@@ -362,18 +362,7 @@ void CStreamConfig::checkMediaIp(const std::string &strIp, STREAM_IP_LIST& ipLis
     ipList.push_back(unIp);
     SVS_LOG((SVS_LM_INFO,"add Ip [%s] to ip list.", strIp.c_str()));
 }
-/*****************************************************************************
- �� �� ��  : readSccConfigure
- ��������  : ��ȡ�͵�����ص�������
- �������  : CSVS_Config &sysConfig
- �������  : ��
- �� �� ֵ  : ȫ����ȡ�ɹ�,���� RET_OK
-             ������һ���������ȡʧ���򷵻� RET_FAIL
- �޸���ʷ      :
- 1. ��    ��   :
-    ��    ��   :
-    �޸�����   :
-*****************************************************************************/
+
 int32_t CStreamConfig::readSccConfigure()
 {
     if (RET_OK != readIpValue("SVS_SCHEDULE", "Ip", m_unSccIp))
@@ -456,22 +445,10 @@ int32_t CStreamConfig::readItemServiceId(CSVS_Config &sysConfig)
     return RET_OK;
 }
 
-/*****************************************************************************
- �� �� ��  : readItemServiceName
- ��������  : ��ȡSTREAM������
- �������  : CSVS_Config &sysConfig
- �������  : ��
- �� �� ֵ  : �ɹ���ȡ,���� RET_OK ���򷵻� RET_FAIL
- �޸���ʷ      :
- 1. ��    ��   :
-    ��    ��   :
-    �޸�����   :
-*****************************************************************************/
 int32_t CStreamConfig::readItemServiceName(CSVS_Config &sysConfig)
 {
     const char *szSectionStream = "SVS_STREAM";
 
-    // ��ȡSTREAM�����
     const char *szKeyName = "Name";
     if (RET_OK != sysConfig.get(szSectionStream, szKeyName, m_szStreamName))
     {
@@ -480,7 +457,7 @@ int32_t CStreamConfig::readItemServiceName(CSVS_Config &sysConfig)
             szKeyName));
         return RET_FAIL;
     }
-    // ����STREAM����ַ���������һ���ֽ�Ϊ0,��ֹ��Ƴ���
+
     m_szStreamName[sizeof(m_szStreamName) - 1] = 0;
 
     SVS_LOG((SVS_LM_INFO,"suceess to read [%s:%s], value [%s].",
@@ -492,17 +469,7 @@ int32_t CStreamConfig::readItemServiceName(CSVS_Config &sysConfig)
 }
 
 
-/*****************************************************************************
- �� �� ��  : readItemServiceNetType
- ��������  :
- �������  : CSVS_Config &sysConfig
- �������  : ��
- �� �� ֵ  : �ɹ���ȡ,���� RET_OK ���򷵻� RET_FAIL
- �޸���ʷ      :
- 1. ��    ��   :
-    ��    ��   :
-    �޸�����   :
-*****************************************************************************/
+
 int32_t CStreamConfig::readItemServiceNetType(CSVS_Config &sysConfig)
 {
     const char *szSectionStream = "SVS_STREAM";
