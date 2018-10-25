@@ -16,8 +16,6 @@
 
 #include "svs_server_stack.h"
 #include "controlstack/svs_control_stack.h"
-// #include "device_stack/svs_device_stack.h"
-// #include "access_control_manager/svs_access_control_manager.h"
 
 extern ACE_Recursive_Thread_Mutex g_tmp_send_msg_mutex;
 
@@ -604,7 +602,7 @@ void CStreamServer::offline()
             if (NULL == pDevSession)
             {
                 continue;
-         }
+            }
 
             BindDevList.push_back(std::string(pDevSession->m_szDevID));
         }
@@ -1123,7 +1121,7 @@ void CServerManager::handleConnEvent(const ConnEvent* pstEvent)
                 SVS_LOG((SVS_LM_DEBUG,
                             "handleConnEvent, find the index.."));
                 pServer->offline();
-                (void)pServer->decReference();
+                this->ReleaseServer(pServer);
                 this->ReleaseServer(pServer);
 
             }
@@ -1151,7 +1149,7 @@ void CServerManager::handleConnEvent(const ConnEvent* pstEvent)
                 SVS_LOG((SVS_LM_DEBUG,
                             "handleConnEvent,timeout , find the index.."));
                 pServer->offline();
-                (void)pServer->decReference();
+                this->ReleaseServer(pServer);
                 this->ReleaseServer(pServer);
 
             }
@@ -1721,9 +1719,10 @@ void CServerManager::handleServerBusinessReport(uint32_t ulHandleIndex,const cha
     pCStreamServer = (CStreamServer*)pCServer;
 
     // deal the request.
-    pCStreamServer->handle_business_report_req(pszMsg);
+    // TODO: send the business report
+    //pCStreamServer->handle_business_report_req(pszMsg);
 
-    (void)pCServer->decReference();
+    this->ReleaseServer(pCServer);
 
     SVS_MSG_COMMON_RESP stRespMsg;
     memset(&stRespMsg,0,sizeof(SVS_MSG_COMMON_RESP));
@@ -1732,7 +1731,7 @@ void CServerManager::handleServerBusinessReport(uint32_t ulHandleIndex,const cha
     stRespMsg.MsgHeader.PacketLength    = sizeof(SVS_MSG_COMMON_RESP);
     stRespMsg.MsgHeader.MsgType         = SVS_MSG_TYPE_MU_SESSION_REPORT_RESP;
     stRespMsg.RespCode                  = nRet;
-    stRespMsg.RequestType       = SVS_MSG_TYPE_MU_SESSION_REPORT_REQ;
+    stRespMsg.RequestType               = SVS_MSG_TYPE_MU_SESSION_REPORT_REQ;
 
     nRet = sendMessage(ulHandleIndex,(char*)&stRespMsg,sizeof(SVS_MSG_COMMON_RESP));
     if(0 != nRet)
@@ -1776,7 +1775,7 @@ void CServerManager::handleServerLoadInfoReq(uint32_t ulHandleIndex,const char* 
     // deal the request.
     pCStreamServer->handle_load_info_report_req(pszMsg);
 
-    (void)pCServer->decReference();
+    this->ReleaseServer(pCServer);
 
     SVS_MSG_COMMON_RESP stRespMsg;
     memset(&stRespMsg,0,sizeof(SVS_MSG_COMMON_RESP));

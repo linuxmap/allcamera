@@ -96,6 +96,7 @@ CRealTimeBusiness::CRealTimeBusiness()
 {
     SVS_LOG((SVS_LM_INFO, "CRealTimeBusiness, %x", this));
     m_MsgCached = NULL;
+    m_uiDevStreamStatus = EN_DEV_STREAM_STATUS_INIT;
 }
 
 CRealTimeBusiness::~CRealTimeBusiness()
@@ -182,7 +183,7 @@ int32_t CRealTimeBusiness::on_timer(time_t tCurrentTime, int32_t eventId, int32_
                 pCStreamServer = (CStreamServer*)pCServer;
                 pCStreamServer->freeStreamforRealtime(m_strDevID.c_str());
 
-                (void)pCServer->decReference();
+                pCServerManager->ReleaseServer(pCServer);
             }while(0);
 
             // send tear down response message.
@@ -321,7 +322,7 @@ int32_t CRealTimeBusiness::mu_session_setup_realtime(ACE_Message_Block *mb, uint
             if ((!m_strMuSvrID.empty()) && (m_strMuSvrID != strMuSvrofReq))
             {
                 // not the same server just send error response
-                (void)pCServer->decReference();
+                pCServerManager->ReleaseServer(pCServer);
                 SVS_LOG((SVS_LM_WARNING,
                                  "receive mu stream real time session setup request, but from a different mu, "
                                  "CurrentMu=%s, NewMu=%s, DevID=%s, rtspurl=%s.",
@@ -330,7 +331,7 @@ int32_t CRealTimeBusiness::mu_session_setup_realtime(ACE_Message_Block *mb, uint
             }
             // donn't need to alloc stream.
 
-            (void)pCServer->decReference();
+            pCServerManager->ReleaseServer(pCServer);
 
             iRespCode = 0;
 
@@ -465,9 +466,7 @@ int32_t CRealTimeBusiness::mu_session_play_realtime(ACE_Message_Block *mb)
 
             strMuSvrofReq = pCServer->getServerID();
 
-            // server need to remember the stream info.
-            // pCStreamServer = (CStreamServer*)pCServer;
-            (void)pCServer->decReference();
+            pCServerManager->ReleaseServer(pCServer);
 
             if ((!m_strMuSvrID.empty()) && (m_strMuSvrID != strMuSvrofReq))
             {
@@ -583,7 +582,7 @@ int32_t CRealTimeBusiness::mu_media_keyframe_req(ACE_Message_Block *mb)
 
             // server need to remember the stream info.
             // pCStreamServer = (CStreamServer*)pCServer;
-            (void)pCServer->decReference();
+            pCServerManager->ReleaseServer(pCServer);
 
             if ((!m_strMuSvrID.empty()) && (m_strMuSvrID != strMuSvrofReq))
             {
@@ -664,120 +663,7 @@ int32_t CRealTimeBusiness::http_report_response(ACE_Message_Block *mb)
     SVS_LOG((SVS_LM_INFO,
                      "deal http report response message, DeviceID=%s.",
                      t_szDevID));
-    /*
-    // m_Transno2SessionMap.insert(std::map<uint16_t, BusinessSession*>::value_type(usTransno,pBusinessSession));
-    CBusinessManager* pCBusinessManager = &CBusinessManager::instance();
 
-    std::map<uint16_t, BusinessSession*>::iterator iter;
-    iter = m_Transno2SessionMap.find(reset_transactionno(t_pResp->MsgHeader.TransactionNo));
-    if(iter == m_Transno2SessionMap.end())
-    {
-        SVS_LOG((SVS_LM_WARNING,
-                         "can not find the request business, DeviceID=%s, transction:[%d].",
-                         t_szDevID, t_pResp->MsgHeader.TransactionNo));
-    }
-    else
-    {
-        pBusinessSession = (BusinessSession*)iter->second;
-
-        pBusinessSession->m_uiBusinessSessionStatus = EN_BUSINESS_SESSION_STATUS_RUNNING;
-
-        if (EN_DEV_STREAM_STATUS_NOTIFYING_DEV == m_uiDevStreamStatus)
-        {
-            // waitting for the response from dev.
-            pBusinessSession->m_uiBusinessSessionStatus = EN_BUSINESS_SESSION_STATUS_WAITTING_NOTIFY_DEV_RESP;
-        }
-        else if (EN_DEV_STREAM_STATUS_RUNNING == m_uiDevStreamStatus)
-        {
-            pCBusinessManager->send_mdu_session_setup_resp(t_pResp->RespCode, pBusinessSession->m_MsgCached);
-
-            freeMessageBlock(pBusinessSession->m_MsgCached);
-            pBusinessSession->m_iTimerID = 0;
-            pBusinessSession->m_uiWaitTime = 0;
-            pBusinessSession->m_uiBusinessSessionStatus = EN_BUSINESS_SESSION_STATUS_RUNNING;
-        }
-    }
-    // pBusinessSession->m_uiWaitTime = 0;
-    // pBusinessSession->m_iTimerID = 0;
-
-
-    // now send "notify dev to send stream" msg.
-    if (EN_DEV_STREAM_STATUS_INIT == m_uiDevStreamStatus)
-    {
-        if( (0 == t_pResp->RespCode)
-            && (NULL == pBusinessSession))
-        {
-            // TODO: call the notify dev to send stream method.
-            SVS_MSG_MDU_SESSION_SETUP_REQ* t_pReqCached
-                = (SVS_MSG_MDU_SESSION_SETUP_REQ*)(void*)GetCommonHdr(pBusinessSession->m_MsgCached->rd_ptr());
-
-            SVS_ACM::REQUEST_SEND_INVITE2DEV oHttpRequest;
-            oHttpRequest.nRequestID = m_usTransno;
-
-            memcpy(oHttpRequest.szLensID, t_szDevID, SVS_DEVICEID_LEN);
-            oHttpRequest.eCallType = t_pReqCached->CallType;
-            oHttpRequest.eUrlType = t_pReqCached->UrlType;
-            oHttpRequest.ePlayType = t_pReqCached->PlayType;
-            oHttpRequest.UrlLen = t_pReqCached->UrlLen;
-            memcpy(oHttpRequest.szUrl, t_pReqCached->szUrl, RTSP_URL_LEN);
-            oHttpRequest.SdpLen = t_pReqCached->SdpLen;
-            memcpy(oHttpRequest.szSdp, t_pReqCached->szSdp, SDP_MSG_LENS);
-
-            if ( 0 != CAccessControlStack::instance().asyncRequest(oHttpRequest, IServerStack::asyncResponse, NULL))
-            {
-                return -1;
-         }
-
-            m_llTimerID = m_usTransno;
-            m_uiWaitTime = BUSINESS_TIME_OUT;
-             (void)time(&m_tLastEventTime);
-
-             return 0;
-        }
-        else
-        {
-            std::map<uint16_t, BusinessSession*>::iterator iter;
-            BusinessSession* pBusinessSession = NULL;
-
-            // release all the sessions.
-            for (iter = m_Transno2SessionMap.begin(); iter != m_Transno2SessionMap.end(); )
-            {
-                //
-                pBusinessSession = (BusinessSession*)iter->second;
-
-                if (EN_BUSINESS_SESSION_STATUS_RUNNING != pBusinessSession->m_uiBusinessSessionStatus)
-                {
-                    // send the mu setup response.
-                    pCBusinessManager->send_mdu_session_setup_resp(-1, pBusinessSession->m_MsgCached);
-
-                    freeMessageBlock(pBusinessSession->m_MsgCached);
-                    pBusinessSession->m_iTimerID = 0;
-                    pBusinessSession->m_uiWaitTime = 0;
-                    delete pBusinessSession;
-                    m_Transno2SessionMap.erase(iter++);
-                }
-            }
-
-            return -2;  // release the object.
-        }
-    }
-    else if (EN_DEV_STREAM_STATUS_TEARDOWN_REPORTING == m_uiDevStreamStatus)
-    {
-        // TODO: call the "notify dev to stop stream" method.
-
-        SVS_ACM::REQUEST_SEND_BYE2DEV oHttpRequest;
-        oHttpRequest.nRequestID = m_usTransno;
-
-        strncpy(oHttpRequest.szLensID,m_strDevID.c_str(), SVS_DEVICEID_LEN);
-
-        if ( 0 != CAccessControlStack::instance().asyncRequest(oHttpRequest, IServerStack::asyncResponse, NULL))
-        {
-            return -1;
-     }
-
-        m_uiDevStreamStatus = EN_DEV_STREAM_STATUS_TEARDOWN_NOTIFYING_DEV;
-    }
-    */
     return 0;
 }
 
@@ -863,7 +749,7 @@ int32_t CRealTimeBusiness::notify_dev_start_stream_response(ACE_Message_Block *m
         // donn't need to alloc stream.
         pCStreamServer->freeStreamforRealtime(m_strDevID.c_str());
 
-        (void)pCServer->decReference();
+        pCServerManager->ReleaseServer(pCServer);
 
     }while(0);
 
@@ -930,7 +816,7 @@ int32_t CRealTimeBusiness::mu_session_teardown_req(ACE_Message_Block *mb)
         if (m_strMuSvrID != strMuSvrofReq)
         {
             // just send error response
-            (void)pCServer->decReference();
+            pCServerManager->ReleaseServer(pCServer);
             SVS_LOG((SVS_LM_WARNING,
                              "receive mu session teardown request, but from a different mu, "
                              "CurrentMu=%s, NewMu=%s, DevID=%s.",
@@ -942,7 +828,7 @@ int32_t CRealTimeBusiness::mu_session_teardown_req(ACE_Message_Block *mb)
         pCStreamServer = (CStreamServer*)pCServer;
         pCStreamServer->freeStreamforRealtime(m_strDevID.c_str());
 
-        (void)pCServer->decReference();
+        pCServerManager->ReleaseServer(pCServer);
 
         if (EN_DEV_STREAM_STATUS_NOTIFYING_STREAM <= m_uiDevStreamStatus)
         {
@@ -1051,7 +937,7 @@ int32_t CRealTimeBusiness::notify_dev_stop_stream_response(ACE_Message_Block *mb
             // donn't need to alloc stream.
             pCStreamServer->freeStreamforRealtime(m_strDevID.c_str());
 
-            (void)pCServer->decReference();
+            pCServerManager->ReleaseServer(pCServer);
         }while(0);
         SVS_LOG((SVS_LM_ERROR,
                          "deal notify device send stream response message, failed to noitfy dev, "
@@ -1499,7 +1385,6 @@ int32_t CBusinessManager::mu_session_setup_realtime(ACE_Message_Block *mb)
         if (-1 == iRet)
         {
             pCStreamServer->freeStreamforRealtime(t_szDevID);
-            (void)pCServer->decReference();
             delete pCRealTimeBusiness;
             pCRealTimeBusiness = NULL;
             m_mapDev2RealtimeBusiness.erase(t_szDevID);
@@ -1509,10 +1394,8 @@ int32_t CBusinessManager::mu_session_setup_realtime(ACE_Message_Block *mb)
         {
             send_mdu_session_setup_resp(iRet, mb);
         }
-        else    // 1, send invite to device success
-        {
-            (void)pCServer->decReference();
-        }
+
+        pCServerManager->ReleaseServer(pCServer);
 
         return iRet;
     }    while(0);
@@ -2154,7 +2037,7 @@ void CBusinessManager::send_mdu_session_setup_resp(int32_t iRespCode,CBusiness* 
                       t_strDevID.c_str()));
 
     freeMessageBlock(mbResopnse);
-    (void)pCServer->decReference();
+    pCServerManager->ReleaseServer(pCServer);
 
     return;
 }
@@ -2245,7 +2128,7 @@ void CBusinessManager::send_mdu_session_setup_resp(
     pCServerManager->sendMessage(ulServerIndex,(char*)pResp, pResp->MsgHeader.PacketLength);
     string strMuSvrofReq = pCServer->getServerID();
     freeMessageBlock(mbResopnse);
-    (void)pCServer->decReference();
+    pCServerManager->ReleaseServer(pCServer);
 
 
      SVS_LOG((SVS_LM_INFO, "send mu session setup response message success, DeviceID=%s, MuSvrID=%s.",
@@ -2319,7 +2202,7 @@ void CBusinessManager::send_mdu_session_play_resp(int32_t iRespCode, ACE_Message
     pCServerManager->sendMessage(ulServerIndex,(char*)pResp, pResp->MsgHeader.PacketLength);
     string strMuSvrofReq = pCServer->getServerID();
     freeMessageBlock(mbResopnse);
-    (void)pCServer->decReference();
+    pCServerManager->ReleaseServer(pCServer);
 
 
      SVS_LOG((SVS_LM_INFO, "send mu session play response message success, DeviceID=%s, MuSvrID=%s.",
@@ -2394,7 +2277,7 @@ void CBusinessManager::send_mu_session_teardown_resp(int32_t iRespCode,ACE_Messa
     pCServerManager->sendMessage(ulServerIndex,(char*)pResp, pResp->MsgHeader.PacketLength);
     string strMuSvrofReq = pCServer->getServerID();
     freeMessageBlock(mbResopnse);
-    (void)pCServer->decReference();
+    pCServerManager->ReleaseServer(pCServer);
 
      SVS_LOG((SVS_LM_INFO, "send mu session teardown response success, DeviceID=%s, MuSvrID=%s.",
                       t_szDevID, strMuSvrofReq.c_str()));

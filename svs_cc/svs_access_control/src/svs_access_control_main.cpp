@@ -113,7 +113,8 @@ void server_run(void)
     }
 
     if((0 != CServerManager::instance().start())
-        ||(0 != CBusinessManager::instance().start()))
+        ||(0 != CBusinessManager::instance().start()
+        ||(0 != IDeviceStackMgr::instance().start())))
     {
         (void)g_svrLogStrategy.endLogStrategy();
         send_sigquit_to_deamon();

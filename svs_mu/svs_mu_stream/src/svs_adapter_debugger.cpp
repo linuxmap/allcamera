@@ -132,19 +132,10 @@ int32_t CMduDebugger::handle_close(ACE_HANDLE /*handle*/, ACE_Reactor_Mask /*mas
 
     return 0;
 }
-/*****************************************************************************
- ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½  : sendData
- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  : ï¿½ï¿½Í»ï¿½ï¿½Ë·ï¿½ï¿½Í»ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½,Ò»ï¿½ï¿½ï¿½ï¿½ï¿½î´¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½Ï¢
- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  : ï¿½ï¿½
- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  : ï¿½ï¿½
- ï¿½ï¿½ ï¿½ï¿½ Öµ  : ï¿½É¹ï¿½ï¿½ï¿½ï¿½ï¿½0,Ê§ï¿½Ü·ï¿½ï¿½ï¿½-1
- ï¿½Þ¸ï¿½ï¿½ï¿½Ê·      :
- 1. ï¿½ï¿½    ï¿½ï¿½   : 2009ï¿½ï¿½4ï¿½ï¿½13ï¿½ï¿½
-    ï¿½Þ¸ï¿½ï¿½ï¿½ï¿½ï¿½   : ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-*****************************************************************************/
+
 int32_t CMduDebugger::sendData()
 {
-    //ï¿½ï¿½Ö¹ï¿½Ú´ï¿½ï¿½ï¿½ï¿½Ô½ï¿½ï¿½
+
     m_szSendBuf[ sizeof(m_szSendBuf) - 1 ] = '\0';
 
     ACE_Time_Value tv(SVS_LOG_SEND_TIMEOUT, 0);
@@ -161,16 +152,7 @@ int32_t CMduDebugger::sendData()
 
     return 0;
 }
-/*****************************************************************************
- ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½  : handle_input
- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  : ï¿½ï¿½ï¿½Õ¿Í»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  : ACE_HANDLE
- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  : ï¿½ï¿½
- ï¿½ï¿½ ï¿½ï¿½ Öµ  : ï¿½É¹ï¿½ï¿½ï¿½ï¿½ï¿½0,Ê§ï¿½Ü·ï¿½ï¿½ï¿½-1
- ï¿½Þ¸ï¿½ï¿½ï¿½Ê·      :
- 1. ï¿½ï¿½    ï¿½ï¿½   : 2009ï¿½ï¿½4ï¿½ï¿½13ï¿½ï¿½
-    ï¿½Þ¸ï¿½ï¿½ï¿½ï¿½ï¿½   : ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-*****************************************************************************/
+
 int32_t CMduDebugger::handle_input(ACE_HANDLE /*handle*/)
 {
     m_iHeartbeatNum++;
@@ -186,8 +168,6 @@ int32_t CMduDebugger::handle_input(ACE_HANDLE /*handle*/)
         return -1;
     }
 
-    // ï¿½ï¿½telnetï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ctrlï¿½ï¿½Cï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¶ï¿½ï¿½ï¿½5ï¿½ï¿½ï¿½Ö½Ú£ï¿½0XFF 0XF4 0XFF 0XFD 0X06
-    // Ö»Òªï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½Õµï¿½ï¿½ï¿½5ï¿½ï¿½ï¿½Ö½Ú£ï¿½ï¿½ï¿½ï¿½Ë³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë£ï¿½ï¿½Í¿ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦Ctrl+Cï¿½ï¿½
     int32_t i = 0;
     const int32_t ctrCLen = sizeof(ctrlC) / sizeof(ctrlC[0]);
     for (i = 0; i < ctrCLen; i++)
@@ -231,7 +211,6 @@ int32_t CMduDebugger::handle_input(ACE_HANDLE /*handle*/)
     //dump end
     string strCmd = m_szRecvBuf;
 
-    //cmd È¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     string::size_type pos;
     while ((pos = strCmd.find( "\r\n" )) != string::npos)
     {
@@ -277,22 +256,9 @@ void CMduDebugger::parseCmd(std::string& strCmd, std::string& strSubCmd) const
     return;
 }
 
-/*****************************************************************************
- ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½  : handle_message
- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  : ï¿½Ô¿Í»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð·Ö·ï¿½ï¿½ï¿½ï¿½ï¿½
- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  : const std::string &strCmd ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  : ï¿½ï¿½
- ï¿½ï¿½ ï¿½ï¿½ Öµ  : ï¿½É¹ï¿½ï¿½ï¿½ï¿½ï¿½0,Ê§ï¿½Ü·ï¿½ï¿½ï¿½-1
- ï¿½Þ¸ï¿½ï¿½ï¿½Ê·      :
- 1. ï¿½ï¿½    ï¿½ï¿½   : 2009ï¿½ï¿½4ï¿½ï¿½13ï¿½ï¿½
-    ï¿½Þ¸ï¿½ï¿½ï¿½ï¿½ï¿½   : ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-*****************************************************************************/
+
 int32_t CMduDebugger::handleFirstLevelCmd(std::string& strCmd)
 {
-    // ï¿½Þ¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½
-    // ï¿½Ö¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-    // ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö§ï¿½ï¿½ help,show,exit,quit
-
 
     std::string firstLevelCmd;
     parseCmd(strCmd,  firstLevelCmd);
@@ -307,22 +273,11 @@ int32_t CMduDebugger::handleFirstLevelCmd(std::string& strCmd)
         return iRet;
     }
 
-    // Ã»ï¿½Ð²ï¿½ï¿½Òµï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     iRet = sendBadCmd();
     return iRet;
 }
 
-// Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-/*****************************************************************************
- ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½  : sendHelpInfo
- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  : ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  : ï¿½ï¿½
- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  : ï¿½ï¿½
- ï¿½ï¿½ ï¿½ï¿½ Öµ  : ï¿½É¹ï¿½ï¿½ï¿½ï¿½ï¿½0,Ê§ï¿½Ü·ï¿½ï¿½ï¿½-1
- ï¿½Þ¸ï¿½ï¿½ï¿½Ê·      :
- 1. ï¿½ï¿½    ï¿½ï¿½   : 2009ï¿½ï¿½4ï¿½ï¿½13ï¿½ï¿½
-    ï¿½Þ¸ï¿½ï¿½ï¿½ï¿½ï¿½   : ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-*****************************************************************************/
+
 int32_t CMduDebugger::sendHelpInfo(std::string& strCmd)
 {
     std::string strSubCmd;
@@ -334,21 +289,21 @@ int32_t CMduDebugger::sendHelpInfo(std::string& strCmd)
     {
         (void)ACE_OS::snprintf( m_szSendBuf,
               sizeof(m_szSendBuf),
-              "\n°ïÖúÐÅÏ¢: \n\t"
-              "help                 ÏÔÊ¾°ïÖúÐÅÏ¢\n\t"
-              "show                 ÏÔÊ¾·þÎñ»ù±¾ÅäÖÃÐÅÏ¢\n\t"
-              "show debug           ÏÔÊ¾µ÷ÊÔÅäÖÃÐÅÏ¢\n\t"
-              "show buffer          ÏÔÊ¾ÏµÍ³»º³åÇøÐÅÏ¢\n\t"
-              "show session         ÏÔÊ¾Ã½Ìå»á»°ÐÅÏ¢\n\t"
-              "show session [id]    ÏÔÊ¾Ã½Ìå»á»°ÏêÏ¸ÐÅÏ¢\n\t"
-              "show session count   ÏÔÊ¾Ã½Ìå»á»°ÊýÁ¿\n\t"
-              "show sdp [id]        ÏÔÊ¾Ã½Ìå»á»°SDPÐÅÏ¢\n\t"
-              "show business        ÏÔÊ¾Ã½ÌåÒµÎñÐÅÏ¢\n\t"
-              "show business [id]   ÏÔÊ¾Ã½ÌåÒµÎñÏêÏ¸ÐÅÏ¢\n\t"
-              "show business count  ÏÔÊ¾Ã½ÌåÒµÎñÊýÁ¿\n\t"
-              "exit                 ÍË³ö\n\t"
-              "quit                 ÍË³ö\n\t"
-              "ctrl+C               ÍË³ö\n\t"
+              "\nhelp information: \n\t"
+              "help                 show help information\n\t"
+              "show                 show service basic configure info\n\t"
+              "show debug           show debug configuer\n\t"
+              "show buffer          show system cache buffer info\n\t"
+              "show session         show media session info\n\t"
+              "show session [id]    show medis session detail info\n\t"
+              "show session count   show all media session count\n\t"
+              "show sdp [id]        show session sdp info\n\t"
+              "show business        show media business info\n\t"
+              "show business [id]   show media business detail info\n\t"
+              "show business count  show all media business count\n\t"
+              "exit                 quit\n\t"
+              "quit                 quit\n\t"
+              "ctrl+C               quit\n\t"
               SVS_CMD_PROMPT);
 
         return sendData();

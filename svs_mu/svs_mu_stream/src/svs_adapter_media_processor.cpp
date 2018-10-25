@@ -10,7 +10,7 @@
 #include "svs_adapter_sdp.h"
 
 
-//#define __PRINT_MEDIA__
+#define __PRINT_MEDIA__
 
 
 CPacketList::CPacketList()
@@ -449,8 +449,8 @@ CMduPsMediaProcessorSet::CMduPsMediaProcessorSet()
 {
     m_RtpFrameOrganizer.init(this,MAX_RTP_FRAME_CACHE_NUM);
     m_usRtpSeq = 0;
-    m_VideoPayload = PT_TYPE_MAX;
-    m_AudioPayload = PT_TYPE_MAX;
+    m_VideoPayload = PT_TYPE_H264;
+    m_AudioPayload = PT_TYPE_PCMU;
 }
 
 CMduPsMediaProcessorSet::~CMduPsMediaProcessorSet()
@@ -1035,7 +1035,7 @@ void CMduPsMediaProcessorSet::ProgramKnowFrame(es_frame_info& FrameInfo,RTP_FRAM
     {
         /* audio */
         FrameInfo.payload = PT_TYPE_PCMU;
-        sendEsVideoFrame(FrameInfo,rtpFrameList);
+        sendEsAudioFrame(FrameInfo,rtpFrameList);
     }
 
     return;
