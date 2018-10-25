@@ -1,12 +1,12 @@
-#ifndef __MDU_MEDIA_KEY_FRAME_H__
-#define __MDU_MEDIA_KEY_FRAME_H__
+#ifndef __STREAM_MEDIA_KEY_FRAME_H__
+#define __STREAM_MEDIA_KEY_FRAME_H__
 #include "svs_vms_message.h"
 
-class CMduMediaKeyFrameReq: public CMduSvsMessage
+class CStreamMediaKeyFrameReq: public CStreamSvsMessage
 {
 public:
-    CMduMediaKeyFrameReq();
-    virtual ~CMduMediaKeyFrameReq();
+    CStreamMediaKeyFrameReq();
+    virtual ~CStreamMediaKeyFrameReq();
 
     int32_t create(uint32_t unLength,
                 uint32_t unTransNo);
@@ -20,7 +20,7 @@ public:
     void dump() const;
 
 private:
-    SVS_MSG_MDU_KEY_FRAME_REQ*      m_pReq;
+    SVS_MSG_STREAM_KEY_FRAME_REQ*      m_pReq;
 };
 #endif
 

@@ -1,5 +1,5 @@
 /*
- * MduBusinessManager.cpp
+ * StreamBusinessManager.cpp
  *
  *  Created on: 2016-1-21
  *      Author:
@@ -14,15 +14,15 @@
 
 int32_t CSessionFluxTimer::handle_timeout(const ACE_Time_Value &tv, const void *arg)
 {
-    CMduBusinessManager::instance()->statFlux();
+    CStreamBusinessManager::instance()->statFlux();
 
     return 0;
 }
 
 
-CMduBusinessManager* CMduBusinessManager::m_pMduBusinessManager = NULL;
+CStreamBusinessManager* CStreamBusinessManager::m_pStreamBusinessManager = NULL;
 
-CMduBusinessManager::CMduBusinessManager()
+CStreamBusinessManager::CStreamBusinessManager()
 {
     m_unMaxBusinessNum = 0;
     m_InputRate   = 0;
@@ -30,50 +30,50 @@ CMduBusinessManager::CMduBusinessManager()
     m_pFluxTimer  = NULL;
 }
 
-CMduBusinessManager::~CMduBusinessManager()
+CStreamBusinessManager::~CStreamBusinessManager()
 {
 }
 
-CMduBusinessManager* CMduBusinessManager::instance()
+CStreamBusinessManager* CStreamBusinessManager::instance()
 {
-    if (NULL == m_pMduBusinessManager)
+    if (NULL == m_pStreamBusinessManager)
     {
         try
         {
-            m_pMduBusinessManager = new CMduBusinessManager;
+            m_pStreamBusinessManager = new CStreamBusinessManager;
         }
         catch (...)
         {
         }
     }
 
-    return m_pMduBusinessManager;
+    return m_pStreamBusinessManager;
 }
 
-int32_t CMduBusinessManager::initManager()
+int32_t CStreamBusinessManager::initManager()
 {
     m_BusinessMap.clear();
-    SVS_LOG((SVS_LM_INFO,"init mdu business manager success."));
+    SVS_LOG((SVS_LM_INFO,"init stream business manager success."));
     return RET_OK;
 }
 
-void CMduBusinessManager::closeManager()
+void CStreamBusinessManager::closeManager()
 {
     stopFluxTimer();
 
     m_BusinessMap.clear();
-    SVS_LOG((SVS_LM_INFO,"close mdu business manager success."));
+    SVS_LOG((SVS_LM_INFO,"close stream business manager success."));
     return;
 }
 
-CMduBusiness* CMduBusinessManager::createBusiness(uint64_svs recvSessionId,
+CStreamBusiness* CStreamBusinessManager::createBusiness(uint64_svs recvSessionId,
                                                   uint64_svs sendSessionId,
                                                   PLAY_TYPE enPlayType)
 {
-    CMduBusiness *pBusiness = NULL;
+    CStreamBusiness *pBusiness = NULL;
     try
     {
-        pBusiness = new CMduBusiness;
+        pBusiness = new CStreamBusiness;
     }
     catch(...)
     {
@@ -94,7 +94,7 @@ CMduBusiness* CMduBusinessManager::createBusiness(uint64_svs recvSessionId,
             startFluxTimer();
         }
 
-        if (m_unMaxBusinessNum >= CMduConfig::instance()->getServiceCapacity())
+        if (m_unMaxBusinessNum >= CStreamConfig::instance()->getServiceCapacity())
         {
             SVS_LOG((SVS_LM_WARNING,"business manager create business fail, "
                     "business count[%u] up to service capacity.",
@@ -113,9 +113,9 @@ CMduBusiness* CMduBusinessManager::createBusiness(uint64_svs recvSessionId,
     return pBusiness;
 }
 
-CMduBusiness* CMduBusinessManager::findBusiness(uint64_svs streamID)
+CStreamBusiness* CStreamBusinessManager::findBusiness(uint64_svs streamID)
 {
-    CMduBusiness *pBusiness = NULL;
+    CStreamBusiness *pBusiness = NULL;
     ACE_Guard<ACE_Thread_Mutex> locker(m_BusinessMapMutex);
     STREAM_BUSINESS_MAP_ITER  iter = m_BusinessMap.find(streamID);
     if (m_BusinessMap.end() == iter)
@@ -130,16 +130,16 @@ CMduBusiness* CMduBusinessManager::findBusiness(uint64_svs streamID)
 }
 
 
-uint32_t CMduBusinessManager::getAttachedBusinessCount(uint64_svs streamID)
+uint32_t CStreamBusinessManager::getAttachedBusinessCount(uint64_svs streamID)
 {
     ACE_Guard<ACE_Thread_Mutex> locker(m_BusinessMapMutex);
     return m_BusinessMap.count(streamID);
 }
 
-void CMduBusinessManager::findBusiness(uint64_svs streamID, BUSINESS_LIST &list)
+void CStreamBusinessManager::findBusiness(uint64_svs streamID, BUSINESS_LIST &list)
 {
     list.clear();
-    CMduBusiness *pBusiness = NULL;
+    CStreamBusiness *pBusiness = NULL;
     ACE_Guard<ACE_Thread_Mutex> locker(m_BusinessMapMutex);
     STREAM_BUSINESS_MAP_ITER iter = m_BusinessMap.find(streamID);
     for(;m_BusinessMap.end() != iter; ++iter)
@@ -158,10 +158,10 @@ void CMduBusinessManager::findBusiness(uint64_svs streamID, BUSINESS_LIST &list)
     return;
 }
 
-void CMduBusinessManager::getAllBusiness(BUSINESS_LIST& businessList)
+void CStreamBusinessManager::getAllBusiness(BUSINESS_LIST& businessList)
 {
     businessList.clear();
-    CMduBusiness *pBusiness = NULL;
+    CStreamBusiness *pBusiness = NULL;
     ACE_Guard<ACE_Thread_Mutex> locker(m_BusinessMapMutex);
     STREAM_BUSINESS_MAP_ITER iter;
 
@@ -181,9 +181,9 @@ void CMduBusinessManager::getAllBusiness(BUSINESS_LIST& businessList)
     return;
 }
 
-bool CMduBusinessManager::isBusinessInList
+bool CStreamBusinessManager::isBusinessInList
 (
-    const CMduBusiness *pBusiness,
+    const CStreamBusiness *pBusiness,
     BUSINESS_LIST& businessList
 )const
 {
@@ -199,13 +199,13 @@ bool CMduBusinessManager::isBusinessInList
     return false;
 }
 
-uint32_t CMduBusinessManager::getBusinessCount()
+uint32_t CStreamBusinessManager::getBusinessCount()
 {
     ACE_Guard<ACE_Thread_Mutex> locker(m_BusinessMapMutex);
     return m_BusinessMap.size();
 }
 
-uint32_t CMduBusinessManager::getBusinessCount(uint64_svs ullStreamId)
+uint32_t CStreamBusinessManager::getBusinessCount(uint64_svs ullStreamId)
 {
     uint32_t unCount = 0;
     ACE_Guard<ACE_Thread_Mutex> locker(m_BusinessMapMutex);
@@ -222,12 +222,12 @@ uint32_t CMduBusinessManager::getBusinessCount(uint64_svs ullStreamId)
     return unCount;
 }
 
-void CMduBusinessManager::statFlux()
+void CStreamBusinessManager::statFlux()
 {
     m_InputRate  = 0;
     m_OutputRate = 0;
 
-    CMduBusiness *pBusiness = NULL;
+    CStreamBusiness *pBusiness = NULL;
     ACE_Guard<ACE_Thread_Mutex> locker(m_BusinessMapMutex);
     STREAM_BUSINESS_MAP_ITER iter;
     for (iter = m_BusinessMap.begin(); iter != m_BusinessMap.end(); ++iter)
@@ -243,17 +243,17 @@ void CMduBusinessManager::statFlux()
     return;
 }
 
-uint32_t CMduBusinessManager::getInputRate()const
+uint32_t CStreamBusinessManager::getInputRate()const
 {
     return m_InputRate;
 }
 
-uint32_t CMduBusinessManager::getOutputRate()const
+uint32_t CStreamBusinessManager::getOutputRate()const
 {
     return m_OutputRate;
 }
 
-void CMduBusinessManager::releaseBusiness(CMduBusiness* &pBusiness)
+void CStreamBusinessManager::releaseBusiness(CStreamBusiness* &pBusiness)
 {
     if (NULL == pBusiness)
     {
@@ -271,9 +271,9 @@ void CMduBusinessManager::releaseBusiness(CMduBusiness* &pBusiness)
     return;
 }
 
-void CMduBusinessManager::releaseBusiness(BUSINESS_LIST &list)
+void CStreamBusinessManager::releaseBusiness(BUSINESS_LIST &list)
 {
-    CMduBusiness *pBusiness = NULL;
+    CStreamBusiness *pBusiness = NULL;
     for (BUSINESS_LIST_ITER iter = list.begin();
             iter != list.end(); iter++)
     {
@@ -286,7 +286,7 @@ void CMduBusinessManager::releaseBusiness(BUSINESS_LIST &list)
 
 
 
-void CMduBusinessManager::destroyBusiness(CMduBusiness *&pBusiness)
+void CStreamBusinessManager::destroyBusiness(CStreamBusiness *&pBusiness)
 {
     if (NULL == pBusiness)
     {
@@ -335,9 +335,9 @@ void CMduBusinessManager::destroyBusiness(CMduBusiness *&pBusiness)
     return;
 }
 
-void CMduBusinessManager::startFluxTimer()
+void CStreamBusinessManager::startFluxTimer()
 {
-    ACE_Reactor* pReactor = CMduServiceTask::instance()->getTimerReactor();
+    ACE_Reactor* pReactor = CStreamServiceTask::instance()->getTimerReactor();
     if (NULL == pReactor)
     {
         return;
@@ -352,7 +352,7 @@ void CMduBusinessManager::startFluxTimer()
         return;
     }
 
-    ACE_Time_Value tv((int32_t)CMduConfig::instance()->getAccountPeriod(), 0);
+    ACE_Time_Value tv((int32_t)CStreamConfig::instance()->getAccountPeriod(), 0);
     int32_t TimerId = pReactor->schedule_timer(m_pFluxTimer, this, tv, tv);
     if (-1 == TimerId)
     {
@@ -364,14 +364,14 @@ void CMduBusinessManager::startFluxTimer()
     return;
 }
 
-void CMduBusinessManager::stopFluxTimer()
+void CStreamBusinessManager::stopFluxTimer()
 {
     if (NULL == m_pFluxTimer)
     {
         return;
     }
 
-    ACE_Reactor* pReactor = CMduServiceTask::instance()->getTimerReactor();
+    ACE_Reactor* pReactor = CStreamServiceTask::instance()->getTimerReactor();
     if (NULL == pReactor)
     {
         return;

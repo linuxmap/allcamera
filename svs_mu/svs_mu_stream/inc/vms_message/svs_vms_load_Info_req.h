@@ -1,24 +1,24 @@
 /*
- * MduLoadInfoReq.h
+ * StreamLoadInfoReq.h
  *
  *  Created on: 2016-3-22
  *      Author:
  */
 
-#ifndef MDULOADINFOREQ_H_
-#define MDULOADINFOREQ_H_
+#ifndef STREAMLOADINFOREQ_H_
+#define STREAMLOADINFOREQ_H_
 
 #include "svs_vms_message.h"
 
-class CMduLoadInfoReq : public CMduSvsMessage
+class CStreamLoadInfoReq : public CStreamSvsMessage
 {
 public:
-    CMduLoadInfoReq();
+    CStreamLoadInfoReq();
 
-    virtual ~CMduLoadInfoReq();
+    virtual ~CStreamLoadInfoReq();
 
     // 根据消息长度初始化消息，只初始化消息头，子类需要重载
-    // 该消息只有MDU创建，故不需要实现另外的Create方法
+    // 该消息只有STREAM创建，故不需要实现另外的Create方法
     int32_t create(uint32_t unLength,
                uint32_t unTransNo);
 
@@ -31,7 +31,7 @@ public:
 
     void dump() const;
 private:
-    SVS_MSG_MDU_LOAD_INFO_REQ* m_pLoadInfo;
+    SVS_MSG_STREAM_LOAD_INFO_REQ* m_pLoadInfo;
 };
 
-#endif /* MDULOADINFOREQ_H_ */
+#endif /* STREAMLOADINFOREQ_H_ */

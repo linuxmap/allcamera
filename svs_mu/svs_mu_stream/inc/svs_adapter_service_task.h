@@ -1,18 +1,18 @@
-#ifndef __CMDUSERVICETASK_H__
-#define __CMDUSERVICETASK_H__
+#ifndef __CSTREAMSERVICETASK_H__
+#define __CSTREAMSERVICETASK_H__
 
 #include <svs_ace_header.h>
 #include "svs_adapter_scc_connector.h"
 #include "svs_adapter_time.h"
 #include "svs_adapter_debugger.h"
 
-enum _enMduServiceThreads
+enum _enStreamServiceThreads
 {
     MAIN_REACTOR_THREAD    = 0,
     SCC_MSG_HANDLER_THREAD = 1,
     MEDIA_MSG_HANDLE_THREAD= 2,
-    MDU_TIMER_THREAD       = 3,
-    MDU_DEBUG_THREAD       = 4,
+    STREAM_TIMER_THREAD       = 3,
+    STREAM_DEBUG_THREAD       = 4,
 
     MAX_SERVICE_THREAD
 };
@@ -23,25 +23,25 @@ public:
     virtual int32_t handle_timeout(const ACE_Time_Value &tv, const void *arg);
 };
 
-class CMduServiceTask : public ACE_Task<ACE_MT_SYNCH>
+class CStreamServiceTask : public ACE_Task<ACE_MT_SYNCH>
 {
 public:
-    virtual ~CMduServiceTask();
+    virtual ~CStreamServiceTask();
 
-    static CMduServiceTask *instance()
+    static CStreamServiceTask *instance()
     {
-        if (NULL == g_mduServiceTask)
+        if (NULL == g_streamServiceTask)
         {
             try
             {
-                g_mduServiceTask = new CMduServiceTask;
+                g_streamServiceTask = new CStreamServiceTask;
             }
             catch(...)
             {
             }
         }
 
-        return g_mduServiceTask;
+        return g_streamServiceTask;
     }
 
     UTAPI int32_t openServiceTask();
@@ -50,13 +50,13 @@ public:
 
     UTAPI int32_t svc();
 
-    UTAPI int32_t sendMsgToSCC(const CMduSvsMessage* pMessage);
+    UTAPI int32_t sendMsgToSCC(const CStreamSvsMessage* pMessage);
 
     UTAPI int32_t enqueueInnerMessage(ACE_Message_Block* pMsg);
 
     UTAPI ACE_Reactor*  getTimerReactor();
 
-    UTAPI CMduSccConnector* getSccConnector();
+    UTAPI CStreamSccConnector* getSccConnector();
 
     UTAPI void sendSysLoadReport() const;
 
@@ -73,7 +73,7 @@ private:
 
     UTAPI int32_t startSysStat();
 private:
-    CMduServiceTask();
+    CStreamServiceTask();
 
     UTAPI int32_t openAllMsgQueue();
 
@@ -89,7 +89,7 @@ private:
 
     UTAPI void sccMessageHandleThread();
 
-    UTAPI void mduTimerManagerThread();
+    UTAPI void streamTimerManagerThread();
 
     UTAPI void innerMsgHandleThread();
 
@@ -101,24 +101,24 @@ private:
 
     UTAPI void handleInnerMessage(const ACE_Message_Block *pMsg) const;
  private:
-    static CMduServiceTask*         g_mduServiceTask;
+    static CStreamServiceTask*         g_streamServiceTask;
     bool                            m_bRunFlag;
 
-    CMduSccConnector*               m_pSccConnect;
+    CStreamSccConnector*               m_pSccConnect;
     ACE_Message_Queue<ACE_SYNCH>    m_SccRecvQueue;
     ACE_Message_Queue<ACE_SYNCH>    m_MediaMsgQueue;
 
     uint32_t                        m_unThreadIndex;
     ACE_Thread_Mutex                m_ThreadIndexMutex;
 
-    CMduDebugAcceptor               m_debugAcceptor;
+    CStreamDebugAcceptor               m_debugAcceptor;
     ACE_Reactor*                    m_pDebugReactor;
     ACE_Reactor*                    m_pTimerReactor;
 
     CLoadReportTimer*               m_pLoadReportTimer;
 #ifdef UNITTEST
-    friend class MockCMduServiceTask;
+    friend class MockCStreamServiceTask;
 #endif
 };
 
-#endif // __CMDUSERVICETASK_H__
+#endif // __CSTREAMSERVICETASK_H__

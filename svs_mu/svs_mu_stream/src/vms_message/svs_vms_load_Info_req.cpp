@@ -1,5 +1,5 @@
 /*
- * MduLoadInfoReq.cpp
+ * StreamLoadInfoReq.cpp
  *
  *  Created on: 2016-3-22
  *      Author:
@@ -11,43 +11,43 @@
 #include "svs_adapter_media_block_buffer.h"
 #include "svs_vms_load_Info_req.h"
 #include "svs_adapter_service_task.h"
-CMduLoadInfoReq::CMduLoadInfoReq()
+CStreamLoadInfoReq::CStreamLoadInfoReq()
 {
     m_pLoadInfo = NULL;
 }
 
-CMduLoadInfoReq::~CMduLoadInfoReq()
+CStreamLoadInfoReq::~CStreamLoadInfoReq()
 {
     m_pLoadInfo = NULL;
 }
 
 // �����Ϣ���ȳ�ʼ����Ϣ��ֻ��ʼ����Ϣͷ��������Ҫ����
-// ����Ϣֻ��MDU�������ʲ���Ҫʵ�������Create����
-int32_t CMduLoadInfoReq::create(uint32_t unLength,
+// ����Ϣֻ��STREAM�������ʲ���Ҫʵ�������Create����
+int32_t CStreamLoadInfoReq::create(uint32_t unLength,
                             uint32_t unTransNo)
 {
     // �ȵ��ø���ĳ�ʼ���ӿ�
-    int32_t nRet = CMduSvsMessage::create(unLength, unTransNo);
+    int32_t nRet = CStreamSvsMessage::create(unLength, unTransNo);
     if (RET_OK != nRet)
     {
         return nRet;
     }
 
-    m_pLoadInfo = (SVS_MSG_MDU_LOAD_INFO_REQ*)(void*)getBinaryData();
+    m_pLoadInfo = (SVS_MSG_STREAM_LOAD_INFO_REQ*)(void*)getBinaryData();
 
     // �Լ���������Ϣ����Ҫ�����
     return RET_OK;
 }
 
 /// ��ʼ����Ϣ��
-int32_t CMduLoadInfoReq::initMsgBody()
+int32_t CStreamLoadInfoReq::initMsgBody()
 {
     if (NULL == m_pLoadInfo)
     {
         return RET_FAIL;
     }
 
-    m_pLoadInfo->TransmitNumber = CMduConfig::instance()->getServiceCapacity();
+    m_pLoadInfo->TransmitNumber = CStreamConfig::instance()->getServiceCapacity();
 
     uint32_t ulTotal = 0;
     uint32_t ulUsed  = 0;
@@ -72,17 +72,17 @@ int32_t CMduLoadInfoReq::initMsgBody()
             m_pLoadInfo->CacheUsedNum));
 
     // ip
-    MDU_IP_LIST  ipList;
+    STREAM_IP_LIST  ipList;
     ACE_INET_Addr addr;
     uint32_t UsedRecvSize = 0;
     uint32_t UsedSendSize = 0;
-    uint32_t  unInternalIp = CMduConfig::instance()->getInternalMediaIp();
-    CMduConfig::instance()->getExternalMediaIpList(ipList);
+    uint32_t  unInternalIp = CStreamConfig::instance()->getInternalMediaIp();
+    CStreamConfig::instance()->getExternalMediaIpList(ipList);
 
     ipList.push_front(unInternalIp);
     m_pLoadInfo->NetworkCardNum = 0;
 
-    for (MDU_IP_LIST::iterator iter = ipList.begin(); iter != ipList.end(); iter++)
+    for (STREAM_IP_LIST::iterator iter = ipList.begin(); iter != ipList.end(); iter++)
     {
         addr.set((uint16_t)0, *iter);
         if (RET_OK == CSvsSysStat::instance().GetNetworkCardInfo(addr.get_host_addr(),
@@ -102,25 +102,25 @@ int32_t CMduLoadInfoReq::initMsgBody()
     return RET_OK;
 }
 
-uint32_t CMduLoadInfoReq::getMsgType()
+uint32_t CStreamLoadInfoReq::getMsgType()
 {
-    return SVS_MSG_TYPE_MDU_LOAD_INFO_REQ;
+    return SVS_MSG_TYPE_STREAM_LOAD_INFO_REQ;
 }
 
-int32_t CMduLoadInfoReq::handleMessage()
+int32_t CStreamLoadInfoReq::handleMessage()
 {
     // ����ϢΨһ�Ĵ�����ǰ��Լ����͸�SCC
-    return CMduServiceTask::instance()->sendMsgToSCC(this);
+    return CStreamServiceTask::instance()->sendMsgToSCC(this);
 }
 
-void CMduLoadInfoReq::dump() const
+void CStreamLoadInfoReq::dump() const
 {
     if (NULL == m_pLoadInfo)
     {
         return;
     }
 
-    CMduSvsMessage::dump();
+    CStreamSvsMessage::dump();
 
     // ����Ϣ�ṹ��ӡ��Ϣ��
     SVS_LOG((SVS_LM_DEBUG,"MessageBody:"));

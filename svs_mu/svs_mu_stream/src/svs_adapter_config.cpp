@@ -1,4 +1,4 @@
-// MduConfig.cpp: implementation of the CMduConfig class.
+// StreamConfig.cpp: implementation of the CStreamConfig class.
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -11,14 +11,14 @@
 #include "svs_adapter_svs_def.h"
 #include <sys/time.h>
 
-CMduConfig::CMduConfig()
+CStreamConfig::CStreamConfig()
 {
-    (void)ACE_OS::memset(m_szMduID, 0x0, sizeof(m_szMduID));
-    (void)ACE_OS::memset(m_szMduName, 0x0, sizeof(m_szMduName));
-    m_unAccountPeriod   = MDU_ACCOUNT_INTERVAL_DEFAULT;
-    m_unReportPeriod    = MDU_REPORT_INTERVAL_DEFAULT;
-    m_unServiceNetType  = MDU_SERVICE_NET_TYPE_DEFAULT;
-    m_unServiceCapacity = MDU_SERVICE_CAPACITY_DEFAULT;
+    (void)ACE_OS::memset(m_szStreamID, 0x0, sizeof(m_szStreamID));
+    (void)ACE_OS::memset(m_szStreamName, 0x0, sizeof(m_szStreamName));
+    m_unAccountPeriod   = STREAM_ACCOUNT_INTERVAL_DEFAULT;
+    m_unReportPeriod    = STREAM_REPORT_INTERVAL_DEFAULT;
+    m_unServiceNetType  = STREAM_SERVICE_NET_TYPE_DEFAULT;
+    m_unServiceCapacity = STREAM_SERVICE_CAPACITY_DEFAULT;
 
     m_unServiceIp = 0;
     m_unServicePortListNum = 0;
@@ -58,26 +58,26 @@ CMduConfig::CMduConfig()
 
     memset(m_strRegisterPasswd, 0x0, sizeof(m_strRegisterPasswd));
 
-    m_DistributeLimitPerChannel = MDU_SERVICE_CAPACITY_DEFAULT;
+    m_DistributeLimitPerChannel = STREAM_SERVICE_CAPACITY_DEFAULT;
 
 }
 
-CMduConfig::~CMduConfig()
+CStreamConfig::~CStreamConfig()
 {
 
 }
 
-const char* CMduConfig::getDecodeTag() const
+const char* CStreamConfig::getDecodeTag() const
 {
     return m_strDecodeTag.c_str();
 }
 
 
-int32_t CMduConfig::init(const char* pCfgFile)
+int32_t CStreamConfig::init(const char* pCfgFile)
 {
     if (NULL == pCfgFile)
     {
-        SVS_LOG((SVS_LM_CRITICAL,"Read mdu config fail. config file is null."));
+        SVS_LOG((SVS_LM_CRITICAL,"Read stream config fail. config file is null."));
         return RET_FAIL;
     }
     CSVS_Config sysConfig(pCfgFile);
@@ -90,9 +90,9 @@ int32_t CMduConfig::init(const char* pCfgFile)
         m_LastModifyTime = fileInfo.st_mtime;
     }
 
-    if (RET_OK != readMduConfigure(sysConfig))
+    if (RET_OK != readStreamConfigure(sysConfig))
     {
-        SVS_LOG((SVS_LM_CRITICAL,"Get mdu configure fail."));
+        SVS_LOG((SVS_LM_CRITICAL,"Get stream configure fail."));
         return RET_FAIL;
     }
 
@@ -118,7 +118,7 @@ int32_t CMduConfig::init(const char* pCfgFile)
     return RET_OK;
 }
 
-int32_t CMduConfig::set(const char* sectionName, const char* itemName, const char* keyValue)const
+int32_t CStreamConfig::set(const char* sectionName, const char* itemName, const char* keyValue)const
 {
     CSVS_Config sysConfig(m_FileName);
     int32_t iRet;
@@ -126,7 +126,7 @@ int32_t CMduConfig::set(const char* sectionName, const char* itemName, const cha
     return iRet;
 }
 
-int32_t CMduConfig::handle_timeout(const ACE_Time_Value &tv, const void *arg)
+int32_t CStreamConfig::handle_timeout(const ACE_Time_Value &tv, const void *arg)
 {
     struct stat fileInfo;
     if (0 == stat(m_FileName, &fileInfo))
@@ -142,133 +142,122 @@ int32_t CMduConfig::handle_timeout(const ACE_Time_Value &tv, const void *arg)
     (void)CSVS_Daemon_Thread::instance()->reConfig(m_unCheckThreadInterval,
                                                    m_unRestartServerFlag,
                                                    m_unDumpServerFlag);
-    SVS_LOG((SVS_LM_INFO,"mdu config reload success."));
+    SVS_LOG((SVS_LM_INFO,"stream config reload success."));
     return 0;
 }
 
 // ���������ļ�ˢ�¶�ʱ�����������ڷ���һ��ʼ�ͳ�ʼ����
 // ��ʱ�����̻߳�û�����������Զ�ʱ�������ڷ���������󵥶�����
-int32_t CMduConfig::startReloadTimer()
+int32_t CStreamConfig::startReloadTimer()
 {
-    ACE_Reactor *pReactor = CMduServiceTask::instance()->getTimerReactor();
+    ACE_Reactor *pReactor = CStreamServiceTask::instance()->getTimerReactor();
     if (NULL == pReactor)
     {
         return RET_FAIL;
     }
 
-    ACE_Time_Value tv(MDU_CONFIG_RELOAD_INTERVAL, 0);
+    ACE_Time_Value tv(STREAM_CONFIG_RELOAD_INTERVAL, 0);
     int32_t TimerId = pReactor->schedule_timer(this, this, tv, tv);
     if (-1 == TimerId)
     {
-        SVS_LOG((SVS_LM_WARNING,"mdu config start reload timer fail."));
+        SVS_LOG((SVS_LM_WARNING,"stream config start reload timer fail."));
         return RET_FAIL;
     }
 
-    SVS_LOG((SVS_LM_INFO,"mdu config start reload timer[%d] success.", TimerId));
+    SVS_LOG((SVS_LM_INFO,"stream config start reload timer[%d] success.", TimerId));
     return RET_OK;
 }
 
 // ֹͣ�����ļ�ˢ�¶�ʱ��
-void CMduConfig::stopReloadTimer()
+void CStreamConfig::stopReloadTimer()
 {
-    ACE_Reactor *pReactor = CMduServiceTask::instance()->getTimerReactor();
+    ACE_Reactor *pReactor = CStreamServiceTask::instance()->getTimerReactor();
     if (NULL == pReactor)
     {
         return;
     }
 
     (void) pReactor->cancel_timer(this);
-    SVS_LOG((SVS_LM_INFO,"mdu config stop reload timer success."));
+    SVS_LOG((SVS_LM_INFO,"stream config stop reload timer success."));
 
     return;
 }
 
-/*****************************************************************************
- �� �� ��  : readMduConfigure
- ��������  : ��ȡMDU������
- �������  : CSVS_Config &sysConfig
- �������  : ��
- �� �� ֵ  : ȫ����ȡ�ɹ�,���� RET_OK
-             ������һ���������ȡʧ���򷵻� RET_FAIL
- �޸���ʷ      :
- 1. ��    ��   :
-    ��    ��   :
-    �޸�����   :
-*****************************************************************************/
-int32_t CMduConfig::readMduConfigure(CSVS_Config &sysConfig)
+
+int32_t CStreamConfig::readStreamConfigure(CSVS_Config &sysConfig)
 {
     if (RET_OK != readItemServiceId(sysConfig))
     {
-        SVS_LOG((SVS_LM_CRITICAL,"Get mdu id fail."));
+        SVS_LOG((SVS_LM_CRITICAL,"Get stream id fail."));
         return RET_FAIL;
     }
 
     if (RET_OK != readItemServiceName(sysConfig))
     {
-        SVS_LOG((SVS_LM_CRITICAL,"Get mdu name fail."));
+        SVS_LOG((SVS_LM_CRITICAL,"Get stream name fail."));
         return RET_FAIL;
     }
 
 
     if (RET_OK != readItemServiceNetType(sysConfig))
     {
-        SVS_LOG((SVS_LM_CRITICAL,"Get mdu service net type fail."));
+        SVS_LOG((SVS_LM_CRITICAL,"Get stream service net type fail."));
         return RET_FAIL;
     }
 
     if (RET_OK != readIntValue("SVS_STREAM",
                                "ServiceCapacity",
                                m_unServiceCapacity,
-                               MDU_SERVICE_CAPACITY_MAX,
+                               STREAM_SERVICE_CAPACITY_MAX,
                                1,
-                               MDU_SERVICE_CAPACITY_DEFAULT))
+                               STREAM_SERVICE_CAPACITY_DEFAULT))
     {
-        SVS_LOG((SVS_LM_CRITICAL,"Get mdu service capacity fail."));
+        SVS_LOG((SVS_LM_CRITICAL,"Get stream service capacity fail."));
         return RET_FAIL;
     }
 
     if (RET_OK != readIpValue("SVS_STREAM", "ServiceIp", m_unServiceIp))
     {
-        SVS_LOG((SVS_LM_CRITICAL,"Get mdu service ip fail."));
+        SVS_LOG((SVS_LM_CRITICAL,"Get stream service ip fail."));
         return RET_FAIL;
     }
 
     if (RET_OK != readItemServicePortList(sysConfig))
     {
-        SVS_LOG((SVS_LM_CRITICAL,"Get mdu service port list fail."));
+        SVS_LOG((SVS_LM_CRITICAL,"Get stream service port list fail."));
         return RET_FAIL;
     }
 
     if (RET_OK != readIntValue("SVS_STREAM",
                                "AccountPeriod",
                                m_unAccountPeriod,
-                               MDU_ACCOUNT_INTERVAL_MAX,
-                               MDU_ACCOUNT_INTERVAL_MIN,
-                               MDU_ACCOUNT_INTERVAL_DEFAULT))
+                               STREAM_ACCOUNT_INTERVAL_MAX,
+                               STREAM_ACCOUNT_INTERVAL_MIN,
+                               STREAM_ACCOUNT_INTERVAL_DEFAULT))
     {
-        SVS_LOG((SVS_LM_INFO,"Get mdu account period fail."));
+        SVS_LOG((SVS_LM_INFO,"Get stream account period fail."));
         return RET_FAIL;
     }
 
     if (RET_OK != readIntValue("SVS_STREAM",
                                "ReportPeriod",
                                m_unReportPeriod,
-                               MDU_REPORT_INTERVAL_MAX,
-                               MDU_REPORT_INTERVAL_MIN,
-                               MDU_REPORT_INTERVAL_DEFAULT))
+                               STREAM_REPORT_INTERVAL_MAX,
+                               STREAM_REPORT_INTERVAL_MIN,
+                               STREAM_REPORT_INTERVAL_DEFAULT))
     {
-        SVS_LOG((SVS_LM_INFO,"Get mdu report period fail."));
+        SVS_LOG((SVS_LM_INFO,"Get stream report period fail."));
         return RET_FAIL;
     }
 
     // decode tag
-    const char *szSectionMdu = "SVS_STREAM";
+    const char *szSectionStream = "SVS_STREAM";
     const char *szKeyServicePortList = "DecodeTag";
-    char buf[MDU_MAX_BUF_LEN] = {0};
-    if (RET_OK != sysConfig.get(szSectionMdu, szKeyServicePortList, buf))
+    char buf[STREAM_MAX_BUF_LEN] = {0};
+    if (RET_OK != sysConfig.get(szSectionStream, szKeyServicePortList, buf))
     {
         SVS_LOG((SVS_LM_WARNING,"Haven't found [%s:%s] in the config file.",
-                szSectionMdu,
+                szSectionStream,
                 szKeyServicePortList));
     }
 
@@ -278,7 +267,7 @@ int32_t CMduConfig::readMduConfigure(CSVS_Config &sysConfig)
     if (0 != sysConfig.get("SVS_SCHEDULE", "RegisterPasswd", m_strRegisterPasswd, sizeof(m_strRegisterPasswd) - 1))
     {
         SVS_LOG((SVS_LM_WARNING,
-            "Fail to init mdu server, get config item [SVS_SCHEDULE][RegisterPasswd] failed, "
+            "Fail to init stream server, get config item [SVS_SCHEDULE][RegisterPasswd] failed, "
             "will use empty register passwd"));
 
         return RET_FAIL;
@@ -291,9 +280,9 @@ int32_t CMduConfig::readMduConfigure(CSVS_Config &sysConfig)
     if (RET_FAIL == readIntValue("SVS_STREAM",
                                "UrlEffectiveWhile",
                                m_ulUrlEffectiveWhile,
-                               MDU_RTSP_ANTIHOTLINKING_TIME_LEN_MAX,
+                               STREAM_RTSP_ANTIHOTLINKING_TIME_LEN_MAX,
                                0,
-                               MDU_RTSP_ANTIHOTLINKING_TIME_LEN_DEFAULT))
+                               STREAM_RTSP_ANTIHOTLINKING_TIME_LEN_DEFAULT))
     {
         SVS_LOG((SVS_LM_INFO,"Get RtspUrlEffectiveWhile fail."));
         return RET_FAIL;
@@ -303,7 +292,7 @@ int32_t CMduConfig::readMduConfigure(CSVS_Config &sysConfig)
     SVS_LOG((SVS_LM_INFO,"success to load RtspUrlEffectiveWhile[%u].", m_ulUrlEffectiveWhile));
 
 
-    SVS_LOG((SVS_LM_INFO,"success to load MDU configure."));
+    SVS_LOG((SVS_LM_INFO,"success to load STREAM configure."));
     return RET_OK;
 }
 
@@ -318,13 +307,13 @@ int32_t CMduConfig::readMduConfigure(CSVS_Config &sysConfig)
     ��    ��   :
     �޸�����   :
 *****************************************************************************/
-int32_t CMduConfig::readMediaConfigure(CSVS_Config &sysConfig)
+int32_t CStreamConfig::readMediaConfigure(CSVS_Config &sysConfig)
 {
     const char* szSection = "MEDIA";
 
     if (RET_OK != readIpValue(szSection, "InternalMediaIp", m_unInternalMediaIp))
     {
-        SVS_LOG((SVS_LM_CRITICAL,"Get mdu internal media ip config fail."));
+        SVS_LOG((SVS_LM_CRITICAL,"Get stream internal media ip config fail."));
         return RET_FAIL;
     }
 
@@ -347,12 +336,12 @@ int32_t CMduConfig::readMediaConfigure(CSVS_Config &sysConfig)
 
     (void)readIntValue(szSection, "DistributeLimitPerChannel",
                        m_DistributeLimitPerChannel,
-                       MDU_SERVICE_CAPACITY_MAX, 1, MDU_SERVICE_CAPACITY_DEFAULT);
+                       STREAM_SERVICE_CAPACITY_MAX, 1, STREAM_SERVICE_CAPACITY_DEFAULT);
 
     return RET_OK;
 }
 
-void CMduConfig::checkMediaIp(const std::string &strIp, MDU_IP_LIST& ipList)const
+void CStreamConfig::checkMediaIp(const std::string &strIp, STREAM_IP_LIST& ipList)const
 {
     uint32_t unIp = ACE_OS::inet_addr(strIp.c_str());
     unIp = ACE_NTOHL(unIp);
@@ -362,7 +351,7 @@ void CMduConfig::checkMediaIp(const std::string &strIp, MDU_IP_LIST& ipList)cons
         return;
     }
 
-    for (MDU_IP_LIST::iterator iter = ipList.begin(); iter != ipList.end(); iter++)
+    for (STREAM_IP_LIST::iterator iter = ipList.begin(); iter != ipList.end(); iter++)
     {
         if (unIp == *iter)
         {
@@ -385,7 +374,7 @@ void CMduConfig::checkMediaIp(const std::string &strIp, MDU_IP_LIST& ipList)cons
     ��    ��   :
     �޸�����   :
 *****************************************************************************/
-int32_t CMduConfig::readSccConfigure()
+int32_t CStreamConfig::readSccConfigure()
 {
     if (RET_OK != readIpValue("SVS_SCHEDULE", "Ip", m_unSccIp))
     {
@@ -422,7 +411,7 @@ int32_t CMduConfig::readSccConfigure()
 }
 
 
-int32_t CMduConfig::readDebugConfigure(CSVS_Config &sysConfig)
+int32_t CStreamConfig::readDebugConfigure(CSVS_Config &sysConfig)
 {
     uint32_t Port;
     if (RET_OK != readIntValue("SVS_STREAM",
@@ -430,7 +419,7 @@ int32_t CMduConfig::readDebugConfigure(CSVS_Config &sysConfig)
                                Port,
                                0xFFFF,
                                1,
-                               DEFAULT_MDU_DEBUG_PORT))
+                               DEFAULT_STREAM_DEBUG_PORT))
     {
         SVS_LOG((SVS_LM_CRITICAL,"Get debug port fail."));
         return RET_FAIL;
@@ -440,36 +429,36 @@ int32_t CMduConfig::readDebugConfigure(CSVS_Config &sysConfig)
     return RET_OK;
 }
 
-int32_t CMduConfig::readItemServiceId(CSVS_Config &sysConfig)
+int32_t CStreamConfig::readItemServiceId(CSVS_Config &sysConfig)
 {
 
-    const char *szSectionMdu= "SVS_STREAM";
+    const char *szSectionStream= "SVS_STREAM";
 
     const char *szKeyID = "ID";
-    if (RET_OK != sysConfig.get(szSectionMdu, szKeyID, m_szMduID))
+    if (RET_OK != sysConfig.get(szSectionStream, szKeyID, m_szStreamID))
     {
         SVS_LOG((SVS_LM_CRITICAL,"Haven't found [%s:%s] in the config file.",
-            szSectionMdu, szKeyID));
+            szSectionStream, szKeyID));
         return RET_FAIL;
     }
 
-    if(RET_OK != checkDeviceID(m_szMduID))
+    if(RET_OK != checkDeviceID(m_szStreamID))
     {
-        SVS_LOG((SVS_LM_CRITICAL,"Invalid mdu id string, id[%s].", m_szMduID));
+        SVS_LOG((SVS_LM_CRITICAL,"Invalid stream id string, id[%s].", m_szStreamID));
 
         return RET_FAIL;
     }
     SVS_LOG((SVS_LM_INFO,"suceess to read [%s:%s], value [%s].",
-        szSectionMdu,
+        szSectionStream,
         szKeyID,
-        m_szMduID));
+        m_szStreamID));
 
     return RET_OK;
 }
 
 /*****************************************************************************
  �� �� ��  : readItemServiceName
- ��������  : ��ȡMDU������
+ ��������  : ��ȡSTREAM������
  �������  : CSVS_Config &sysConfig
  �������  : ��
  �� �� ֵ  : �ɹ���ȡ,���� RET_OK ���򷵻� RET_FAIL
@@ -478,26 +467,26 @@ int32_t CMduConfig::readItemServiceId(CSVS_Config &sysConfig)
     ��    ��   :
     �޸�����   :
 *****************************************************************************/
-int32_t CMduConfig::readItemServiceName(CSVS_Config &sysConfig)
+int32_t CStreamConfig::readItemServiceName(CSVS_Config &sysConfig)
 {
-    const char *szSectionMdu = "SVS_STREAM";
+    const char *szSectionStream = "SVS_STREAM";
 
-    // ��ȡMDU�����
+    // ��ȡSTREAM�����
     const char *szKeyName = "Name";
-    if (RET_OK != sysConfig.get(szSectionMdu, szKeyName, m_szMduName))
+    if (RET_OK != sysConfig.get(szSectionStream, szKeyName, m_szStreamName))
     {
         SVS_LOG((SVS_LM_CRITICAL,"Haven't found [%s:%s] in the config file.",
-            szSectionMdu,
+            szSectionStream,
             szKeyName));
         return RET_FAIL;
     }
-    // ����MDU����ַ���������һ���ֽ�Ϊ0,��ֹ��Ƴ���
-    m_szMduName[sizeof(m_szMduName) - 1] = 0;
+    // ����STREAM����ַ���������һ���ֽ�Ϊ0,��ֹ��Ƴ���
+    m_szStreamName[sizeof(m_szStreamName) - 1] = 0;
 
     SVS_LOG((SVS_LM_INFO,"suceess to read [%s:%s], value [%s].",
-            szSectionMdu,
+            szSectionStream,
             szKeyName,
-            m_szMduName));
+            m_szStreamName));
 
     return RET_OK;
 }
@@ -514,17 +503,17 @@ int32_t CMduConfig::readItemServiceName(CSVS_Config &sysConfig)
     ��    ��   :
     �޸�����   :
 *****************************************************************************/
-int32_t CMduConfig::readItemServiceNetType(CSVS_Config &sysConfig)
+int32_t CStreamConfig::readItemServiceNetType(CSVS_Config &sysConfig)
 {
-    const char *szSectionMdu = "SVS_STREAM";
+    const char *szSectionStream = "SVS_STREAM";
 
-    char buf[MDU_MAX_BUF_LEN] = {0,};
+    char buf[STREAM_MAX_BUF_LEN] = {0,};
 
     const char *szKeyServiceNetType = "ServiceNetType";
-    if (RET_OK != sysConfig.get(szSectionMdu, szKeyServiceNetType, buf))
+    if (RET_OK != sysConfig.get(szSectionStream, szKeyServiceNetType, buf))
     {
         SVS_LOG((SVS_LM_CRITICAL,"Haven't found [%s:%s] in the config file.",
-            szSectionMdu,
+            szSectionStream,
             szKeyServiceNetType));
         return RET_FAIL;
     }
@@ -532,15 +521,15 @@ int32_t CMduConfig::readItemServiceNetType(CSVS_Config &sysConfig)
 
     if(m_unServiceNetType == 0)
     {
-        m_unServiceNetType = MDU_SERVICE_NET_TYPE_DEFAULT;
+        m_unServiceNetType = STREAM_SERVICE_NET_TYPE_DEFAULT;
         SVS_LOG((SVS_LM_CRITICAL,"Invalid service net type, set the default value [%d].",
-            MDU_SERVICE_NET_TYPE_DEFAULT));
+            STREAM_SERVICE_NET_TYPE_DEFAULT));
 
         return RET_OK;
     }
 
     SVS_LOG((SVS_LM_INFO,"suceess to read [%s:%s], value [%d].",
-            szSectionMdu,
+            szSectionStream,
             szKeyServiceNetType,
             m_unServiceNetType));
 
@@ -558,17 +547,17 @@ int32_t CMduConfig::readItemServiceNetType(CSVS_Config &sysConfig)
     ��    ��   :
     �޸�����   :
 *****************************************************************************/
-int32_t CMduConfig::readItemServicePortList(CSVS_Config &sysConfig)
+int32_t CStreamConfig::readItemServicePortList(CSVS_Config &sysConfig)
 {
-    const char *szSectionMdu = "SVS_STREAM";
+    const char *szSectionStream = "SVS_STREAM";
 
-    char buf[MDU_MAX_BUF_LEN] = {0,};
+    char buf[STREAM_MAX_BUF_LEN] = {0,};
 
     const char *szKeyServicePortList = "ServicePortList";
-    if (RET_OK != sysConfig.get(szSectionMdu, szKeyServicePortList, buf))
+    if (RET_OK != sysConfig.get(szSectionStream, szKeyServicePortList, buf))
     {
         SVS_LOG((SVS_LM_CRITICAL,"Haven't found [%s:%s] in the config file.",
-            szSectionMdu,
+            szSectionStream,
             szKeyServicePortList));
         return RET_FAIL;
     }
@@ -588,14 +577,14 @@ int32_t CMduConfig::readItemServicePortList(CSVS_Config &sysConfig)
             if(m_usServicePortList[i] == 0)
             {
                 SVS_LOG((SVS_LM_CRITICAL,"failed to read [%s:%s], Invalid value [%s].",
-                    szSectionMdu,
+                    szSectionStream,
                     szKeyServicePortList,
                     strSub.c_str()));
                 return RET_FAIL;
             }
             m_unServicePortListNum++;
             SVS_LOG((SVS_LM_INFO,"suceess to read [%s:%s:%d], value [%s].",
-                szSectionMdu,
+                szSectionStream,
                 szKeyServicePortList,
                 m_unServicePortListNum,
                 strSub.c_str()));
@@ -606,14 +595,14 @@ int32_t CMduConfig::readItemServicePortList(CSVS_Config &sysConfig)
             if(m_usServicePortList[i] == 0)
             {
                 SVS_LOG((SVS_LM_CRITICAL,"failed to read [%s:%s], Invalid value [%s].",
-                    szSectionMdu,
+                    szSectionStream,
                     szKeyServicePortList,
                     strItemPortList.c_str()));
                 return RET_FAIL;
             }
             m_unServicePortListNum++;
             SVS_LOG((SVS_LM_INFO,"suceess to read [%s:%s:%d], value [%s].",
-                szSectionMdu,
+                szSectionStream,
                 szKeyServicePortList,
                 m_unServicePortListNum,
                 strItemPortList.c_str()));
@@ -623,7 +612,7 @@ int32_t CMduConfig::readItemServicePortList(CSVS_Config &sysConfig)
     if(m_unServicePortListNum == 0)
     {
             SVS_LOG((SVS_LM_CRITICAL,"failed to read [%s:%s], haven't found validata port.",
-                szSectionMdu,
+                szSectionStream,
                 szKeyServicePortList));
             return RET_FAIL;
     }
@@ -633,32 +622,32 @@ int32_t CMduConfig::readItemServicePortList(CSVS_Config &sysConfig)
 
 }
 
-int32_t CMduConfig::readItemMediaPortConfig(CSVS_Config &sysConfig)
+int32_t CStreamConfig::readItemMediaPortConfig(CSVS_Config &sysConfig)
 {
-    const char *szSectionMdu  = "MEDIA";
+    const char *szSectionStream  = "MEDIA";
     const char *szKeyTcpPort = "TcpMediaPort";
     const char *szKeyUdpPortList = "UdpMediaPort";
 
-    char buf[MDU_MAX_BUF_LEN] ={ 0, };
+    char buf[STREAM_MAX_BUF_LEN] ={ 0, };
 
     uint32_t unPort;
-    if (RET_OK != readIntValue(szSectionMdu,
+    if (RET_OK != readIntValue(szSectionStream,
                                szKeyTcpPort,
                                unPort,
                                0xFFFF,
                                1,
                                DEFAULT_TCP_RECV_MEDIA_PORT))
     {
-        SVS_LOG((SVS_LM_CRITICAL,"Get mdu tcp media port config fail."));
+        SVS_LOG((SVS_LM_CRITICAL,"Get stream tcp media port config fail."));
         return RET_FAIL;
     }
     m_usTcpMediaPort = (uint16_t)unPort;
 
-    memset(buf, 0x0, MDU_MAX_BUF_LEN);
-    if (RET_OK != sysConfig.get(szSectionMdu, szKeyUdpPortList, buf))
+    memset(buf, 0x0, STREAM_MAX_BUF_LEN);
+    if (RET_OK != sysConfig.get(szSectionStream, szKeyUdpPortList, buf))
     {
         SVS_LOG((SVS_LM_CRITICAL,"Haven't found [%s:%s] in the config file.",
-                szSectionMdu,
+                szSectionStream,
                 szKeyUdpPortList));
         return RET_FAIL;
     }
@@ -666,58 +655,58 @@ int32_t CMduConfig::readItemMediaPortConfig(CSVS_Config &sysConfig)
     if (RET_OK != parsePortList(buf, m_stUdpMediaPort))
     {
         SVS_LOG((SVS_LM_CRITICAL,"parse [%s:%s] fail, config value[%s].",
-                                szSectionMdu,
+                                szSectionStream,
                                 szKeyUdpPortList,
                                 buf));
         return RET_FAIL;
     }
 
 
-    if (RET_OK != readIntValue(szSectionMdu,
+    if (RET_OK != readIntValue(szSectionStream,
                                "RtspServerPort",
                                unPort,
                                0xFFFF,
                                1,
                                DEFAULT_RTSP_SERVER_PORT))
     {
-        SVS_LOG((SVS_LM_CRITICAL,"Get mdu rtsp server port config  fail."));
+        SVS_LOG((SVS_LM_CRITICAL,"Get stream rtsp server port config  fail."));
         return RET_FAIL;
     }
     m_usRtspServerPort = (uint16_t) unPort;
 
-    if (RET_OK != readIntValue(szSectionMdu,
+    if (RET_OK != readIntValue(szSectionStream,
                                "HlsServerPort",
                                unPort,
                                0xFFFF,
                                0,
                                DEFAULT_HLS_SERVER_PORT))
     {
-        SVS_LOG((SVS_LM_CRITICAL,"Get mdu hls server port config  fail."));
+        SVS_LOG((SVS_LM_CRITICAL,"Get stream hls server port config  fail."));
         return RET_FAIL;
     }
     m_usHlsServerPort = (uint16_t) unPort;
 
-    if (RET_OK != readIntValue(szSectionMdu,
+    if (RET_OK != readIntValue(szSectionStream,
                                "RtmpServerPort",
                                unPort,
                                0xFFFF,
                                0,
                                DEFAULT_HLS_SERVER_PORT))
     {
-        SVS_LOG((SVS_LM_CRITICAL,"Get mdu rtmp server port config  fail."));
+        SVS_LOG((SVS_LM_CRITICAL,"Get stream rtmp server port config  fail."));
         return RET_FAIL;
     }
     m_usRtmpServerPort = (uint16_t) unPort;
 
 
-    if (RET_OK != readIntValue(szSectionMdu,
+    if (RET_OK != readIntValue(szSectionStream,
                                "RecordMediaPort",
                                unPort,
                                0xFFFF,
                                1,
                                DEFAULT_RECORD_MEDIA_PORT))
     {
-        SVS_LOG((SVS_LM_CRITICAL,"Get mdu record media port config  fail."));
+        SVS_LOG((SVS_LM_CRITICAL,"Get stream record media port config  fail."));
         return RET_FAIL;
     }
     m_usRecordMediaPort = (uint16_t) unPort;
@@ -725,24 +714,24 @@ int32_t CMduConfig::readItemMediaPortConfig(CSVS_Config &sysConfig)
     return RET_OK;
 }
 
-int32_t CMduConfig::readItemEhomeMediaPortConfig(CSVS_Config &sysConfig)
+int32_t CStreamConfig::readItemEhomeMediaPortConfig(CSVS_Config &sysConfig)
 {
-    const char *szSectionMdu  = "MEDIA";
+    const char *szSectionStream  = "MEDIA";
     const char *szEnableEhome = "EhomePortSwitch";
     const char *szEhomeTrans  = "EhomeTransType";
     const char *szEhomePortList = "EhomeMediaPort";
 
-    char buf[MDU_MAX_BUF_LEN] ={ 0, };
+    char buf[STREAM_MAX_BUF_LEN] ={ 0, };
 
     uint32_t unEnable;
-    if (RET_OK != readIntValue(szSectionMdu,
+    if (RET_OK != readIntValue(szSectionStream,
                                szEnableEhome,
                                unEnable,
                                1,
                                0,
                                0))
     {
-        SVS_LOG((SVS_LM_WARNING,"Get mdu ehome enable media flag config fail."));
+        SVS_LOG((SVS_LM_WARNING,"Get stream ehome enable media flag config fail."));
         m_usEnableEhome = 0;
         return RET_OK;
     }
@@ -750,24 +739,24 @@ int32_t CMduConfig::readItemEhomeMediaPortConfig(CSVS_Config &sysConfig)
 
     uint32_t unEhomeTransType;
 
-    if (RET_OK != readIntValue(szSectionMdu,
+    if (RET_OK != readIntValue(szSectionStream,
                                szEhomeTrans,
                                unEhomeTransType,
                                1,
                                0,
                                0))
     {
-        SVS_LOG((SVS_LM_WARNING,"Get mdu ehome transtype media flag config fail."));
+        SVS_LOG((SVS_LM_WARNING,"Get stream ehome transtype media flag config fail."));
         m_usEhomeTransType = 0;
         return RET_OK;
     }
     m_usEhomeTransType = unEhomeTransType;
 
-    memset(buf, 0x0, MDU_MAX_BUF_LEN);
-    if (RET_OK != sysConfig.get(szSectionMdu, szEhomePortList, buf))
+    memset(buf, 0x0, STREAM_MAX_BUF_LEN);
+    if (RET_OK != sysConfig.get(szSectionStream, szEhomePortList, buf))
     {
         SVS_LOG((SVS_LM_WARNING,"Haven't found [%s:%s] in the config file.",
-                szSectionMdu,
+                szSectionStream,
                 szEhomePortList));
         m_usEnableEhome = 0;
         return RET_OK;
@@ -776,7 +765,7 @@ int32_t CMduConfig::readItemEhomeMediaPortConfig(CSVS_Config &sysConfig)
     if (RET_OK != parsePortList(buf, m_stEhomeMediaPort))
     {
         SVS_LOG((SVS_LM_CRITICAL,"parse [%s:%s] fail, config value[%s].",
-                                szSectionMdu,
+                                szSectionStream,
                                 szEhomePortList,
                                 buf));
         return RET_FAIL;
@@ -786,7 +775,7 @@ int32_t CMduConfig::readItemEhomeMediaPortConfig(CSVS_Config &sysConfig)
 }
 
 
-int32_t CMduConfig::readIpValue
+int32_t CStreamConfig::readIpValue
 (
     const char*   section,
     const char*   key,
@@ -804,7 +793,7 @@ int32_t CMduConfig::readIpValue
     }
 
     CSVS_Config sysConfig(m_FileName);
-    char szIp[MDU_IP_ADDR_LEN] = {0};
+    char szIp[STREAM_IP_ADDR_LEN] = {0};
     if (RET_OK != sysConfig.get(section, key, szIp))
     {
         SVS_LOG((SVS_LM_CRITICAL,"Haven't found [%s:%s] in the config file.",
@@ -828,11 +817,11 @@ int32_t CMduConfig::readIpValue
 
 }
 
-int32_t CMduConfig::readIpList
+int32_t CStreamConfig::readIpList
 (
     const char*   section,
     const char*   key,
-    MDU_IP_LIST&  ipList
+    STREAM_IP_LIST&  ipList
 )const
 {
     if (NULL == section)
@@ -846,7 +835,7 @@ int32_t CMduConfig::readIpList
     }
 
     CSVS_Config sysConfig(m_FileName);
-    char  szMediaIp[MDU_MAX_BUF_LEN] = { 0 };
+    char  szMediaIp[STREAM_MAX_BUF_LEN] = { 0 };
     if (RET_OK == sysConfig.get(section, key, szMediaIp))
     {
         std::string strIpConfig = szMediaIp;
@@ -871,7 +860,7 @@ int32_t CMduConfig::readIpList
 
         if (ipList.empty())
         {
-            SVS_LOG((SVS_LM_CRITICAL,"Get mdu [%s:%s] config fail, no invalid ip.", section, key));
+            SVS_LOG((SVS_LM_CRITICAL,"Get stream [%s:%s] config fail, no invalid ip.", section, key));
             return RET_FAIL;
         }
 
@@ -885,7 +874,7 @@ int32_t CMduConfig::readIpList
     return RET_OK;
 }
 
-int32_t CMduConfig::readIntValue
+int32_t CStreamConfig::readIntValue
 (
     const char*   section,
     const char*   key,
@@ -909,7 +898,7 @@ int32_t CMduConfig::readIntValue
 
     value = defaultValue;
 
-    char buf[MDU_MAX_BUF_LEN] = {0};
+    char buf[STREAM_MAX_BUF_LEN] = {0};
     if (RET_OK != sysConfig.get(section, key, buf))
     {
         SVS_LOG((SVS_LM_WARNING,"Haven't found [%s:%s] in the config file set default value [%d].",
@@ -935,7 +924,7 @@ int32_t CMduConfig::readIntValue
 }
 
 
-int32_t CMduConfig::checkPortRange(uint16_t usPortRangeNum, const PortRange *pstPortRange) const
+int32_t CStreamConfig::checkPortRange(uint16_t usPortRangeNum, const PortRange *pstPortRange) const
 {
     int32_t i = 0;
     int32_t j = 0;
@@ -958,7 +947,7 @@ int32_t CMduConfig::checkPortRange(uint16_t usPortRangeNum, const PortRange *pst
             pstPortRange[i].usEndPort ==0 || pstPortRange[i].usStartPort ==0)
         {
             SVS_LOG((SVS_LM_ERROR,
-                "CMduConfig::checkPortRange fail, port range [%d-%d] is abnormal.",
+                "CStreamConfig::checkPortRange fail, port range [%d-%d] is abnormal.",
                 pstPortRange[i].usStartPort,
                 pstPortRange[i].usEndPort));
             return RET_FAIL;
@@ -1011,7 +1000,7 @@ int32_t CMduConfig::checkPortRange(uint16_t usPortRangeNum, const PortRange *pst
     return RET_OK;
 }
 
-int32_t CMduConfig::checkDeviceID(const char *pszDevID) const
+int32_t CStreamConfig::checkDeviceID(const char *pszDevID) const
 {
     if (NULL == pszDevID)
     {
@@ -1042,7 +1031,7 @@ int32_t CMduConfig::checkDeviceID(const char *pszDevID) const
     return RET_OK;
 }
 
-int32_t CMduConfig::parsePortList(const char* pPortbuf, MediaPortConfig &config) const
+int32_t CStreamConfig::parsePortList(const char* pPortbuf, MediaPortConfig &config) const
 {
     std::string strItemPortRange = pPortbuf;
     std::string strSub;
@@ -1100,60 +1089,60 @@ int32_t CMduConfig::parsePortList(const char* pPortbuf, MediaPortConfig &config)
     return RET_OK;
 }
 
-const char* CMduConfig::getServiceId() const
+const char* CStreamConfig::getServiceId() const
 {
-    return m_szMduID;
+    return m_szStreamID;
 }
 
 
-const char* CMduConfig::getServiceName() const
+const char* CStreamConfig::getServiceName() const
 {
-    return m_szMduName;
+    return m_szStreamName;
 }
 
 
-uint32_t CMduConfig::getServiceNetType() const
+uint32_t CStreamConfig::getServiceNetType() const
 {
     return m_unServiceNetType;
 }
 
 
-uint32_t CMduConfig::getServiceCapacity() const
+uint32_t CStreamConfig::getServiceCapacity() const
 {
     return m_unServiceCapacity;
 }
 
 
-uint32_t CMduConfig::getServiceIp() const
+uint32_t CStreamConfig::getServiceIp() const
 {
     return m_unServiceIp;
 }
 
-void CMduConfig::getServicePortList(uint16_t *&pusServicePortList,
+void CStreamConfig::getServicePortList(uint16_t *&pusServicePortList,
                                     uint32_t &unArrayItemNum)
 {
     pusServicePortList = m_usServicePortList;
     unArrayItemNum     = m_unServicePortListNum;
 }
 
-uint32_t CMduConfig::getInternalMediaIp() const
+uint32_t CStreamConfig::getInternalMediaIp() const
 {
     return m_unInternalMediaIp;
 }
 
-void CMduConfig::getExternalMediaIpList(MDU_IP_LIST &ipList) const
+void CStreamConfig::getExternalMediaIpList(STREAM_IP_LIST &ipList) const
 {
     ipList.clear();
     ipList =  m_ExternalMediaIpList;
     return;
 }
 
-uint32_t CMduConfig::getInternalReportIp() const
+uint32_t CStreamConfig::getInternalReportIp() const
 {
     return m_unInternalReportIp;
 }
 
-void CMduConfig::getExternalReportIpList(MDU_IP_LIST &ipList) const
+void CStreamConfig::getExternalReportIpList(STREAM_IP_LIST &ipList) const
 {
     ipList.clear();
     ipList =  m_ExternalReportIpList;
@@ -1161,111 +1150,111 @@ void CMduConfig::getExternalReportIpList(MDU_IP_LIST &ipList) const
 }
 
 
-void CMduConfig::getUdpMediaPortConfig(MediaPortConfig* &pUdpConfig)
+void CStreamConfig::getUdpMediaPortConfig(MediaPortConfig* &pUdpConfig)
 {
     pUdpConfig = &m_stUdpMediaPort;
 }
-uint16_t CMduConfig::getEnableEhome() const
+uint16_t CStreamConfig::getEnableEhome() const
 {
     return m_usEnableEhome;
 }
-uint16_t CMduConfig::getEhomeTransType() const
+uint16_t CStreamConfig::getEhomeTransType() const
 {
     return m_usEhomeTransType;
 }
 
-void CMduConfig::getEhomeMediaPortConfig(MediaPortConfig* &pEhomeConfig)
+void CStreamConfig::getEhomeMediaPortConfig(MediaPortConfig* &pEhomeConfig)
 {
     pEhomeConfig = &m_stEhomeMediaPort;
 }
 
 
-uint16_t CMduConfig::getTcpMediaPort()const
+uint16_t CStreamConfig::getTcpMediaPort()const
 {
     return m_usTcpMediaPort;
 }
 
-uint16_t CMduConfig::getRecordMediaPort() const
+uint16_t CStreamConfig::getRecordMediaPort() const
 {
     return m_usRecordMediaPort;
 }
 
-uint16_t CMduConfig::getRtspServerPort() const
+uint16_t CStreamConfig::getRtspServerPort() const
 {
     return m_usRtspServerPort;
 }
 
-uint16_t CMduConfig::getRtmpServerPort() const
+uint16_t CStreamConfig::getRtmpServerPort() const
 {
     return m_usRtmpServerPort;
 }
 
-uint16_t CMduConfig::getHLSServerPort() const
+uint16_t CStreamConfig::getHLSServerPort() const
 {
     return m_usHlsServerPort;
 }
 
 
-uint32_t CMduConfig::getDistributeLimitPerChannel()const
+uint32_t CStreamConfig::getDistributeLimitPerChannel()const
 {
     return m_DistributeLimitPerChannel;
 }
 
 
-uint32_t CMduConfig::getAccountPeriod() const
+uint32_t CStreamConfig::getAccountPeriod() const
 {
     return m_unAccountPeriod;
 }
 
 
-uint32_t CMduConfig::getReportPeriod() const
+uint32_t CStreamConfig::getReportPeriod() const
 {
     return m_unReportPeriod;
 }
 
 
-uint32_t CMduConfig::getSccIp() const
+uint32_t CStreamConfig::getSccIp() const
 {
     return m_unSccIp;
 }
 
 
-uint16_t CMduConfig::getSccPort() const
+uint16_t CStreamConfig::getSccPort() const
 {
     return m_usSccPort;
 }
 
-uint32_t  CMduConfig::getSccHeartbeatInterval() const
+uint32_t  CStreamConfig::getSccHeartbeatInterval() const
 {
     return m_unSccHeartbeat;
 }
 
-uint16_t  CMduConfig::getDebugPort() const
+uint16_t  CStreamConfig::getDebugPort() const
 {
     return m_usDebugPort;
 }
 
-uint32_t CMduConfig::getDebugCheckThreadInterval() const
+uint32_t CStreamConfig::getDebugCheckThreadInterval() const
 {
     return m_unCheckThreadInterval;
 }
 
-uint32_t CMduConfig::getDebugRestartServerFlag() const
+uint32_t CStreamConfig::getDebugRestartServerFlag() const
 {
     return m_unRestartServerFlag;
 }
 
-uint32_t CMduConfig::getDebugDumpServerFlag() const
+uint32_t CStreamConfig::getDebugDumpServerFlag() const
 {
     return m_unDumpServerFlag;
 }
 
-uint32_t CMduConfig::getUrlEffectiveWhile()const
+uint32_t CStreamConfig::getUrlEffectiveWhile()const
 {
     return m_ulUrlEffectiveWhile;
 }
 
-const char* CMduConfig::GetRegisterPasswd()const
+const char* CStreamConfig::GetRegisterPasswd()const
 {
     return m_strRegisterPasswd;
 }

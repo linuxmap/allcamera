@@ -295,7 +295,7 @@ bool CTcpHandle::checkHandleStatus(uint64_t ullStreamID, uint32_t unTimeout)
                             ullStreamID,
                             getLocalAddr().get_port_number(),ulNow,iter->second.StartTime));
 
-        //if (SVS_GetSecondTime() - iter->second.StartTime >= unTimeout)MDU_CONNECT_ABNORMAL_INTERVAL
+        //if (SVS_GetSecondTime() - iter->second.StartTime >= unTimeout)STREAM_CONNECT_ABNORMAL_INTERVAL
         if (ulNow - iter->second.StartTime >= 20 )
         {
             SVS_LOG((SVS_LM_INFO,"stream[%Q] check tcp handle[%d] status fail, connect is null.current time [%u], start time [%u].",

@@ -1,19 +1,19 @@
 /*
- * MduNetMessage.h
+ * StreamNetMessage.h
  *
  *  Created on: 2016-1-16
  *      Author:
  */
 
-#ifndef MDUNETMESSAGE_H_
-#define MDUNETMESSAGE_H_
+#ifndef STREAMNETMESSAGE_H_
+#define STREAMNETMESSAGE_H_
 #include <vms/vms.h>
-class CMduNatMessage
+class CStreamNatMessage
 {
 public:
-    CMduNatMessage();
-    CMduNatMessage(const CMduNatMessage &natMsg);
-    virtual ~CMduNatMessage();
+    CStreamNatMessage();
+    CStreamNatMessage(const CStreamNatMessage &natMsg);
+    virtual ~CStreamNatMessage();
 
     void init(void* pRecvHandle,
             uint32_t  unMsgSeq,
@@ -35,4 +35,4 @@ public:
     uint16_t  m_usNatPort;
 };
 
-#endif /* MDUNETMESSAGE_H_ */
+#endif /* STREAMNETMESSAGE_H_ */

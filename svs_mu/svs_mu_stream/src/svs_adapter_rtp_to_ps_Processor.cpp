@@ -34,7 +34,7 @@ CRtp2PsProcessor::~CRtp2PsProcessor()
 
 int32_t CRtp2PsProcessor::Init(uint64_t ullSendSessionID)
 {
-    if (RET_OK != CMduMediaProcessor::Init(ullSendSessionID))
+    if (RET_OK != CStreamMediaProcessor::Init(ullSendSessionID))
     {
         return RET_FAIL;
     }
@@ -376,14 +376,14 @@ uint8_t CRtp2PsProcessor::GetRecvVideoPT()
         return m_ucRecvVideoPT;
     }
 
-    CMduBusiness* pBusiness = CMduBusinessManager::instance()->findBusiness(m_SendSessionId);
+    CStreamBusiness* pBusiness = CStreamBusinessManager::instance()->findBusiness(m_SendSessionId);
     if(NULL == pBusiness )
     {
         SVS_LOG((SVS_LM_WARNING,"fine send Session:[%ull]'s Business fail.",m_SendSessionId));
         return m_ucRecvVideoPT;
     }
 
-    CMduSession* pRecvSession = CMduSessionFactory::instance()->findSession(pBusiness->getRecvStreamID());
+    CStreamSession* pRecvSession = CStreamSessionFactory::instance()->findSession(pBusiness->getRecvStreamID());
     if(NULL == pRecvSession )
     {
         SVS_LOG((SVS_LM_WARNING,"fine recv Session:[%ull] fail,send session:[%ull]",
@@ -394,8 +394,8 @@ uint8_t CRtp2PsProcessor::GetRecvVideoPT()
         m_ucRecvVideoPT = pRecvSession->getVideoPayload();
     }
 
-    CMduSessionFactory::instance()->releaseSession(pRecvSession);
-    CMduBusinessManager::instance()->releaseBusiness(pBusiness);
+    CStreamSessionFactory::instance()->releaseSession(pRecvSession);
+    CStreamBusinessManager::instance()->releaseBusiness(pBusiness);
 
     return m_ucRecvVideoPT;
 }

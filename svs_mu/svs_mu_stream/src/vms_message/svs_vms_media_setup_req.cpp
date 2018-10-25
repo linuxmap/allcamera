@@ -1,5 +1,5 @@
 /*
- * MduMediaSetupReq.cpp
+ * StreamMediaSetupReq.cpp
  *
  *  Created on: 2016-5-18
  *      Author:
@@ -9,32 +9,32 @@
 #include "svs_vms_media_setup_req.h"
 #include "svs_adapter_service_task.h"
 
-CMduMediaSetupReq::CMduMediaSetupReq()
+CStreamMediaSetupReq::CStreamMediaSetupReq()
 {
     m_pReq       = NULL;
     m_strRtspUrl = "";
 }
 
-CMduMediaSetupReq::~CMduMediaSetupReq()
+CStreamMediaSetupReq::~CStreamMediaSetupReq()
 {
     m_pReq       = NULL;
 }
 
-int32_t CMduMediaSetupReq::create(uint32_t unLength,
+int32_t CStreamMediaSetupReq::create(uint32_t unLength,
             uint32_t unTransNo)
 {
-    int32_t nRet = CMduSvsMessage::create(unLength, unTransNo);
+    int32_t nRet = CStreamSvsMessage::create(unLength, unTransNo);
     if (RET_OK != nRet)
     {
         return nRet;
     }
 
-    m_pReq = (SVS_MSG_MDU_SESSION_SETUP_REQ*)(void*)getBinaryData();
+    m_pReq = (SVS_MSG_STREAM_SESSION_SETUP_REQ*)(void*)getBinaryData();
 
     return RET_OK;
 }
 
-int32_t CMduMediaSetupReq::initMsgBody(uint32_t unLocalIndex,const char* pszDevID,
+int32_t CStreamMediaSetupReq::initMsgBody(uint32_t unLocalIndex,const char* pszDevID,
                                        PLAY_URL_TYPE UrlType,PLAY_TYPE PlayType,
                                        const char* pRtspUrl,const char* pSdpInfo,
                                        uint32_t MediaLinkMode,const char* pszMediaIP,uint16_t usMediaPort)
@@ -46,7 +46,7 @@ int32_t CMduMediaSetupReq::initMsgBody(uint32_t unLocalIndex,const char* pszDevI
 
     m_strRtspUrl = pRtspUrl;
     m_strSdp     = pSdpInfo;
-    if (getLength() < sizeof(SVS_MSG_MDU_SESSION_SETUP_REQ))
+    if (getLength() < sizeof(SVS_MSG_STREAM_SESSION_SETUP_REQ))
     {
         return RET_FAIL;
     }
@@ -70,24 +70,24 @@ int32_t CMduMediaSetupReq::initMsgBody(uint32_t unLocalIndex,const char* pszDevI
     return RET_OK;
 }
 
-uint32_t CMduMediaSetupReq::getMsgType()
+uint32_t CStreamMediaSetupReq::getMsgType()
 {
-    return SVS_MSG_TYPE_MDU_SESSION_SETUP_REQ;
+    return SVS_MSG_TYPE_STREAM_SESSION_SETUP_REQ;
 }
 
-int32_t CMduMediaSetupReq::handleMessage()
+int32_t CStreamMediaSetupReq::handleMessage()
 {
-    return CMduServiceTask::instance()->sendMsgToSCC(this);
+    return CStreamServiceTask::instance()->sendMsgToSCC(this);
 }
 
-void CMduMediaSetupReq::dump() const
+void CStreamMediaSetupReq::dump() const
 {
     if (NULL == m_pReq)
     {
         return;
     }
 
-    CMduSvsMessage::dump();
+    CStreamSvsMessage::dump();
 
     SVS_LOG((SVS_LM_DEBUG,"MessageBody:"));
     SVS_LOG((SVS_LM_DEBUG,"\tLocalIndex: %u", m_pReq->LocalIndex));

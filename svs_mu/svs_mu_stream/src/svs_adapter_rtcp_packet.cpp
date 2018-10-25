@@ -44,11 +44,11 @@ uint32_t CRtcpPacket::getPeerSSRC() const
     return m_unReporteeSSRC;
 }
 
-// 设置本地Ip,将用来构造CNAME:  mdu@local_ip
+// 设置本地Ip,将用来构造CNAME:  stream@local_ip
 void CRtcpPacket::setLocalIp(uint32_t unLocalIp)
 {
     ACE_INET_Addr addr((uint16_t)0, unLocalIp);
-    m_strCname = "mdu@";
+    m_strCname = "stream@";
     m_strCname += addr.get_host_addr();
 
     return;

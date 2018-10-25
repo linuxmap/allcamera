@@ -21,12 +21,12 @@
 
 int32_t CLoadReportTimer::handle_timeout(const ACE_Time_Value &tv, const void *arg)
 {
-    CMduServiceTask::instance()->sendSysLoadReport();
+    CStreamServiceTask::instance()->sendSysLoadReport();
     return 0;
 }
 
-CMduServiceTask* CMduServiceTask::g_mduServiceTask = NULL;
-CMduServiceTask::CMduServiceTask()
+CStreamServiceTask* CStreamServiceTask::g_streamServiceTask = NULL;
+CStreamServiceTask::CStreamServiceTask()
 {
     m_bRunFlag        = true;
     m_pSccConnect     = NULL;
@@ -37,7 +37,7 @@ CMduServiceTask::CMduServiceTask()
     m_pLoadReportTimer = NULL;
 }
 
-CMduServiceTask::~CMduServiceTask()
+CStreamServiceTask::~CStreamServiceTask()
 {
     try
     {
@@ -57,9 +57,9 @@ CMduServiceTask::~CMduServiceTask()
 
 }
 
-int32_t CMduServiceTask::openServiceTask()
+int32_t CStreamServiceTask::openServiceTask()
 {
-    SVS_LOG((SVS_LM_INFO,"start open mdu service task."));
+    SVS_LOG((SVS_LM_INFO,"start open stream service task."));
 
     m_bRunFlag  = true;
     if (RET_OK != openDeubgger())
@@ -77,7 +77,7 @@ int32_t CMduServiceTask::openServiceTask()
     nRet = createServiceThreads();
     if (RET_OK != nRet)
     {
-        SVS_LOG((SVS_LM_CRITICAL,"create mdu service threads fail, ret[%d].", nRet));
+        SVS_LOG((SVS_LM_CRITICAL,"create stream service threads fail, ret[%d].", nRet));
         return RET_FAIL;
     }
 
@@ -89,7 +89,7 @@ int32_t CMduServiceTask::openServiceTask()
     }
 
     //RTSP Server
-    nRet = CMduRtspService::instance().open();
+    nRet = CStreamRtspService::instance().open();
     if (RET_OK != nRet)
     {
         SVS_LOG((SVS_LM_CRITICAL,"start rtsp service fail, ret[%d].", nRet));
@@ -97,7 +97,7 @@ int32_t CMduServiceTask::openServiceTask()
     }
 
     //RTMP Server
-    nRet = CMduRtmpService::instance().open();
+    nRet = CStreamRtmpService::instance().open();
     if (RET_OK != nRet)
     {
         SVS_LOG((SVS_LM_CRITICAL,"start rtmp service fail, ret[%d].", nRet));
@@ -111,11 +111,11 @@ int32_t CMduServiceTask::openServiceTask()
         return RET_FAIL;
     }
 
-    SVS_LOG((SVS_LM_INFO,"open mdu service task success."));
+    SVS_LOG((SVS_LM_INFO,"open stream service task success."));
     return RET_OK;
 }
 
-int32_t CMduServiceTask::svc()
+int32_t CStreamServiceTask::svc()
 {
     (void)signal(SIGPIPE, SIG_IGN);
 
@@ -139,12 +139,12 @@ int32_t CMduServiceTask::svc()
             innerMsgHandleThread();
             break;
         }
-        case MDU_TIMER_THREAD:
+        case STREAM_TIMER_THREAD:
         {
-            mduTimerManagerThread();
+            streamTimerManagerThread();
             break;
         }
-        case MDU_DEBUG_THREAD:
+        case STREAM_DEBUG_THREAD:
         {
             debugThread();
             break;
@@ -159,7 +159,7 @@ int32_t CMduServiceTask::svc()
     return RET_OK;
 }
 
-int32_t CMduServiceTask::sendMsgToSCC(const CMduSvsMessage* pMessage)
+int32_t CStreamServiceTask::sendMsgToSCC(const CStreamSvsMessage* pMessage)
 {
     if (NULL == pMessage)
     {
@@ -176,9 +176,9 @@ int32_t CMduServiceTask::sendMsgToSCC(const CMduSvsMessage* pMessage)
     return m_pSccConnect->sendMessage(pMessage->getBinaryData(), pMessage->getLength());
 }
 
-void CMduServiceTask::closeServiceTask()
+void CStreamServiceTask::closeServiceTask()
 {
-    SVS_LOG((SVS_LM_CRITICAL,"CMduServiceTask::closeServiceTask begin."));
+    SVS_LOG((SVS_LM_CRITICAL,"CStreamServiceTask::closeServiceTask begin."));
     if (NULL != m_pSccConnect)
     {
         m_pSccConnect->closeConnector();
@@ -194,18 +194,18 @@ void CMduServiceTask::closeServiceTask()
 
     (void)wait();
 
-    SVS_LOG((SVS_LM_CRITICAL,"CMduServiceTask::closeServiceTask end."));
+    SVS_LOG((SVS_LM_CRITICAL,"CStreamServiceTask::closeServiceTask end."));
     return;
 }
 
-int32_t CMduServiceTask::enqueueInnerMessage(ACE_Message_Block* pMsg)
+int32_t CStreamServiceTask::enqueueInnerMessage(ACE_Message_Block* pMsg)
 {
     if (NULL== pMsg)
     {
         return RET_FAIL;
     }
 
-    ACE_Time_Value tv = ACE_Time_Value(ACE_OS::gettimeofday()) + ACE_Time_Value(0, MDU_MAX_QUEUE_DELAY);
+    ACE_Time_Value tv = ACE_Time_Value(ACE_OS::gettimeofday()) + ACE_Time_Value(0, STREAM_MAX_QUEUE_DELAY);
     int32_t lRet = m_MediaMsgQueue.enqueue_tail(pMsg, &tv);
     if (-1 == lRet)
     {
@@ -216,39 +216,39 @@ int32_t CMduServiceTask::enqueueInnerMessage(ACE_Message_Block* pMsg)
     return RET_OK;
 }
 
-ACE_Reactor*  CMduServiceTask::getTimerReactor()
+ACE_Reactor*  CStreamServiceTask::getTimerReactor()
 {
     return m_pTimerReactor;
 }
 
-CMduSccConnector* CMduServiceTask::getSccConnector()
+CStreamSccConnector* CStreamServiceTask::getSccConnector()
 {
     return m_pSccConnect;
 }
 
 
-void CMduServiceTask::sendSysLoadReport() const
+void CStreamServiceTask::sendSysLoadReport() const
 {
-    MDU_IP_LIST ipList;
-    uint32_t unInternalIp = CMduConfig::instance()->getInternalMediaIp();
-    CMduConfig::instance()->getExternalMediaIpList(ipList);
+    STREAM_IP_LIST ipList;
+    uint32_t unInternalIp = CStreamConfig::instance()->getInternalMediaIp();
+    CStreamConfig::instance()->getExternalMediaIpList(ipList);
 
     ipList.push_front(unInternalIp);
-    uint32_t unMsgLen = sizeof(SVS_MSG_MDU_LOAD_INFO_REQ)
+    uint32_t unMsgLen = sizeof(SVS_MSG_STREAM_LOAD_INFO_REQ)
                                    + (ipList.size() - 1) * sizeof(NETWORK_CARD_INFO);
-    CMduSvsMessage *pSvsMessage = NULL;
-    int32_t nRet = CMduMsgFactory::instance()->createSvsMsg(SVS_MSG_TYPE_MDU_LOAD_INFO_REQ,
+    CStreamSvsMessage *pSvsMessage = NULL;
+    int32_t nRet = CStreamMsgFactory::instance()->createSvsMsg(SVS_MSG_TYPE_STREAM_LOAD_INFO_REQ,
                                              unMsgLen,
-                                             CMduMsgFactory::instance()->getReqTransactionNo(),
+                                             CStreamMsgFactory::instance()->getReqTransactionNo(),
                                              pSvsMessage);
     if ((RET_OK != nRet) || (NULL == pSvsMessage))
     {
-        CMduMsgFactory::instance()->destroySvsMsg(pSvsMessage);
+        CStreamMsgFactory::instance()->destroySvsMsg(pSvsMessage);
         SVS_LOG((SVS_LM_INFO,"Send load report to scc fail, create message fail."));
         return;
     }
 
-    CMduLoadInfoReq *pLoadInfo = dynamic_cast<CMduLoadInfoReq *>(pSvsMessage);
+    CStreamLoadInfoReq *pLoadInfo = dynamic_cast<CStreamLoadInfoReq *>(pSvsMessage);
     if (NULL == pLoadInfo)
     {
         return;
@@ -256,24 +256,24 @@ void CMduServiceTask::sendSysLoadReport() const
 
     if (RET_OK != pLoadInfo->initMsgBody())
     {
-        CMduMsgFactory::instance()->destroySvsMsg(pSvsMessage);
+        CStreamMsgFactory::instance()->destroySvsMsg(pSvsMessage);
         SVS_LOG((SVS_LM_INFO,"Send load report to scc fail, init message fail."));
         return;
     }
 
     if (RET_OK != pLoadInfo->handleMessage())
     {
-        CMduMsgFactory::instance()->destroySvsMsg(pSvsMessage);
+        CStreamMsgFactory::instance()->destroySvsMsg(pSvsMessage);
         SVS_LOG((SVS_LM_INFO,"Send load report to scc fail."));
         return;
     }
 
-    CMduMsgFactory::instance()->destroySvsMsg(pSvsMessage);
+    CStreamMsgFactory::instance()->destroySvsMsg(pSvsMessage);
     SVS_LOG((SVS_LM_INFO,"Send load report to scc success."));
     return;
 }
 
-void CMduServiceTask::sendBusinessReport()
+void CStreamServiceTask::sendBusinessReport()
 {
     if (NULL == m_pSccConnect)
     {
@@ -282,7 +282,7 @@ void CMduServiceTask::sendBusinessReport()
 
     BUSINESS_LIST businessList;
     BUSINESS_LIST_ITER iter;
-    CMduBusinessManager::instance()->getAllBusiness(businessList);
+    CStreamBusinessManager::instance()->getAllBusiness(businessList);
 
     uint32_t ulBusinessCount = businessList.size();
     uint32_t ulMsgLen = 0;
@@ -314,8 +314,8 @@ void CMduServiceTask::sendBusinessReport()
                                         = (SVS_MSG_MU_BUSINESS_REPORT_REQ*) (void*) pBuffer;
         M_COMMON::FillCommonHeader(&pReqMsg->MsgHeader,
                                     SVS_MSG_TYPE_MU_SESSION_REPORT_REQ,
-                                    CMduConfig::instance()->getServiceId(),
-                                    CMduMsgFactory::instance()->getReqTransactionNo(),
+                                    CStreamConfig::instance()->getServiceId(),
+                                    CStreamMsgFactory::instance()->getReqTransactionNo(),
                                     ulMsgLen);
         pReqMsg->BusinessTotalNum = ulBusinessCount;
 
@@ -324,7 +324,7 @@ void CMduServiceTask::sendBusinessReport()
 
         for (iter = businessList.begin();iter != businessList.end(); iter++)
         {
-            CMduBusiness *pBusiness = *iter;
+            CStreamBusiness *pBusiness = *iter;
             pBusinessInfo = &pReqMsg->BusinessInfo[i];
             pBusiness->statFluxInfo();
 
@@ -347,17 +347,17 @@ void CMduServiceTask::sendBusinessReport()
         delete[] pBuffer;
     }while(false);
     /* release the business */
-    CMduBusinessManager::instance()->releaseBusiness(businessList);
+    CStreamBusinessManager::instance()->releaseBusiness(businessList);
     return;
 }//lint !e429
 
-void CMduServiceTask::stopSessions()
+void CStreamServiceTask::stopSessions()
 {
     BUSINESS_LIST businessList;
-    CMduBusinessManager::instance()->getAllBusiness(businessList);
+    CStreamBusinessManager::instance()->getAllBusiness(businessList);
     BUSINESS_LIST_ITER iter;
-    CMduBusiness* pBusiness = NULL;
-    CMduSession* pSession = NULL;
+    CStreamBusiness* pBusiness = NULL;
+    CStreamSession* pSession = NULL;
     for (iter = businessList.begin(); iter != businessList.end(); ++iter)
     {
         pBusiness = *iter;
@@ -372,7 +372,7 @@ void CMduServiceTask::stopSessions()
             continue;
         }
 
-        if (MDU_SESSION_STATUS_DISPATCHING != pSession->getStatus())
+        if (STREAM_SESSION_STATUS_DISPATCHING != pSession->getStatus())
         {
             SVS_LOG((SVS_LM_INFO,"stop session[%Q] service type[%u] when regist scc success.",
                         pBusiness->getSendStreamID(), pBusiness->getPlayType()));
@@ -380,20 +380,20 @@ void CMduServiceTask::stopSessions()
         }
     }
 
-    CMduBusinessManager::instance()->releaseBusiness(businessList);
+    CStreamBusinessManager::instance()->releaseBusiness(businessList);
 
     return;
 }
 
-int32_t CMduServiceTask::openAllMsgQueue()
+int32_t CStreamServiceTask::openAllMsgQueue()
 {
-    if (-1 == m_SccRecvQueue.open(MDU_MAX_QUEUE_BYTE_SIZE, MDU_MAX_QUEUE_BYTE_SIZE))
+    if (-1 == m_SccRecvQueue.open(STREAM_MAX_QUEUE_BYTE_SIZE, STREAM_MAX_QUEUE_BYTE_SIZE))
     {
         SVS_LOG((SVS_LM_WARNING,"Fail to open scc recv message queue."));
         return RET_FAIL;
     }
 
-    if (-1 == m_MediaMsgQueue.open(MDU_MAX_QUEUE_BYTE_SIZE, MDU_MAX_QUEUE_BYTE_SIZE))
+    if (-1 == m_MediaMsgQueue.open(STREAM_MAX_QUEUE_BYTE_SIZE, STREAM_MAX_QUEUE_BYTE_SIZE))
     {
         SVS_LOG((SVS_LM_WARNING,"Fail to open inner message queue."));
         return RET_FAIL;
@@ -403,14 +403,14 @@ int32_t CMduServiceTask::openAllMsgQueue()
     return RET_OK;
 }
 
-void CMduServiceTask::closeAllMsgQueue()
+void CStreamServiceTask::closeAllMsgQueue()
 {
     (void)m_SccRecvQueue.close();
     (void)m_MediaMsgQueue.close();
     return;
 }
 
-int32_t CMduServiceTask::createServiceThreads()
+int32_t CStreamServiceTask::createServiceThreads()
 {
     size_t *pStackSize = NULL;
     try
@@ -419,7 +419,7 @@ int32_t CMduServiceTask::createServiceThreads()
     }
     catch(...)
     {
-        SVS_LOG((SVS_LM_CRITICAL,"create mdu service threads fail, thread num[%d], retcode[%d].",
+        SVS_LOG((SVS_LM_CRITICAL,"create stream service threads fail, thread num[%d], retcode[%d].",
                         MAX_SERVICE_THREAD,
                         errno));
         if (NULL != pStackSize)
@@ -451,34 +451,34 @@ int32_t CMduServiceTask::createServiceThreads()
 
     if (-1 == nRet)
     {
-        SVS_LOG((SVS_LM_CRITICAL,"create mdu service threads fail, thread num[%d], retcode[%d].",
+        SVS_LOG((SVS_LM_CRITICAL,"create stream service threads fail, thread num[%d], retcode[%d].",
                         MAX_SERVICE_THREAD,
                         errno));
 
         return RET_FAIL;
     }
 
-    SVS_LOG((SVS_LM_INFO,"create mdu service threds success, thread num[%d].",
+    SVS_LOG((SVS_LM_INFO,"create stream service threds success, thread num[%d].",
                     MAX_SERVICE_THREAD));
     return RET_OK;
 }
 
-int32_t CMduServiceTask::startSysStat()
+int32_t CStreamServiceTask::startSysStat()
 {
 
     if (SVS_STAT_OK != CSvsSysStat::instance().open(NULL))
     {
-        SVS_LOG((SVS_LM_WARNING,"mdu service task open sys stat fail."));
+        SVS_LOG((SVS_LM_WARNING,"stream service task open sys stat fail."));
         return RET_FAIL;
     }
 
-    MDU_IP_LIST   ipList;
+    STREAM_IP_LIST   ipList;
     ACE_INET_Addr  addr;
-    uint32_t unInteranlIp = CMduConfig::instance()->getInternalMediaIp();
-    CMduConfig::instance()->getExternalMediaIpList(ipList);
+    uint32_t unInteranlIp = CStreamConfig::instance()->getInternalMediaIp();
+    CStreamConfig::instance()->getExternalMediaIpList(ipList);
     ipList.push_front(unInteranlIp);
 
-    for (MDU_IP_LIST::iterator iter = ipList.begin(); iter != ipList.end(); iter++)
+    for (STREAM_IP_LIST::iterator iter = ipList.begin(); iter != ipList.end(); iter++)
     {
         addr.set((uint16_t) 0, *iter);
         if (SVS_STAT_OK != CSvsSysStat::instance().AddNetwordCard(addr.get_host_addr()))
@@ -504,24 +504,24 @@ int32_t CMduServiceTask::startSysStat()
         usleep(10);
     }
 
-    ACE_Time_Value tv((int32_t) CMduConfig::instance()->getReportPeriod(), 0);
+    ACE_Time_Value tv((int32_t) CStreamConfig::instance()->getReportPeriod(), 0);
     int32_t TimerId = m_pTimerReactor->schedule_timer(m_pLoadReportTimer, this, tv, tv);   //lint !e613
     if (-1 == TimerId)
     {
-        SVS_LOG((SVS_LM_WARNING,"mdu service task alloc sys stat report timer fail."));
+        SVS_LOG((SVS_LM_WARNING,"stream service task alloc sys stat report timer fail."));
         return RET_FAIL;
     }
 
-    SVS_LOG((SVS_LM_INFO,"mdu service task start sys stat success, stat report timer[%p].",
+    SVS_LOG((SVS_LM_INFO,"stream service task start sys stat success, stat report timer[%p].",
             m_pLoadReportTimer));
     return RET_OK;
 }
 
-int32_t CMduServiceTask::createSccConnect()
+int32_t CStreamServiceTask::createSccConnect()
 {
     try
     {
-        m_pSccConnect = new CMduSccConnector();
+        m_pSccConnect = new CStreamSccConnector();
     }
     catch(...)
     {
@@ -537,7 +537,7 @@ int32_t CMduServiceTask::createSccConnect()
     int32_t nRet = m_pSccConnect->openConnector(&m_SccRecvQueue);
     if (RET_OK != nRet)
     {
-        SVS_LOG((SVS_LM_CRITICAL,"CMduServiceTask::createSccConnect fail, retcode[0x%x].", nRet));
+        SVS_LOG((SVS_LM_CRITICAL,"CStreamServiceTask::createSccConnect fail, retcode[0x%x].", nRet));
         return RET_FAIL;
     }
 
@@ -546,11 +546,11 @@ int32_t CMduServiceTask::createSccConnect()
 }
 
 
-void CMduServiceTask::reactorLoopThread()const
+void CStreamServiceTask::reactorLoopThread()const
 {
-    SVS_LOG((SVS_LM_INFO,"CMduServiceTask::reactorLoopThread start."));
+    SVS_LOG((SVS_LM_INFO,"CStreamServiceTask::reactorLoopThread start."));
 
-    ACE_Dev_Poll_Reactor devPollReactor(MDU_MAX_EPOLL_SIZE, true);
+    ACE_Dev_Poll_Reactor devPollReactor(STREAM_MAX_EPOLL_SIZE, true);
     ACE_Reactor reactor(&devPollReactor);
     (void)ACE_Reactor::instance(&reactor);
     CThread_Stat_Reporter report("ace_reactor");
@@ -558,7 +558,7 @@ void CMduServiceTask::reactorLoopThread()const
     ACE_Time_Value delaytime;
     while(m_bRunFlag)
     {
-        delaytime.set(0, MDU_MAX_TIME_PER_THREAD);
+        delaytime.set(0, STREAM_MAX_TIME_PER_THREAD);
         if (ACE_Reactor::instance()->handle_events(&delaytime) < 0)
         {
             report.ReportStat();
@@ -568,21 +568,21 @@ void CMduServiceTask::reactorLoopThread()const
         report.ReportStat();
     }
 
-    SVS_LOG((SVS_LM_CRITICAL,"CMduServiceTask::reactorLoopThread exit."));
+    SVS_LOG((SVS_LM_CRITICAL,"CStreamServiceTask::reactorLoopThread exit."));
 
     return;   //lint !e429
 }
 
-void CMduServiceTask::sccMessageHandleThread()
+void CStreamServiceTask::sccMessageHandleThread()
 {
-    SVS_LOG((SVS_LM_INFO,"CMduServiceTask::sccMessageHandleThread start."));
+    SVS_LOG((SVS_LM_INFO,"CStreamServiceTask::sccMessageHandleThread start."));
     ACE_Message_Block *pMsg = NULL;
     ACE_Time_Value delayTime;
     CThread_Stat_Reporter report("SccMsgHandleThread");
 
     while (m_bRunFlag)
     {
-        delayTime = ACE_OS::gettimeofday() + ACE_Time_Value(0, MDU_MAX_QUEUE_DELAY);
+        delayTime = ACE_OS::gettimeofday() + ACE_Time_Value(0, STREAM_MAX_QUEUE_DELAY);
         if (-1 == m_SccRecvQueue.dequeue_head(pMsg, &delayTime))
         {
             report.ReportStat();
@@ -597,21 +597,21 @@ void CMduServiceTask::sccMessageHandleThread()
         report.ReportStat();
     }
 
-    SVS_LOG((SVS_LM_CRITICAL,"CMduServiceTask::sccMessageHandleThread exit."));
+    SVS_LOG((SVS_LM_CRITICAL,"CStreamServiceTask::sccMessageHandleThread exit."));
 
     return;
 }
 
 /*lint -e429*/
-void CMduServiceTask::mduTimerManagerThread()
+void CStreamServiceTask::streamTimerManagerThread()
 {
-    SVS_LOG((SVS_LM_INFO,"mdu timer manager thread start."));
+    SVS_LOG((SVS_LM_INFO,"stream timer manager thread start."));
 
     ACE_Reactor_Impl *pImpl = NULL;
 
     try
     {
-        pImpl = new ACE_Dev_Poll_Reactor(MDU_MAX_EPOLL_SIZE, true);
+        pImpl = new ACE_Dev_Poll_Reactor(STREAM_MAX_EPOLL_SIZE, true);
     }
     catch(...)
     {
@@ -634,7 +634,7 @@ void CMduServiceTask::mduTimerManagerThread()
     CThread_Stat_Reporter report("TimerManagerThread");
     while (m_bRunFlag)
     {
-        delaytime.set(0, MDU_MAX_TIME_PER_THREAD);
+        delaytime.set(0, STREAM_MAX_TIME_PER_THREAD);
         ret = m_pTimerReactor->handle_events(&delaytime);
         if (ret < 0)
         {
@@ -644,13 +644,13 @@ void CMduServiceTask::mduTimerManagerThread()
         report.ReportStat();
     }
 
-    SVS_LOG((SVS_LM_INFO,"mdu timer manager thread exit."));
+    SVS_LOG((SVS_LM_INFO,"stream timer manager thread exit."));
     return;
 }
 
-int32_t CMduServiceTask::openDeubgger()
+int32_t CStreamServiceTask::openDeubgger()
 {
-    uint16_t usDebugPort = CMduConfig::instance()->getDebugPort();
+    uint16_t usDebugPort = CStreamConfig::instance()->getDebugPort();
     uint32_t ulAddr = inet_addr("127.0.0.1");
     ACE_INET_Addr localAddr(usDebugPort,  ACE_NTOHL( ulAddr ));
 
@@ -658,7 +658,7 @@ int32_t CMduServiceTask::openDeubgger()
 
     try
     {
-        pImpl = new ACE_Dev_Poll_Reactor(MDU_MAX_EPOLL_SIZE, true);
+        pImpl = new ACE_Dev_Poll_Reactor(STREAM_MAX_EPOLL_SIZE, true);
     }
     catch(...)
     {
@@ -688,12 +688,12 @@ int32_t CMduServiceTask::openDeubgger()
     return RET_OK;
 }
 /*lint +e429*/
-void CMduServiceTask::debugThread()
+void CStreamServiceTask::debugThread()
 {
-    SVS_LOG((SVS_LM_CRITICAL,"CMduServiceTask::debugThread is running."));
+    SVS_LOG((SVS_LM_CRITICAL,"CStreamServiceTask::debugThread is running."));
     if (NULL == m_pDebugReactor)
     {
-        SVS_LOG((SVS_LM_CRITICAL,"CMduServiceTask::debugThread exit, debug reactor is null."));
+        SVS_LOG((SVS_LM_CRITICAL,"CStreamServiceTask::debugThread exit, debug reactor is null."));
         return;
     }
 
@@ -703,7 +703,7 @@ void CMduServiceTask::debugThread()
     CThread_Stat_Reporter report("DebugThread");
     while(m_bRunFlag)
     {
-        delaytime.set(0, MDU_MAX_TIME_PER_THREAD);
+        delaytime.set(0, STREAM_MAX_TIME_PER_THREAD);
         if (m_pDebugReactor->handle_events(&delaytime) < 0)
         {
             report.ReportStat();
@@ -712,14 +712,14 @@ void CMduServiceTask::debugThread()
         report.ReportStat();
     }
 
-    SVS_LOG((SVS_LM_CRITICAL,"CMduServiceTask::debugThread exit."));
+    SVS_LOG((SVS_LM_CRITICAL,"CStreamServiceTask::debugThread exit."));
 
     return;
 
 }
 
 
-void CMduServiceTask::handleSccRecvedMessage(const ACE_Message_Block *pMsg)const
+void CStreamServiceTask::handleSccRecvedMessage(const ACE_Message_Block *pMsg)const
 {
     if ((NULL == pMsg) || (sizeof(SVS_MSG_HEADER) > pMsg->length()))
     {
@@ -732,13 +732,13 @@ void CMduServiceTask::handleSccRecvedMessage(const ACE_Message_Block *pMsg)const
                     pHeader->MsgType,
                     pHeader->TransactionNo));
 
-    CMduSvsMessage *pSvsMessage = NULL;
-    int32_t nRet = CMduMsgFactory::instance()->createSvsMsg((const char*)pMsg->rd_ptr(),
+    CStreamSvsMessage *pSvsMessage = NULL;
+    int32_t nRet = CStreamMsgFactory::instance()->createSvsMsg((const char*)pMsg->rd_ptr(),
                                                         pMsg->length(),
                                                         pSvsMessage);
     if ((RET_OK != nRet) || (NULL == pSvsMessage))
     {
-        CMduMsgFactory::instance()->destroySvsMsg(pSvsMessage);
+        CStreamMsgFactory::instance()->destroySvsMsg(pSvsMessage);
         SVS_LOG((SVS_LM_INFO,"parse scc message fail: msgtype[0x%x] transno[%x]",
                              pHeader->MsgType,
                              pHeader->TransactionNo));
@@ -756,7 +756,7 @@ void CMduServiceTask::handleSccRecvedMessage(const ACE_Message_Block *pMsg)const
                          pHeader->TransactionNo));
     }
 
-    CMduMsgFactory::instance()->destroySvsMsg(pSvsMessage);
+    CStreamMsgFactory::instance()->destroySvsMsg(pSvsMessage);
 
     SVS_LOG((SVS_LM_INFO,"end process scc message: msgtype[0x%x] transno[%x]",
                      pHeader->MsgType,
@@ -765,16 +765,16 @@ void CMduServiceTask::handleSccRecvedMessage(const ACE_Message_Block *pMsg)const
     return;
 }
 
-void CMduServiceTask::innerMsgHandleThread()
+void CStreamServiceTask::innerMsgHandleThread()
 {
-    SVS_LOG((SVS_LM_INFO,"CMduServiceTask::innerMsgHandleThread start."));
+    SVS_LOG((SVS_LM_INFO,"CStreamServiceTask::innerMsgHandleThread start."));
     ACE_Message_Block *pMsg = NULL;
     ACE_Time_Value delayTime;
     CThread_Stat_Reporter report("InnerMsgHandleThread");
 
     while (m_bRunFlag)
     {
-        delayTime = ACE_OS::gettimeofday() + ACE_Time_Value(0, MDU_MAX_QUEUE_DELAY);
+        delayTime = ACE_OS::gettimeofday() + ACE_Time_Value(0, STREAM_MAX_QUEUE_DELAY);
         if (-1 == m_MediaMsgQueue.dequeue_head(pMsg, &delayTime))
         {
             report.ReportStat();
@@ -789,43 +789,43 @@ void CMduServiceTask::innerMsgHandleThread()
         report.ReportStat();
     }
 
-    SVS_LOG((SVS_LM_CRITICAL,"CMduServiceTask::innerMsgHandleThread exit."));
+    SVS_LOG((SVS_LM_CRITICAL,"CStreamServiceTask::innerMsgHandleThread exit."));
 
     return;
 }
 
-uint32_t CMduServiceTask::getThreadIndex()
+uint32_t CStreamServiceTask::getThreadIndex()
 {
     ACE_Guard<ACE_Thread_Mutex> locker(m_ThreadIndexMutex);
     return m_unThreadIndex++;
 }
 
-void CMduServiceTask::handleInnerMessage(const ACE_Message_Block *pMsg) const
+void CStreamServiceTask::handleInnerMessage(const ACE_Message_Block *pMsg) const
 {
     if (NULL == pMsg)
     {
         return;
     }
 
-    MDU_INNER_MSG *pInnerMsg = (MDU_INNER_MSG*)(void*)pMsg->rd_ptr();
+    STREAM_INNER_MSG *pInnerMsg = (STREAM_INNER_MSG*)(void*)pMsg->rd_ptr();
 
     SVS_LOG((SVS_LM_DEBUG,"service task start handle inner message: type[%d].",
             pInnerMsg->usMsgType));
 
-    CMduBusiness *pBusiness = CMduBusinessManager::instance()->findBusiness(pInnerMsg->ullStreamID);
+    CStreamBusiness *pBusiness = CStreamBusinessManager::instance()->findBusiness(pInnerMsg->ullStreamID);
     if (NULL != pBusiness)
     {
         pBusiness->handleInnerMsg(*pInnerMsg, pMsg->length());
-        CMduBusinessManager::instance()->releaseBusiness(pBusiness);
+        CStreamBusinessManager::instance()->releaseBusiness(pBusiness);
         return;
     }
 
-    CMduSession *pSession = CMduSessionFactory::instance()->findSession(pInnerMsg->ullStreamID);
+    CStreamSession *pSession = CStreamSessionFactory::instance()->findSession(pInnerMsg->ullStreamID);
     if (NULL != pSession)
     {
-        CMduRtpSession peerSession;
+        CStreamRtpSession peerSession;
         (void)pSession->handleInnerMessage(*pInnerMsg, pMsg->length(), peerSession);
-        CMduSessionFactory::instance()->releaseSession(pSession);
+        CStreamSessionFactory::instance()->releaseSession(pSession);
         return;
     }
 

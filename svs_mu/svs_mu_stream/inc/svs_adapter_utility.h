@@ -1,9 +1,9 @@
-#ifndef __CMDUUTILITY_H__
-#define __CMDUUTILITY_H__
+#ifndef __CSTREAMUTILITY_H__
+#define __CSTREAMUTILITY_H__
 
 #include <svs_ace_header.h>
 
-class CMduUtility
+class CStreamUtility
 {
 public:
     // 比较两个值的大小

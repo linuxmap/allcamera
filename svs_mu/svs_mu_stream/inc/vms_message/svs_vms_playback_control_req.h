@@ -11,7 +11,7 @@
 #include "svs_vms_message.h"
 
 
-class CPlaybackControlReq : public CMduSvsMessage
+class CPlaybackControlReq : public CStreamSvsMessage
 {
 public:
     CPlaybackControlReq();

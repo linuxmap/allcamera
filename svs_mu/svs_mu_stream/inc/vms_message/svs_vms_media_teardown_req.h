@@ -1,21 +1,21 @@
 /*
- * MduStopDistributeReq.h
+ * StreamStopDistributeReq.h
  *
  *  Created on: 2010-12-31
  *      Author:
  */
 
-#ifndef MDUSTOPDISTRIBUTEREQ_H_
-#define MDUSTOPDISTRIBUTEREQ_H_
+#ifndef STREAMSTOPDISTRIBUTEREQ_H_
+#define STREAMSTOPDISTRIBUTEREQ_H_
 
 #include "svs_vms_message.h"
 
-class CMduMediaTearDownReq : public CMduSvsMessage
+class CStreamMediaTearDownReq : public CStreamSvsMessage
 {
 public:
-    CMduMediaTearDownReq();
+    CStreamMediaTearDownReq();
 
-    virtual ~CMduMediaTearDownReq();
+    virtual ~CStreamMediaTearDownReq();
 
     UTAPI int32_t create(uint32_t unLength,
                uint32_t unTransNo);
@@ -29,8 +29,8 @@ public:
     UTAPI void dump() const;
 
 private:
-    SVS_MSG_MDU_SESSION_TEARDOWN_REQ* m_pRequst;
+    SVS_MSG_STREAM_SESSION_TEARDOWN_REQ* m_pRequst;
 
 };
 
-#endif /* MDUSTOPDISTRIBUTEREQ_H_ */
+#endif /* STREAMSTOPDISTRIBUTEREQ_H_ */

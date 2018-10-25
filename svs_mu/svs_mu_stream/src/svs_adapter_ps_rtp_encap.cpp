@@ -15,7 +15,7 @@ CPsRtpEncap::CPsRtpEncap()
     m_pRtpHandle    = NULL;
     m_pUserData     = NULL;
 
-    memset(m_RtpBuffer, 0x0, MDU_MSG_BLOCK_SIZE);
+    memset(m_RtpBuffer, 0x0, STREAM_MSG_BLOCK_SIZE);
     m_usRtpSeq      = 0;
 }
 
@@ -93,7 +93,7 @@ void CPsRtpEncap::handlePsStream(const char* pPSData, uint32_t unDataSize,
 
     // Íê³ÉRTPÇÐÆ¬
     CRtpPacket  rtpPacket;
-    (void)rtpPacket.GeneratePacket(m_RtpBuffer, MDU_MSG_BLOCK_SIZE);
+    (void)rtpPacket.GeneratePacket(m_RtpBuffer, STREAM_MSG_BLOCK_SIZE);
 
     uint32_t unLeastSize = unDataSize;
     char* pDataPos = (char*)pPSData;

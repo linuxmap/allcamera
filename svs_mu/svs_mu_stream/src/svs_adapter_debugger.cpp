@@ -12,50 +12,50 @@ const uint8_t ctrlC[]     = {0XFF, 0XF4, 0XFF, 0XFD, 0X06};
 const uint8_t formerCmd[] = {0X1B, 0X5B, 0X41};
 
 const time_t g_ulStartTime = time(NULL);
-int32_t CMduDebugger::m_iClientNum = 0;
+int32_t CStreamDebugger::m_iClientNum = 0;
 
-//==========================CMduDebugger BEGIN================================
-CMduDebugger::CMduDebugger()
+//==========================CStreamDebugger BEGIN================================
+CStreamDebugger::CStreamDebugger()
 {
     constructor();
 }
-CMduDebugger::~CMduDebugger()
+CStreamDebugger::~CStreamDebugger()
 {
 }
-void CMduDebugger::constructor()
+void CStreamDebugger::constructor()
 {
     (void)ACE_OS::memset( m_szInetAddr, 0, sizeof(m_szInetAddr));
     m_iTimerId = 0;
     m_iHeartbeatNum = 0;
 
-    m_firstLevelMessage.insert( std::make_pair(SVS_CMD_SPACE, &CMduDebugger::sendSpaceCmd));
-    m_firstLevelMessage.insert( std::make_pair(FIRST_LEVEL_CMD_HELP, &CMduDebugger::sendHelpInfo));
-    m_firstLevelMessage.insert( std::make_pair(FIRST_LEVEL_CMD_SHOW, &CMduDebugger::handleShowCmd));
-    m_firstLevelMessage.insert( std::make_pair(FIRST_LEVEL_CMD_QUIT, &CMduDebugger::exit));
-    m_firstLevelMessage.insert( std::make_pair(FIRST_LEVEL_CMD_EXIT, &CMduDebugger::exit));
+    m_firstLevelMessage.insert( std::make_pair(SVS_CMD_SPACE, &CStreamDebugger::sendSpaceCmd));
+    m_firstLevelMessage.insert( std::make_pair(FIRST_LEVEL_CMD_HELP, &CStreamDebugger::sendHelpInfo));
+    m_firstLevelMessage.insert( std::make_pair(FIRST_LEVEL_CMD_SHOW, &CStreamDebugger::handleShowCmd));
+    m_firstLevelMessage.insert( std::make_pair(FIRST_LEVEL_CMD_QUIT, &CStreamDebugger::exit));
+    m_firstLevelMessage.insert( std::make_pair(FIRST_LEVEL_CMD_EXIT, &CStreamDebugger::exit));
 
-    m_showMessage.insert(std::make_pair(SVS_CMD_SPACE, &CMduDebugger::sendBasicInfo));
-    m_showMessage.insert(std::make_pair(SECOND_LEVEL_CMD_DEBUG, &CMduDebugger::sendDebugInfo));
-    m_showMessage.insert(std::make_pair(SECOND_LEVEL_CMD_SESSION, &CMduDebugger::handleShowSessionCmd));
-    m_showMessage.insert(std::make_pair(SECOND_LEVEL_CMD_BUSINESS, &CMduDebugger::handleShowBusinessCmd));
-    m_showMessage.insert(std::make_pair(SECOND_LEVEL_CMD_BUFFER, &CMduDebugger::sendBufferInfo));
-    m_showMessage.insert(std::make_pair(SECOND_LEVEL_CMD_SDP, &CMduDebugger::handleShowSdpCmd));
+    m_showMessage.insert(std::make_pair(SVS_CMD_SPACE, &CStreamDebugger::sendBasicInfo));
+    m_showMessage.insert(std::make_pair(SECOND_LEVEL_CMD_DEBUG, &CStreamDebugger::sendDebugInfo));
+    m_showMessage.insert(std::make_pair(SECOND_LEVEL_CMD_SESSION, &CStreamDebugger::handleShowSessionCmd));
+    m_showMessage.insert(std::make_pair(SECOND_LEVEL_CMD_BUSINESS, &CStreamDebugger::handleShowBusinessCmd));
+    m_showMessage.insert(std::make_pair(SECOND_LEVEL_CMD_BUFFER, &CStreamDebugger::sendBufferInfo));
+    m_showMessage.insert(std::make_pair(SECOND_LEVEL_CMD_SDP, &CStreamDebugger::handleShowSdpCmd));
 
-    m_sessionMessage.insert(std::make_pair(SVS_CMD_SPACE, &CMduDebugger::sendAllSessionInfo));
-    m_sessionMessage.insert(std::make_pair(THIRD_LEVEL_CMD_COUNT, &CMduDebugger::sendSessionCnt));
+    m_sessionMessage.insert(std::make_pair(SVS_CMD_SPACE, &CStreamDebugger::sendAllSessionInfo));
+    m_sessionMessage.insert(std::make_pair(THIRD_LEVEL_CMD_COUNT, &CStreamDebugger::sendSessionCnt));
 
-    m_businessMessage.insert(std::make_pair(SVS_CMD_SPACE, &CMduDebugger::sendAllBusinessInfo));
-    m_businessMessage.insert(std::make_pair(THIRD_LEVEL_CMD_COUNT, &CMduDebugger::sendBusinessCnt));
+    m_businessMessage.insert(std::make_pair(SVS_CMD_SPACE, &CStreamDebugger::sendAllBusinessInfo));
+    m_businessMessage.insert(std::make_pair(THIRD_LEVEL_CMD_COUNT, &CStreamDebugger::sendBusinessCnt));
 
     return;
 }
 
-int32_t CMduDebugger::open(void *)
+int32_t CStreamDebugger::open(void *)
 {
     m_iClientNum++;
-    if (m_iClientNum > MDU_MAX_DEBUG_NUM)
+    if (m_iClientNum > STREAM_MAX_DEBUG_NUM)
     {
-        SVS_LOG((SVS_LM_ERROR,"[DEBUG]Debug client reach limit[%d].", MDU_MAX_DEBUG_NUM));
+        SVS_LOG((SVS_LM_ERROR,"[DEBUG]Debug client reach limit[%d].", STREAM_MAX_DEBUG_NUM));
         sendLogFailMsg();
         return -1;
     }
@@ -98,7 +98,7 @@ int32_t CMduDebugger::open(void *)
     return 0;
 }
 
-int32_t CMduDebugger::svc()
+int32_t CStreamDebugger::svc()
 {
     return 0;
 }
@@ -113,7 +113,7 @@ int32_t CMduDebugger::svc()
  1. ��    ��   : 2009��4��13��
     �޸�����   : ��������
 *****************************************************************************/
-int32_t CMduDebugger::handle_close(ACE_HANDLE /*handle*/, ACE_Reactor_Mask /*mask*/)
+int32_t CStreamDebugger::handle_close(ACE_HANDLE /*handle*/, ACE_Reactor_Mask /*mask*/)
 {
     SVS_LOG((SVS_LM_INFO,
         "[DEBUG] Debug connection closed. client addr[%s], this[%p], handle[%d].",
@@ -133,7 +133,7 @@ int32_t CMduDebugger::handle_close(ACE_HANDLE /*handle*/, ACE_Reactor_Mask /*mas
     return 0;
 }
 
-int32_t CMduDebugger::sendData()
+int32_t CStreamDebugger::sendData()
 {
 
     m_szSendBuf[ sizeof(m_szSendBuf) - 1 ] = '\0';
@@ -153,12 +153,12 @@ int32_t CMduDebugger::sendData()
     return 0;
 }
 
-int32_t CMduDebugger::handle_input(ACE_HANDLE /*handle*/)
+int32_t CStreamDebugger::handle_input(ACE_HANDLE /*handle*/)
 {
     m_iHeartbeatNum++;
     ACE_Time_Value tv(SVS_LOG_RECV_TIMEOUT);
 
-    int32_t recvResult = peer().recv( m_szRecvBuf, MDU_DEBUG_CMD_LEN, &tv );
+    int32_t recvResult = peer().recv( m_szRecvBuf, STREAM_DEBUG_CMD_LEN, &tv );
 
     if (0 >= recvResult)
     {
@@ -228,7 +228,7 @@ int32_t CMduDebugger::handle_input(ACE_HANDLE /*handle*/)
 }
 
 
-void CMduDebugger::parseCmd(std::string& strCmd, std::string& strSubCmd) const
+void CStreamDebugger::parseCmd(std::string& strCmd, std::string& strSubCmd) const
 {
 
     std::string::size_type idx;
@@ -257,7 +257,7 @@ void CMduDebugger::parseCmd(std::string& strCmd, std::string& strSubCmd) const
 }
 
 
-int32_t CMduDebugger::handleFirstLevelCmd(std::string& strCmd)
+int32_t CStreamDebugger::handleFirstLevelCmd(std::string& strCmd)
 {
 
     std::string firstLevelCmd;
@@ -278,7 +278,7 @@ int32_t CMduDebugger::handleFirstLevelCmd(std::string& strCmd)
 }
 
 
-int32_t CMduDebugger::sendHelpInfo(std::string& strCmd)
+int32_t CStreamDebugger::sendHelpInfo(std::string& strCmd)
 {
     std::string strSubCmd;
 
@@ -314,7 +314,7 @@ int32_t CMduDebugger::sendHelpInfo(std::string& strCmd)
 
 }
 
-int32_t CMduDebugger::exit(std::string& strCmd)
+int32_t CStreamDebugger::exit(std::string& strCmd)
 {
     // ���pclint
     strCmd = strCmd;
@@ -323,7 +323,7 @@ int32_t CMduDebugger::exit(std::string& strCmd)
     return -1;
 }//lint !e1762
 
-int32_t CMduDebugger::handleShowCmd(std::string& strCmd)
+int32_t CStreamDebugger::handleShowCmd(std::string& strCmd)
 {
     int32_t iRet = 0;
     // ȥ�� show
@@ -347,20 +347,20 @@ int32_t CMduDebugger::handleShowCmd(std::string& strCmd)
 }
 
 
-int32_t CMduDebugger::sendDebugInfo(std::string& strCmd)
+int32_t CStreamDebugger::sendDebugInfo(std::string& strCmd)
 {
     strCmd = strCmd;
 
     return sendData();
 }
 
-int32_t CMduDebugger::sendBasicInfo(std::string& strCmd)
+int32_t CStreamDebugger::sendBasicInfo(std::string& strCmd)
 {
     strCmd = strCmd;
 
     memset(m_szSendBuf, 0x0, sizeof(m_szSendBuf));
 
-    CMduSccConnector* pConnect = CMduServiceTask::instance()->getSccConnector();
+    CStreamSccConnector* pConnect = CStreamServiceTask::instance()->getSccConnector();
     if (NULL == pConnect)
     {
         return 0;
@@ -380,16 +380,16 @@ int32_t CMduDebugger::sendBasicInfo(std::string& strCmd)
         return 0;
     }
 
-    ACE_INET_Addr serverAddr(CMduConfig::instance()->getSccPort(), CMduConfig::instance()->getSccIp());
+    ACE_INET_Addr serverAddr(CStreamConfig::instance()->getSccPort(), CStreamConfig::instance()->getSccIp());
     snprintf(m_szSendBuf,
-             MDU_DEBUG_INFO_LEN,
+             STREAM_DEBUG_INFO_LEN,
              "\n\tstream  id[%s]"
              "\n\tservice capacity[%d]"
              "\n\tcontrol addr[%s:%d]"
              "\n\tconnect status[%s]"
              SVS_CMD_PROMPT,
-             CMduConfig::instance()->getServiceId(),
-             CMduConfig::instance()->getServiceCapacity(),
+             CStreamConfig::instance()->getServiceId(),
+             CStreamConfig::instance()->getServiceCapacity(),
              serverAddr.get_host_addr(),
              serverAddr.get_port_number(),
              szConnectStatus[pConnect->getStatus()]);
@@ -406,7 +406,7 @@ int32_t CMduDebugger::sendBasicInfo(std::string& strCmd)
  1. ��    ��   : 2009��4��13��
     �޸�����   : ��������
 *****************************************************************************/
-int32_t CMduDebugger::sendBadCmd()
+int32_t CStreamDebugger::sendBadCmd()
 {
     (void)ACE_OS::snprintf( m_szSendBuf,
         sizeof(m_szSendBuf),
@@ -425,13 +425,13 @@ int32_t CMduDebugger::sendBadCmd()
  1. ��    ��   : 2009��4��13��
     �޸�����   : ��������
 *****************************************************************************/
-int32_t CMduDebugger::sendBufferInfo(std::string& strCmd)
+int32_t CStreamDebugger::sendBufferInfo(std::string& strCmd)
 {
     strCmd = strCmd;
     memset(m_szSendBuf, 0x0, sizeof(m_szSendBuf));
 
     (void)ACE_OS::snprintf( m_szSendBuf,
-                      MDU_DEBUG_INFO_LEN,
+                      STREAM_DEBUG_INFO_LEN,
                       "\n\tremain num[%d]"
                       "\n\ttotal  num[%d]"
                       "\n\tfailure num[%u]"
@@ -453,14 +453,14 @@ int32_t CMduDebugger::sendBufferInfo(std::string& strCmd)
  1. ��    ��   : 2009��4��13��
     �޸�����   : ��������
 *****************************************************************************/
-int32_t CMduDebugger::sendSpaceCmd(std::string& strCmd)
+int32_t CStreamDebugger::sendSpaceCmd(std::string& strCmd)
 {
     strCmd = strCmd;
     sendPrompt();
     return 0;
 }
 
-void CMduDebugger::sendNewLine()
+void CStreamDebugger::sendNewLine()
 {
     memset(m_szSendBuf, 0x0, sizeof(m_szSendBuf));
     (void)ACE_OS::snprintf( m_szSendBuf, sizeof(m_szSendBuf), "\n");
@@ -469,7 +469,7 @@ void CMduDebugger::sendNewLine()
     return;
 }
 
-void CMduDebugger::sendPrompt()
+void CStreamDebugger::sendPrompt()
 {
     memset(m_szSendBuf, 0x0, sizeof(m_szSendBuf));
     (void)ACE_OS::snprintf( m_szSendBuf, sizeof(m_szSendBuf), SVS_CMD_PROMPT );
@@ -478,7 +478,7 @@ void CMduDebugger::sendPrompt()
     return;
 }
 
-int32_t CMduDebugger::handleShowSessionCmd(std::string& strCmd)
+int32_t CStreamDebugger::handleShowSessionCmd(std::string& strCmd)
 {
     int32_t iRet = 0;
     std::string::size_type idx = strlen(SECOND_LEVEL_CMD_SESSION);
@@ -500,7 +500,7 @@ int32_t CMduDebugger::handleShowSessionCmd(std::string& strCmd)
     if (std::string::npos != idx)
     {
         (void)ACE_OS::snprintf(m_szSendBuf,
-                      MDU_DEBUG_INFO_LEN,
+                      STREAM_DEBUG_INFO_LEN,
                       "\nPlease enter the session id, or enter [help] to show help info\n\t"
                       SVS_CMD_PROMPT);
         return sendData();
@@ -515,7 +515,7 @@ int32_t CMduDebugger::handleShowSessionCmd(std::string& strCmd)
 }
 
 
-int32_t CMduDebugger::handleShowSdpCmd(std::string& strCmd)
+int32_t CStreamDebugger::handleShowSdpCmd(std::string& strCmd)
 {
     std::string::size_type idx = strlen(SECOND_LEVEL_CMD_SDP);
     strCmd = strCmd.substr(idx);
@@ -527,7 +527,7 @@ int32_t CMduDebugger::handleShowSdpCmd(std::string& strCmd)
     if (std::string::npos != idx)
     {
         (void)ACE_OS::snprintf(m_szSendBuf,
-                      MDU_DEBUG_INFO_LEN,
+                      STREAM_DEBUG_INFO_LEN,
                       "\nPlease enter the session id, or enter [help] to show help info\n\t"
                       SVS_CMD_PROMPT);
         return sendData();
@@ -541,7 +541,7 @@ int32_t CMduDebugger::handleShowSdpCmd(std::string& strCmd)
     return 0;
 }
 
-int32_t CMduDebugger::handleShowBusinessCmd(std::string& strCmd)
+int32_t CStreamDebugger::handleShowBusinessCmd(std::string& strCmd)
 {
     int32_t iRet = 0;
     std::string::size_type idx = strlen(SECOND_LEVEL_CMD_BUSINESS);
@@ -563,7 +563,7 @@ int32_t CMduDebugger::handleShowBusinessCmd(std::string& strCmd)
     if (std::string::npos != idx)
     {
         (void)ACE_OS::snprintf(m_szSendBuf,
-                      MDU_DEBUG_INFO_LEN,
+                      STREAM_DEBUG_INFO_LEN,
                       "\nPlease enter the business id, or enter [help] to show help info\n\t"
                       SVS_CMD_PROMPT);
         return sendData();
@@ -579,7 +579,7 @@ int32_t CMduDebugger::handleShowBusinessCmd(std::string& strCmd)
 
 
 
-int32_t CMduDebugger::sendSessionCnt(std::string& strCmd)
+int32_t CStreamDebugger::sendSessionCnt(std::string& strCmd)
 {
     strCmd = strCmd;
 
@@ -588,11 +588,11 @@ int32_t CMduDebugger::sendSessionCnt(std::string& strCmd)
     uint32_t bidirectionNum = 0;
     uint32_t totalNum = 0;
 
-    CMduSessionFactory::instance()->getSessionCount(inputNum, outputNum, bidirectionNum, totalNum);
+    CStreamSessionFactory::instance()->getSessionCount(inputNum, outputNum, bidirectionNum, totalNum);
 
     memset(m_szSendBuf, 0x0, sizeof(m_szSendBuf));
     (void)ACE_OS::snprintf(m_szSendBuf,
-                           MDU_DEBUG_INFO_LEN,
+                           STREAM_DEBUG_INFO_LEN,
                            "\n\tRecvOnly  session num[%u]"
                            "\n\tSendOnly  session num[%u]"
                            "\n\tSendRecv  session num[%u]"
@@ -606,16 +606,16 @@ int32_t CMduDebugger::sendSessionCnt(std::string& strCmd)
     return sendData();
 }
 
-void CMduDebugger::sendSessionInfo(uint64_svs ullStreamId)
+void CStreamDebugger::sendSessionInfo(uint64_svs ullStreamId)
 {
     memset(m_szSendBuf, 0x0, sizeof(m_szSendBuf));
 
-    CMduSession* pSession = CMduSessionFactory::instance()->findSession(ullStreamId);
+    CStreamSession* pSession = CStreamSessionFactory::instance()->findSession(ullStreamId);
 
     if (NULL == pSession)
     {
         (void)ACE_OS::snprintf(m_szSendBuf,
-                      MDU_DEBUG_INFO_LEN,
+                      STREAM_DEBUG_INFO_LEN,
                       "\nSession id[%lld] is wrong, can't find corresponding session info."
                       SVS_CMD_PROMPT,
                       ullStreamId);
@@ -626,22 +626,22 @@ void CMduDebugger::sendSessionInfo(uint64_svs ullStreamId)
     sendNewLine();
     //dump the session info
     pSession->Dump(get_handle());
-    CMduSessionFactory::instance()->releaseSession(pSession);
+    CStreamSessionFactory::instance()->releaseSession(pSession);
 
     sendPrompt();
     return;
 }
 
-void CMduDebugger::sendSessionsdp(uint64_svs ullStreamId)
+void CStreamDebugger::sendSessionsdp(uint64_svs ullStreamId)
 {
     memset(m_szSendBuf, 0x0, sizeof(m_szSendBuf));
 
-    CMduBusiness* pBusiness = NULL;
-    pBusiness = CMduBusinessManager::instance()->findBusiness(ullStreamId);
+    CStreamBusiness* pBusiness = NULL;
+    pBusiness = CStreamBusinessManager::instance()->findBusiness(ullStreamId);
     if (NULL == pBusiness)
     {
         (void)ACE_OS::snprintf(m_szSendBuf,
-                      MDU_DEBUG_INFO_LEN,
+                      STREAM_DEBUG_INFO_LEN,
                       "\nSession id[%lld] is wrong, can't find corresponding session info."
                       SVS_CMD_PROMPT,
                       ullStreamId);
@@ -653,53 +653,53 @@ void CMduDebugger::sendSessionsdp(uint64_svs ullStreamId)
 
     pBusiness->DumpSdp(ullStreamId, get_handle());
 
-    CMduBusinessManager::instance()->releaseBusiness(pBusiness);
+    CStreamBusinessManager::instance()->releaseBusiness(pBusiness);
 
     sendPrompt();
     return;
 }
 
 
-int32_t CMduDebugger::sendAllSessionInfo(std::string &strCmd)
+int32_t CStreamDebugger::sendAllSessionInfo(std::string &strCmd)
 {
     strCmd = strCmd;
 
-    CMduSessionList sessionList;
-    CMduSessionFactory::instance()->getAllSession(sessionList);
+    CStreamSessionList sessionList;
+    CStreamSessionFactory::instance()->getAllSession(sessionList);
     if (!sessionList.empty())
     {
-        CMduSessionIter iter;
-        CMduSession* pSession = NULL;
+        CStreamSessionIter iter;
+        CStreamSession* pSession = NULL;
         for (iter = sessionList.begin(); iter != sessionList.end(); iter++)
         {
             sendNewLine();
 
             pSession = *iter;
             pSession->Dump(get_handle());
-            CMduSessionFactory::instance()->releaseSession(pSession);
+            CStreamSessionFactory::instance()->releaseSession(pSession);
         }
     }
 
     memset(m_szSendBuf, 0x0, sizeof(m_szSendBuf));
     (void)ACE_OS::snprintf(m_szSendBuf,
-                           MDU_DEBUG_INFO_LEN,
+                           STREAM_DEBUG_INFO_LEN,
                            "\n\nTotal session num[%d]"
                            SVS_CMD_PROMPT,
                            sessionList.size());
     return sendData();
 }
 
-int32_t CMduDebugger::sendBusinessCnt(std::string& strCmd)
+int32_t CStreamDebugger::sendBusinessCnt(std::string& strCmd)
 {
     strCmd = strCmd;
 
     uint32_t businessNum = 0;
 
-    businessNum = CMduBusinessManager::instance()->getBusinessCount();
+    businessNum = CStreamBusinessManager::instance()->getBusinessCount();
 
     memset(m_szSendBuf, 0x0, sizeof(m_szSendBuf));
     (void)ACE_OS::snprintf(m_szSendBuf,
-                           MDU_DEBUG_INFO_LEN,
+                           STREAM_DEBUG_INFO_LEN,
                            "\n\tBusiness total num[%u]"
                            SVS_CMD_PROMPT,
                            businessNum);
@@ -707,13 +707,13 @@ int32_t CMduDebugger::sendBusinessCnt(std::string& strCmd)
     return sendData();
 }
 
-void CMduDebugger::sendBusinessInfo(uint64_svs ullStreamId)
+void CStreamDebugger::sendBusinessInfo(uint64_svs ullStreamId)
 {
-    CMduBusiness* pBusiness = CMduBusinessManager::instance()->findBusiness(ullStreamId);
+    CStreamBusiness* pBusiness = CStreamBusinessManager::instance()->findBusiness(ullStreamId);
     if (NULL == pBusiness)
     {
         (void)ACE_OS::snprintf(m_szSendBuf,
-                      MDU_DEBUG_INFO_LEN,
+                      STREAM_DEBUG_INFO_LEN,
                       "\nBusiness Session id[%lld] is wrong, can't find corresponding business info."
                       SVS_CMD_PROMPT,
                       ullStreamId);
@@ -723,18 +723,18 @@ void CMduDebugger::sendBusinessInfo(uint64_svs ullStreamId)
 
     sendNewLine();
     pBusiness->Dump(get_handle());
-    CMduBusinessManager::instance()->releaseBusiness(pBusiness);
+    CStreamBusinessManager::instance()->releaseBusiness(pBusiness);
 
     sendPrompt();
     return;
 }
 
-int32_t CMduDebugger::sendAllBusinessInfo(std::string &strCmd)
+int32_t CStreamDebugger::sendAllBusinessInfo(std::string &strCmd)
 {
     BUSINESS_LIST      buslist;
     BUSINESS_LIST_ITER iter;
-    CMduBusiness*      pBusiness = NULL;
-    CMduBusinessManager::instance()->getAllBusiness(buslist);
+    CStreamBusiness*      pBusiness = NULL;
+    CStreamBusinessManager::instance()->getAllBusiness(buslist);
 
     for (iter = buslist.begin(); iter != buslist.end(); ++iter)
     {
@@ -746,18 +746,18 @@ int32_t CMduDebugger::sendAllBusinessInfo(std::string &strCmd)
         pBusiness->Dump(get_handle());
     }
 
-    CMduBusinessManager::instance()->releaseBusiness(buslist);
+    CStreamBusinessManager::instance()->releaseBusiness(buslist);
 
     memset(m_szSendBuf, 0x0, sizeof(m_szSendBuf));
     (void)ACE_OS::snprintf(m_szSendBuf,
-                           MDU_DEBUG_INFO_LEN,
+                           STREAM_DEBUG_INFO_LEN,
                            "\n\nTotal business num[%d]"
                            SVS_CMD_PROMPT,
                            buslist.size());
     return sendData();
 }
 
-int32_t CMduDebugger::handle_timeout(const ACE_Time_Value&, const void*)
+int32_t CStreamDebugger::handle_timeout(const ACE_Time_Value&, const void*)
 {
     if (m_iHeartbeatNum > 0)
     {
@@ -770,14 +770,14 @@ int32_t CMduDebugger::handle_timeout(const ACE_Time_Value&, const void*)
     }
 
     (void)ACE_OS::snprintf( m_szSendBuf,
-                            MDU_DEBUG_INFO_LEN,
+                            STREAM_DEBUG_INFO_LEN,
                             "Sorry for Closing, more than 20 minutes no input\r\n");
     (void)sendData();
 
     return -1;
 }
 
-void CMduDebugger::sendVersion()
+void CStreamDebugger::sendVersion()
 {
     time_t now_time;
     (void)time(&now_time);
@@ -809,20 +809,20 @@ void CMduDebugger::sendVersion()
 }
 
 
-void CMduDebugger::sendLogFailMsg()
+void CStreamDebugger::sendLogFailMsg()
 {
     (void)ACE_OS::snprintf( m_szSendBuf,
                       sizeof(m_szSendBuf),
                       "\nDebug client reach limit[%d] please retry later\n\n",
-                      MDU_MAX_DEBUG_NUM);
+                      STREAM_MAX_DEBUG_NUM);
     (void)sendData();
     return;
 }
 
-//==========================CMduDebugger END================================
+//==========================CStreamDebugger END================================
 
 
-int32_t CMduDebugger::sendIAC(uint8_t cmd,uint8_t option)
+int32_t CStreamDebugger::sendIAC(uint8_t cmd,uint8_t option)
 {
     memset(m_szSendBuf,0,sizeof(m_szSendBuf));
 
@@ -835,7 +835,7 @@ int32_t CMduDebugger::sendIAC(uint8_t cmd,uint8_t option)
 
     return sendData();
 }
-int32_t CMduDebugger::sendNegotiate()
+int32_t CStreamDebugger::sendNegotiate()
 {
     (void)sendIAC(DO,TType);
     (void)sendIAC(DO,Techo);

@@ -28,7 +28,7 @@ CPacketList::~CPacketList()
     }
 }
 
-int32_t CPacketList::Send(CMduMediaProcessor* pProcessor)
+int32_t CPacketList::Send(CStreamMediaProcessor* pProcessor)
 {
     if (m_PacketList.empty())
     {
@@ -40,7 +40,7 @@ int32_t CPacketList::Send(CMduMediaProcessor* pProcessor)
         return RET_FAIL;
     }
 
-    CMduSession *pSession = pProcessor->getSession();
+    CStreamSession *pSession = pProcessor->getSession();
     if (NULL == pSession)
     {
         return RET_FAIL;
@@ -131,20 +131,20 @@ void CPacketList::ClearFrame(uint32_t num)
 
 }
 
-CMduMediaProcessor::CMduMediaProcessor()
+CStreamMediaProcessor::CStreamMediaProcessor()
 {
 
     m_pSendSession  = NULL;
     m_SendSessionId = 0;
 }
 
-CMduMediaProcessor::~CMduMediaProcessor()
+CStreamMediaProcessor::~CStreamMediaProcessor()
 {
     try
     {
         if (NULL != m_pSendSession)
         {
-            CMduSessionFactory::instance()->releaseSession(m_pSendSession);
+            CStreamSessionFactory::instance()->releaseSession(m_pSendSession);
             m_pSendSession = NULL;
         }
     }
@@ -153,14 +153,14 @@ CMduMediaProcessor::~CMduMediaProcessor()
     }
 }
 
-int32_t CMduMediaProcessor::Init(uint64_t ullSendSessionID)
+int32_t CStreamMediaProcessor::Init(uint64_t ullSendSessionID)
 {
     if (NULL != m_pSendSession)
     {
         return RET_FAIL;
     }
 
-    m_pSendSession = CMduSessionFactory::instance()->findSession(ullSendSessionID);
+    m_pSendSession = CStreamSessionFactory::instance()->findSession(ullSendSessionID);
     if (NULL == m_pSendSession)
     {
         SVS_LOG((SVS_LM_ERROR,"Init media processor fail, can't find send session by id[%Q].",
@@ -170,28 +170,28 @@ int32_t CMduMediaProcessor::Init(uint64_t ullSendSessionID)
 
     m_SendSessionId = ullSendSessionID;
 
-    SVS_LOG((SVS_LM_INFO,"CMduMediaProcessor::Init success. send session[%p] stream id[%Q].",
+    SVS_LOG((SVS_LM_INFO,"CStreamMediaProcessor::Init success. send session[%p] stream id[%Q].",
             m_pSendSession,
             m_SendSessionId));
     return RET_OK;
 }
 
-CMduSession* CMduMediaProcessor::getSession()
+CStreamSession* CStreamMediaProcessor::getSession()
 {
     return m_pSendSession;
 }
 
-uint32_t CMduMediaProcessor::getInputRate()const
+uint32_t CStreamMediaProcessor::getInputRate()const
 {
     return m_dataStat.getRate();
 }
 
-void CMduMediaProcessor::statFlux(uint32_t flux)
+void CStreamMediaProcessor::statFlux(uint32_t flux)
 {
     m_dataStat.addFlux(flux);
 }
 
-uint32_t CMduMediaProcessor::getFlux(uint32_t& ulStartTime, uint32_t& ulEndTime)
+uint32_t CStreamMediaProcessor::getFlux(uint32_t& ulStartTime, uint32_t& ulEndTime)
 {
     return m_dataStat.getFlux(ulStartTime, ulEndTime);
 }
@@ -289,11 +289,11 @@ void CDirectProcessor::Dump(ACE_HANDLE handle)
 }
 
 
-CMduMediaProcessorSet::CMduMediaProcessorSet()
+CStreamMediaProcessorSet::CStreamMediaProcessorSet()
 {
 }
 
-CMduMediaProcessorSet::~CMduMediaProcessorSet()
+CStreamMediaProcessorSet::~CStreamMediaProcessorSet()
 {
     try
     {
@@ -306,12 +306,12 @@ CMduMediaProcessorSet::~CMduMediaProcessorSet()
 }
 
 //
-int32_t CMduMediaProcessorSet::AddMediaProcessor(CMduMediaProcessor* pstProcessor)
+int32_t CStreamMediaProcessorSet::AddMediaProcessor(CStreamMediaProcessor* pstProcessor)
 {
     if (NULL == pstProcessor)
     {
         SVS_LOG((SVS_LM_ERROR,
-            "CMduMediaProcessorSet::AddMediaProcessor fail, processor is null."));
+            "CStreamMediaProcessorSet::AddMediaProcessor fail, processor is null."));
         return RET_FAIL;
     }
 
@@ -321,14 +321,14 @@ int32_t CMduMediaProcessorSet::AddMediaProcessor(CMduMediaProcessor* pstProcesso
         if (*iter == pstProcessor)
         {
             SVS_LOG((SVS_LM_ERROR,
-                "CMduMediaProcessorSet::AddMediaProcessor fail, processor [%p] already in convert list.",
+                "CStreamMediaProcessorSet::AddMediaProcessor fail, processor [%p] already in convert list.",
                 pstProcessor));
             return RET_FAIL;
         }
     }
 
     m_EsOverRtpProcessList.push_back(pstProcessor);
-    SVS_LOG((SVS_LM_INFO,"CMduMediaProcessorSet::AddMediaProcessor success."
+    SVS_LOG((SVS_LM_INFO,"CStreamMediaProcessorSet::AddMediaProcessor success."
         " processor[%p] processor set[%p]"
         " now processor in list num[%d].",
         pstProcessor,
@@ -339,11 +339,11 @@ int32_t CMduMediaProcessorSet::AddMediaProcessor(CMduMediaProcessor* pstProcesso
 }
 
 //
-int32_t CMduMediaProcessorSet::DelMediaProcessor(CMduMediaProcessor*& pProcessor)
+int32_t CStreamMediaProcessorSet::DelMediaProcessor(CStreamMediaProcessor*& pProcessor)
 {
     if (NULL == pProcessor)
     {
-        SVS_LOG((SVS_LM_DEBUG,"CMduMediaProcessorSet::DelMediaProcessor fail, processor is null."));
+        SVS_LOG((SVS_LM_DEBUG,"CStreamMediaProcessorSet::DelMediaProcessor fail, processor is null."));
         return RET_ERR_PARAM;
     }
 
@@ -354,7 +354,7 @@ int32_t CMduMediaProcessorSet::DelMediaProcessor(CMduMediaProcessor*& pProcessor
         if (*iter == pProcessor)
         {
             SVS_LOG((SVS_LM_INFO,
-                "CMduMediaProcessorSet::DelMediaProcessor success, processor [%p] find in es list."
+                "CStreamMediaProcessorSet::DelMediaProcessor success, processor [%p] find in es list."
                 " now processor in list num[%d].",
                 pProcessor,
                 m_EsOverRtpProcessList.size()));
@@ -370,21 +370,21 @@ int32_t CMduMediaProcessorSet::DelMediaProcessor(CMduMediaProcessor*& pProcessor
 
     if (m_EsOverRtpProcessList.empty())
     {
-        SVS_LOG((SVS_LM_INFO,"CMduMediaProcessorSet::DelMediaProcessor list is empty."));
+        SVS_LOG((SVS_LM_INFO,"CStreamMediaProcessorSet::DelMediaProcessor list is empty."));
         return RET_ERR_LIST_EMPTY;
     }
 
     return RET_OK;
 }
 
-int32_t CMduMediaProcessorSet::GetSendSessionType( CMduMediaProcessor* pProcessor,
+int32_t CStreamMediaProcessorSet::GetSendSessionType( CStreamMediaProcessor* pProcessor,
                                                      uint32_t& unSessionType)const
 {
     if(NULL == pProcessor)
     {
         return RET_FAIL;
     }
-    CMduSession*  pSendSession = pProcessor->getSession();
+    CStreamSession*  pSendSession = pProcessor->getSession();
     if(NULL == pSendSession)
     {
         return RET_FAIL;
@@ -395,14 +395,14 @@ int32_t CMduMediaProcessorSet::GetSendSessionType( CMduMediaProcessor* pProcesso
     return RET_OK;
 }
 
-int32_t CMduMediaProcessorSet::Send(ACE_Message_Block* pMb)
+int32_t CStreamMediaProcessorSet::Send(ACE_Message_Block* pMb)
 {
     ProcessorIter iter;
-    CMduMediaProcessor* pProcessor = NULL;
+    CStreamMediaProcessor* pProcessor = NULL;
 
     if (NULL == pMb)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaProcessorSet::Send fail, mb is null."));
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaProcessorSet::Send fail, mb is null."));
         return RET_FAIL;
     }
 
@@ -424,14 +424,14 @@ int32_t CMduMediaProcessorSet::Send(ACE_Message_Block* pMb)
 }
 
 
-int32_t CMduMediaProcessorSet::SetEncodeFormat(uint32_t unEncodeFormat)
+int32_t CStreamMediaProcessorSet::SetEncodeFormat(uint32_t unEncodeFormat)
 {
     return RET_OK;
 }
-void CMduMediaProcessorSet::Destroy()
+void CStreamMediaProcessorSet::Destroy()
 {
     ProcessorIter iter;
-    CMduMediaProcessor* pProcessor = NULL;
+    CStreamMediaProcessor* pProcessor = NULL;
 
     for (iter = m_EsOverRtpProcessList.begin(); iter != m_EsOverRtpProcessList.end(); ++iter)
     {
@@ -445,7 +445,7 @@ void CMduMediaProcessorSet::Destroy()
 
 }
 
-CMduPsMediaProcessorSet::CMduPsMediaProcessorSet()
+CStreamPsMediaProcessorSet::CStreamPsMediaProcessorSet()
 {
     m_RtpFrameOrganizer.init(this,MAX_RTP_FRAME_CACHE_NUM);
     m_usRtpSeq = 0;
@@ -453,23 +453,23 @@ CMduPsMediaProcessorSet::CMduPsMediaProcessorSet()
     m_AudioPayload = PT_TYPE_PCMU;
 }
 
-CMduPsMediaProcessorSet::~CMduPsMediaProcessorSet()
+CStreamPsMediaProcessorSet::~CStreamPsMediaProcessorSet()
 {
 }
 
 
-int32_t CMduPsMediaProcessorSet::Send(ACE_Message_Block* pMb)
+int32_t CStreamPsMediaProcessorSet::Send(ACE_Message_Block* pMb)
 {
     if (NULL == pMb)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaProcessorSet::Send fail, mb is null."));
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaProcessorSet::Send fail, mb is null."));
         return RET_FAIL;
     }
 
     return m_RtpFrameOrganizer.insertRtpPacket(pMb);
 }
 
-void CMduPsMediaProcessorSet::handleRtpFrame(RTP_FRAME_LIST &rtpFrameList)
+void CStreamPsMediaProcessorSet::handleRtpFrame(RTP_FRAME_LIST &rtpFrameList)
 {
     es_frame_info FrameInfo;
     memset(&FrameInfo,0,sizeof(es_frame_info));
@@ -500,12 +500,12 @@ void CMduPsMediaProcessorSet::handleRtpFrame(RTP_FRAME_LIST &rtpFrameList)
             return;
         }
         rtpPacket.SetPayloadType(FrameInfo.payload);
-        (void)CMduMediaProcessorSet::Send(pMb);
+        (void)CStreamMediaProcessorSet::Send(pMb);
     }
 
 
 }
-bool CMduPsMediaProcessorSet::checkProgramStreamHead(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
+bool CStreamPsMediaProcessorSet::checkProgramStreamHead(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
 {
     ACE_Message_Block* pMb = rtpFrameList.front();
 
@@ -546,11 +546,11 @@ bool CMduPsMediaProcessorSet::checkProgramStreamHead(es_frame_info& FrameInfo,RT
         FrameInfo.payload = PT_TYPE_PCMU;
     }
 #ifdef __PRINT_MEDIA__
-        SVS_LOG((SVS_LM_ERROR, "CMduPsMediaProcessorSet::checkProgramStreamHead ,this is no ps ,payload:[%d].",FrameInfo.payload ));
+        SVS_LOG((SVS_LM_ERROR, "CStreamPsMediaProcessorSet::checkProgramStreamHead ,this is no ps ,payload:[%d].",FrameInfo.payload ));
 #endif
     return false;
 }
-void CMduPsMediaProcessorSet::dealProgramStreamRtpFrame(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
+void CStreamPsMediaProcessorSet::dealProgramStreamRtpFrame(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
 {
     m_enStatus  = PARSING_PACK_HEADER;
 
@@ -627,7 +627,7 @@ void CMduPsMediaProcessorSet::dealProgramStreamRtpFrame(es_frame_info& FrameInfo
 
 
 
-int32_t CMduPsMediaProcessorSet::SkipAllRtpHead(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList,RTP_FRAME_LIST &PatserFrameList)
+int32_t CStreamPsMediaProcessorSet::SkipAllRtpHead(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList,RTP_FRAME_LIST &PatserFrameList)
 {
     ACE_Message_Block* pMb = rtpFrameList.front();
     ACE_Message_Block* pNewMb = NULL;
@@ -670,7 +670,7 @@ int32_t CMduPsMediaProcessorSet::SkipAllRtpHead(es_frame_info& FrameInfo,RTP_FRA
     return RET_OK;
 }
 
-void CMduPsMediaProcessorSet::ProgramStreamPackHeader(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
+void CStreamPsMediaProcessorSet::ProgramStreamPackHeader(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
 {
     ACE_Message_Block* pMb = rtpFrameList.front();
 
@@ -711,7 +711,7 @@ void CMduPsMediaProcessorSet::ProgramStreamPackHeader(es_frame_info& FrameInfo,R
     m_enStatus  = PARSING_SYSTEM_HEADER;
     return;
 }
-void CMduPsMediaProcessorSet::ProgramSystemPackHeader(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
+void CStreamPsMediaProcessorSet::ProgramSystemPackHeader(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
 {
     //00 00 01 bb
     ACE_Message_Block* pMb = rtpFrameList.front();
@@ -756,7 +756,7 @@ void CMduPsMediaProcessorSet::ProgramSystemPackHeader(es_frame_info& FrameInfo,R
 
     return;
 }
-void CMduPsMediaProcessorSet::ProgramStreamMap(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
+void CStreamPsMediaProcessorSet::ProgramStreamMap(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
 {
     ACE_Message_Block* pMb = rtpFrameList.front();
 
@@ -870,7 +870,7 @@ void CMduPsMediaProcessorSet::ProgramStreamMap(es_frame_info& FrameInfo,RTP_FRAM
 
     return;
 }
-void CMduPsMediaProcessorSet::ProgramPrivateHeader(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
+void CStreamPsMediaProcessorSet::ProgramPrivateHeader(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
 {
     ACE_Message_Block* pMb = rtpFrameList.front();
 
@@ -922,7 +922,7 @@ void CMduPsMediaProcessorSet::ProgramPrivateHeader(es_frame_info& FrameInfo,RTP_
 
     m_enStatus  = PARSING_PES_PACKET;
 }
-void CMduPsMediaProcessorSet::ProgramEStramHead(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
+void CStreamPsMediaProcessorSet::ProgramEStramHead(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
 {
     ACE_Message_Block* pMb = rtpFrameList.front();
 
@@ -952,7 +952,7 @@ void CMduPsMediaProcessorSet::ProgramEStramHead(es_frame_info& FrameInfo,RTP_FRA
 
     FrameInfo.length    = pse_length.length - 3 - PSEPack->stuffing_length;//PTS DTS stuffing_length
 #ifdef __PRINT_MEDIA__
-    SVS_LOG((SVS_LM_ERROR, "CMduPsMediaProcessorSet::ProgramEStramHead, EsLen:[%d],pseLen:[%d] stuffLen:[%d]",
+    SVS_LOG((SVS_LM_ERROR, "CStreamPsMediaProcessorSet::ProgramEStramHead, EsLen:[%d],pseLen:[%d] stuffLen:[%d]",
                                          FrameInfo.length,pse_length.length,PSEPack->stuffing_length ));
 #endif
     FrameInfo.streamId  = PSEPack->PackStart.stream_id[0];
@@ -961,7 +961,7 @@ void CMduPsMediaProcessorSet::ProgramEStramHead(es_frame_info& FrameInfo,RTP_FRA
     if(ulPesHeadLen >= length)
     {
 #ifdef __PRINT_MEDIA__
-    SVS_LOG((SVS_LM_ERROR, "CMduPsMediaProcessorSet::ProgramEStramHead, discard pes head len:[%d],packet len:[%d],payload:[%d].",
+    SVS_LOG((SVS_LM_ERROR, "CStreamPsMediaProcessorSet::ProgramEStramHead, discard pes head len:[%d],packet len:[%d],payload:[%d].",
                                          ulPesHeadLen,length,FrameInfo.payload));
 #endif
         /* free the fisrt mb */
@@ -1000,7 +1000,7 @@ void CMduPsMediaProcessorSet::ProgramEStramHead(es_frame_info& FrameInfo,RTP_FRA
 
     return;
 }
-void CMduPsMediaProcessorSet::ProgramKnowFrame(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
+void CStreamPsMediaProcessorSet::ProgramKnowFrame(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
 {
     ACE_Message_Block* pMb = rtpFrameList.front();
 
@@ -1012,7 +1012,7 @@ void CMduPsMediaProcessorSet::ProgramKnowFrame(es_frame_info& FrameInfo,RTP_FRAM
         /* try H264 */
         H264_NALU_HEADER* pNalu = (H264_NALU_HEADER*)(void*)&buffer[4];
 #ifdef __PRINT_MEDIA__
-        SVS_LOG((SVS_LM_ERROR, "CMduPsMediaProcessorSet::ProgramKnowFrame,H264,F:[%d],Type:[%d]",
+        SVS_LOG((SVS_LM_ERROR, "CStreamPsMediaProcessorSet::ProgramKnowFrame,H264,F:[%d],Type:[%d]",
                                                      pNalu->F,pNalu->TYPE));
 #endif
         if((!pNalu->F)&&(H264_NAL_UNDEFINED < pNalu->TYPE || H264_NAL_END > pNalu->TYPE)) {
@@ -1041,7 +1041,7 @@ void CMduPsMediaProcessorSet::ProgramKnowFrame(es_frame_info& FrameInfo,RTP_FRAM
     return;
 }
 
-void CMduPsMediaProcessorSet::sendEsAudioFrame(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
+void CStreamPsMediaProcessorSet::sendEsAudioFrame(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
 {
     if(PT_TYPE_MAX == m_AudioPayload)
     {
@@ -1089,7 +1089,7 @@ void CMduPsMediaProcessorSet::sendEsAudioFrame(es_frame_info& FrameInfo,RTP_FRAM
                 rtpPacket.SetPayloadType(m_VideoPayload);
             }
 
-            (void)CMduMediaProcessorSet::Send(pMb);
+            (void)CStreamMediaProcessorSet::Send(pMb);
             CMediaBlockBuffer::instance().freeMediaBlock(pMb);
         }
         else {
@@ -1112,7 +1112,7 @@ void CMduPsMediaProcessorSet::sendEsAudioFrame(es_frame_info& FrameInfo,RTP_FRAM
                 pSendMb->wr_ptr(sizeof(RTP_FIXED_HEADER));
                 pSendMb->copy(pMb->rd_ptr(),ulEsLen);
 
-                (void)CMduMediaProcessorSet::Send(pSendMb);
+                (void)CStreamMediaProcessorSet::Send(pSendMb);
                 CMediaBlockBuffer::instance().freeMediaBlock(pSendMb);
 
             }
@@ -1125,7 +1125,7 @@ void CMduPsMediaProcessorSet::sendEsAudioFrame(es_frame_info& FrameInfo,RTP_FRAM
     FrameInfo.timestamp++;
     return;
 }
-void CMduPsMediaProcessorSet::sendEsVideoFrame(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
+void CStreamPsMediaProcessorSet::sendEsVideoFrame(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
 {
     ACE_Message_Block* pMb = rtpFrameList.front();
 
@@ -1162,7 +1162,7 @@ void CMduPsMediaProcessorSet::sendEsVideoFrame(es_frame_info& FrameInfo,RTP_FRAM
     }
     return;
 }
-void CMduPsMediaProcessorSet::sendH264EsSigleNalu(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
+void CStreamPsMediaProcessorSet::sendH264EsSigleNalu(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
 {
     uint32_t ulEsLen = FrameInfo.length;
     ACE_Message_Block* pMb     = NULL;
@@ -1193,7 +1193,7 @@ void CMduPsMediaProcessorSet::sendH264EsSigleNalu(es_frame_info& FrameInfo,RTP_F
         rtpPacket.SetPayloadType(m_VideoPayload);
         rtpPacket.SetMarker(true);
 
-        (void)CMduMediaProcessorSet::Send(pMb);
+        (void)CStreamMediaProcessorSet::Send(pMb);
         CMediaBlockBuffer::instance().freeMediaBlock(pMb);
 
     }
@@ -1220,7 +1220,7 @@ void CMduPsMediaProcessorSet::sendH264EsSigleNalu(es_frame_info& FrameInfo,RTP_F
             pSendMb->wr_ptr(sizeof(RTP_FIXED_HEADER));
             pSendMb->copy(pMb->rd_ptr(),ulEsLen);
 
-            (void)CMduMediaProcessorSet::Send(pSendMb);
+            (void)CStreamMediaProcessorSet::Send(pSendMb);
 
             CMediaBlockBuffer::instance().freeMediaBlock(pSendMb);
 
@@ -1231,7 +1231,7 @@ void CMduPsMediaProcessorSet::sendH264EsSigleNalu(es_frame_info& FrameInfo,RTP_F
     FrameInfo.timestamp++;
     return;
 }
-void CMduPsMediaProcessorSet::sendH264EsFuNale(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
+void CStreamPsMediaProcessorSet::sendH264EsFuNale(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
 {
     uint32_t ulEsLen = FrameInfo.length;
     ACE_Message_Block* pMb     = NULL;
@@ -1304,7 +1304,7 @@ void CMduPsMediaProcessorSet::sendH264EsFuNale(es_frame_info& FrameInfo,RTP_FRAM
             }
             rtpPacket.SetPayloadType(m_VideoPayload);
 
-            (void)CMduMediaProcessorSet::Send(pMb);
+            (void)CStreamMediaProcessorSet::Send(pMb);
             CMediaBlockBuffer::instance().freeMediaBlock(pMb);
         }
         else {
@@ -1349,7 +1349,7 @@ void CMduPsMediaProcessorSet::sendH264EsFuNale(es_frame_info& FrameInfo,RTP_FRAM
 
                 pSendMb->copy(pMb->rd_ptr(),ulEsLen);
 
-                (void)CMduMediaProcessorSet::Send(pSendMb);
+                (void)CStreamMediaProcessorSet::Send(pSendMb);
                 CMediaBlockBuffer::instance().freeMediaBlock(pSendMb);
             }
             pMb->rd_ptr(ulEsLen);
@@ -1360,7 +1360,7 @@ void CMduPsMediaProcessorSet::sendH264EsFuNale(es_frame_info& FrameInfo,RTP_FRAM
 
     FrameInfo.timestamp++;
 }
-void CMduPsMediaProcessorSet::sendH265EsSigleNalu(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
+void CStreamPsMediaProcessorSet::sendH265EsSigleNalu(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
 {
     uint32_t ulEsLen = FrameInfo.length;
     ACE_Message_Block* pMb     = NULL;
@@ -1397,7 +1397,7 @@ void CMduPsMediaProcessorSet::sendH265EsSigleNalu(es_frame_info& FrameInfo,RTP_F
         rtpPacket.SetPayloadType(m_VideoPayload);
         rtpPacket.SetMarker(true);
 
-        (void)CMduMediaProcessorSet::Send(pMb);
+        (void)CStreamMediaProcessorSet::Send(pMb);
         CMediaBlockBuffer::instance().freeMediaBlock(pMb);
 
     }
@@ -1430,7 +1430,7 @@ void CMduPsMediaProcessorSet::sendH265EsSigleNalu(es_frame_info& FrameInfo,RTP_F
 
             pSendMb->copy(pMb->rd_ptr(),ulEsLen);
 
-            (void)CMduMediaProcessorSet::Send(pSendMb);
+            (void)CStreamMediaProcessorSet::Send(pSendMb);
 
             CMediaBlockBuffer::instance().freeMediaBlock(pSendMb);
 
@@ -1441,7 +1441,7 @@ void CMduPsMediaProcessorSet::sendH265EsSigleNalu(es_frame_info& FrameInfo,RTP_F
     FrameInfo.timestamp++;
     return;
 }
-void CMduPsMediaProcessorSet::sendH265EsFuNale(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
+void CStreamPsMediaProcessorSet::sendH265EsFuNale(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
 {
     uint32_t ulEsLen = FrameInfo.length;
     ACE_Message_Block* pMb     = NULL;
@@ -1533,7 +1533,7 @@ void CMduPsMediaProcessorSet::sendH265EsFuNale(es_frame_info& FrameInfo,RTP_FRAM
             }
             rtpPacket.SetPayloadType(m_VideoPayload);
 
-            (void)CMduMediaProcessorSet::Send(pMb);
+            (void)CStreamMediaProcessorSet::Send(pMb);
             CMediaBlockBuffer::instance().freeMediaBlock(pMb);
         }
         else {
@@ -1600,7 +1600,7 @@ void CMduPsMediaProcessorSet::sendH265EsFuNale(es_frame_info& FrameInfo,RTP_FRAM
 
                 pSendMb->copy(pMb->rd_ptr(),ulEsLen);
 
-                (void)CMduMediaProcessorSet::Send(pSendMb);
+                (void)CStreamMediaProcessorSet::Send(pSendMb);
                 CMediaBlockBuffer::instance().freeMediaBlock(pSendMb);
             }
             pMb->rd_ptr(ulEsLen);
@@ -1614,12 +1614,12 @@ void CMduPsMediaProcessorSet::sendH265EsFuNale(es_frame_info& FrameInfo,RTP_FRAM
 
 
 
-void CMduPsMediaProcessorSet::skipunKnowFrame(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
+void CStreamPsMediaProcessorSet::skipunKnowFrame(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
 {
     uint32_t ulEsLen = FrameInfo.length;
     ACE_Message_Block* pMb = NULL;
 #ifdef __PRINT_MEDIA__
-    SVS_LOG((SVS_LM_ERROR, "CMduPsMediaProcessorSet::skipunKnowFrame, total EsLen:[%d],streamID:[0x%02x]",
+    SVS_LOG((SVS_LM_ERROR, "CStreamPsMediaProcessorSet::skipunKnowFrame, total EsLen:[%d],streamID:[0x%02x]",
                                    FrameInfo.length,FrameInfo.streamId));
 #endif
 

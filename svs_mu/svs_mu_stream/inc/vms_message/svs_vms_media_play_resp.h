@@ -1,13 +1,13 @@
-#ifndef _MDU_MEDIA_PLAY_RESP_H_
-#define _MDU_MEDIA_PLAY_RESP_H_
+#ifndef _STREAM_MEDIA_PLAY_RESP_H_
+#define _STREAM_MEDIA_PLAY_RESP_H_
 
 #include "svs_vms_message.h"
 
-class CMduMediaPlayResp: public CMduSvsMessage
+class CStreamMediaPlayResp: public CStreamSvsMessage
 {
 public:
-    CMduMediaPlayResp();
-    virtual ~CMduMediaPlayResp();
+    CStreamMediaPlayResp();
+    virtual ~CStreamMediaPlayResp();
 
     int32_t create(char* pMsgData, uint32_t unLength);
 
@@ -26,7 +26,7 @@ public:
     uint8_t* getDeviceID() const;
 
 private:
-    SVS_MSG_MDU_SESSION_PLAY_RESP  *m_pPlayResp;
+    SVS_MSG_STREAM_SESSION_PLAY_RESP  *m_pPlayResp;
 };
 
-#endif /* _MDU_MEDIA_PLAY_RESP_H_ */
+#endif /* _STREAM_MEDIA_PLAY_RESP_H_ */

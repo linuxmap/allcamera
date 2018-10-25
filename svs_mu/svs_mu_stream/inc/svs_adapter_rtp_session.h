@@ -1,12 +1,12 @@
 /*
- * MduRtpSession.h
+ * StreamRtpSession.h
  *
  *  Created on: 2016-2-10
  *      Author:
  */
 
-#ifndef MDURTPSESSION_H_
-#define MDURTPSESSION_H_
+#ifndef STREAMRTPSESSION_H_
+#define STREAMRTPSESSION_H_
 
 #include "svs_adapter_session.h"
 #include "svs_adapter_network_handle.h"
@@ -50,11 +50,11 @@ enum _enRTP_HANDLE_TYPE
     }
 
 
-class CMduRtpSession : public CMduSession
+class CStreamRtpSession : public CStreamSession
 {
 public:
-    CMduRtpSession();
-    virtual ~CMduRtpSession();
+    CStreamRtpSession();
+    virtual ~CStreamRtpSession();
 
     int32_t initSesssion(PEER_TYPE unPeerType);
     /// 对外接口：发送媒体流
@@ -62,9 +62,9 @@ public:
 
     int32_t sendVcrMessage(CRtspPacket &rtspPack);
 
-    int32_t handleInnerMessage(const MDU_INNER_MSG &innerMsg,
+    int32_t handleInnerMessage(const STREAM_INNER_MSG &innerMsg,
                            uint32_t unMsgSize,
-                           CMduSession &peerSession);
+                           CStreamSession &peerSession);
     // 发送EOS消息
     int32_t sendSessionStopMessage(uint32_t unStopType);
 
@@ -85,7 +85,7 @@ public:
 
 protected:
     /// 发送NAT穿越响应实现
-    int32_t sendNatResponse(CMduNatMessage &natMsg);
+    int32_t sendNatResponse(CStreamNatMessage &natMsg);
 
     /// 分配端口资源
     int32_t allocMediaPort();
@@ -114,17 +114,17 @@ private:
 
     bool checkUdpMediaChannelStatus() const;
 
-    int32_t sendTcpNatResponse(const CMduNatMessage &natMsg);
+    int32_t sendTcpNatResponse(const CStreamNatMessage &natMsg);
 
-    int32_t sendUdpNatResponse(const CMduNatMessage &natMsg);
+    int32_t sendUdpNatResponse(const CStreamNatMessage &natMsg);
 
     int32_t sendUdpMediaData(ACE_Message_Block **pMbArray, uint32_t MsgCount);
 
     int32_t sendTcpMediaData(ACE_Message_Block **pMbArray, uint32_t MsgCount);
 
-    int32_t handleRtspMessage(const MDU_INNER_MSG &innerMsg,
+    int32_t handleRtspMessage(const STREAM_INNER_MSG &innerMsg,
                           uint32_t unMsgSize,
-                          CMduSession &peerSession);
+                          CStreamSession &peerSession);
 
     void sendNatRequest();
 
@@ -137,15 +137,15 @@ private:
     // 处理RTSP VCR消息
     int32_t handleRtspVcrMessage(CRtspPacket &rtspMsg,
                              const void* pRecvHandle,
-                             CMduSession &peerSession);
+                             CStreamSession &peerSession);
 
     // 处理RTSP响应消息
     int32_t handleRtspRespMessage(CRtspPacket &rtspMsg,
                              const void* pRecvHandle,
-                             CMduSession &peerSession);
+                             CStreamSession &peerSession);
 
     // 处理心跳消息
-    int32_t handleRtspHeartbeatMsg(const MDU_INNER_MSG &innerMsg, CRtspPacket &rtspPack);
+    int32_t handleRtspHeartbeatMsg(const STREAM_INNER_MSG &innerMsg, CRtspPacket &rtspPack);
 
     int32_t NumRate2PlayRate(double dNumRate, uint32_t &unPlayRate) const;
 
@@ -165,25 +165,25 @@ private:            // 标准RTSP PULL流程
     int32_t sendStdVcrMessage(CRtspPacket &rtspPack);
 
     // 处理标准Rtsp消息
-    int32_t handleStdRtspMessage(const MDU_INNER_MSG &innerMsg,
+    int32_t handleStdRtspMessage(const STREAM_INNER_MSG &innerMsg,
                              uint32_t unMsgSize,
-                             CMduSession &peerSession);
+                             CStreamSession &peerSession);
 
     int32_t handleStdRtspDescribeResp(CRtspMessage &rtspMessage);
 
-    int32_t handleStdRtspSetupResp(CRtspMessage &rtspMessage, CMduSession &peerSession);
+    int32_t handleStdRtspSetupResp(CRtspMessage &rtspMessage, CStreamSession &peerSession);
 
     int32_t handleVideoRtspSetupResp(CRtspSetupMessage &setupMessage);
 
     int32_t handleAudioRtspSetupResp(CRtspSetupMessage &setupMessage);
 
-    int32_t handleStdRtspPlayResp(CRtspMessage &rtspMessage, CMduSession &peerSession);
+    int32_t handleStdRtspPlayResp(CRtspMessage &rtspMessage, CStreamSession &peerSession);
 
-    int32_t handleStdRtspPauseResp(CRtspMessage &rtspMessage, CMduSession &peerSession) const;
+    int32_t handleStdRtspPauseResp(CRtspMessage &rtspMessage, CStreamSession &peerSession) const;
 
     int32_t handleStdRtspTeardownResp(CRtspMessage &rtspMessage) const;
 
-    int32_t handleStdRtspAnnounceReq(CRtspMessage &rtspMessage, CMduSession &peerSession);
+    int32_t handleStdRtspAnnounceReq(CRtspMessage &rtspMessage, CStreamSession &peerSession);
 
     // 如果RTP包中
     void resetRtpPt(CRtpPacket &rtpPack);
@@ -202,7 +202,7 @@ protected:
     CTcpHandle*             m_pTcpHandle;
     bool                    m_bHasPeerAddr;
     ACE_INET_Addr           m_TcpPeerAddr;
-    uint32_t                m_ulLastNatTime;        // 上一次NAT穿越的时间，只在MDU级联时使用
+    uint32_t                m_ulLastNatTime;        // 上一次NAT穿越的时间，只在STREAM级联时使用
 
     /// UDP会话相关句柄
     CNetworkHandle*         m_pUdpHandle[HANDLE_TYPE_MAX];
@@ -220,7 +220,7 @@ protected:
     bool                    m_bAudioPlay;
 
     // Payload Type变更
-    CMduSession*            m_pPeerSession;
+    CStreamSession*            m_pPeerSession;
 
 public:
     uint32_t                m_unRangeType;
@@ -233,4 +233,4 @@ public:
 
 };
 
-#endif /* MDURTPSESSION_H_ */
+#endif /* STREAMRTPSESSION_H_ */

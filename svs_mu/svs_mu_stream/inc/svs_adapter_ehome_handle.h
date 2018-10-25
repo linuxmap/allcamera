@@ -26,7 +26,6 @@ private:
     void ProgramStreamMap(es_frame_info& FrameInfo,char*& pData,uint32_t& ulLens);
     void ProgramPrivateHeader(es_frame_info& FrameInfo,char*& pData,uint32_t& ulLens);
     void ProgramEStramHead(es_frame_info& FrameInfo,char*& pData,uint32_t& ulLens);
-    void ProgramKnowFrame(es_frame_info& FrameInfo,char*& pData,uint32_t& ulLens);
 private:
     uint64_t    m_ullStreamId;
     int32_t     m_lSessionId;

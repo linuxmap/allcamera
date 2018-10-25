@@ -1,12 +1,12 @@
 /*
- * MduRtspPushSession.h
+ * StreamRtspPushSession.h
  *
  *  Created on: 2016-5-16
  *      Author:
  */
 
-#ifndef MDURTSPPUSHSESSION_H_
-#define MDURTSPPUSHSESSION_H_
+#ifndef STREAMRTSPPUSHSESSION_H_
+#define STREAMRTSPPUSHSESSION_H_
 
 #include "svs_ace_header.h"
 #include "svs_adapter_session.h"
@@ -31,18 +31,18 @@ enum RTSP_SESSION_STATUS
 
 #define RTP_INTERLEAVE_LENGTH   4
 
-class CMduRtspPushSession: public ACE_Event_Handler
+class CStreamRtspPushSession: public ACE_Event_Handler
 {
 public:
-    CMduRtspPushSession();
-    virtual ~CMduRtspPushSession();
+    CStreamRtspPushSession();
+    virtual ~CStreamRtspPushSession();
 
 public:
     int32_t open(uint32_t unIndex, const ACE_INET_Addr &peerAddr);
 
     void close();
 
-    int32_t handleSvsMessage(CMduSvsMessage &message);
+    int32_t handleSvsMessage(CStreamSvsMessage &message);
 
     int32_t handle_input(ACE_HANDLE handle);
 
@@ -148,8 +148,8 @@ private:
     CMediaSdp                    m_RtspSdp;
 
     std::string                  m_strContentID;
-    CMduStdRtpSession*           m_pRtpSession;
-    CMduSession*                 m_pPeerSession;
+    CStreamStdRtpSession*           m_pRtpSession;
+    CStreamSession*                 m_pPeerSession;
 
     CRtspMessage*                m_pLastRtspMsg;
 
@@ -163,4 +163,4 @@ private:
 
 };
 
-#endif /* MDURTSPPUSHSESSION_H_ */
+#endif /* STREAMRTSPPUSHSESSION_H_ */

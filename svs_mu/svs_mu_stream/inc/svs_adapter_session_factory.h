@@ -1,5 +1,5 @@
-#ifndef __CMDUSESSIONFACTORY_H__
-#define __CMDUSESSIONFACTORY_H__
+#ifndef __CSTREAMSESSIONFACTORY_H__
+#define __CSTREAMSESSIONFACTORY_H__
 
 #include <map>
 #include <list>
@@ -7,8 +7,8 @@
 #include "svs_adapter_port_manager.h"
 #include "svs_adapter_def.h"
 
-typedef std::list<CMduSession*>     CMduSessionList;
-typedef CMduSessionList::iterator   CMduSessionIter;
+typedef std::list<CStreamSession*>     CStreamSessionList;
+typedef CStreamSessionList::iterator   CStreamSessionIter;
 
 typedef std::map<uint64_svs,uint64_svs>  LIVE_PUSTREAM_MAP ;
 typedef std::map<uint64_svs,uint64_svs>::iterator  LIVE_PUSTREAM_ITER ;
@@ -23,19 +23,19 @@ public:
 };
 
 
-class CMduSessionFactory
+class CStreamSessionFactory
 {
 public:
     /** Default destructor */
-    virtual ~CMduSessionFactory();
+    virtual ~CStreamSessionFactory();
 
-    static CMduSessionFactory *instance()
+    static CStreamSessionFactory *instance()
     {
         if (NULL == g_sessionFactory)
         {
             try
             {
-                g_sessionFactory = new CMduSessionFactory;
+                g_sessionFactory = new CStreamSessionFactory;
             }
             catch(...)
             {
@@ -49,26 +49,26 @@ public:
 
     UTAPI void close();
 
-    UTAPI CMduSession* createSourceSession(std::string& strContend,
+    UTAPI CStreamSession* createSourceSession(std::string& strContend,
                                     PEER_TYPE unPeerType,
                                     SESSION_TYPE unSessionType,
                                     bool bLocalFlag = false);
 
-    UTAPI CMduSession* createSession(PEER_TYPE unPeerType,
+    UTAPI CStreamSession* createSession(PEER_TYPE unPeerType,
                                     SESSION_TYPE unSessionType,
                                     bool bLocalFlag = false);
 
-    UTAPI void releaseSession(CMduSession* &pMduSession);
+    UTAPI void releaseSession(CStreamSession* &pStreamSession);
 
     UTAPI void releaseSession(uint64_svs streamID);
 
-    UTAPI CMduSession* findSession(uint64_svs streamID);
+    UTAPI CStreamSession* findSession(uint64_svs streamID);
 
-    UTAPI CMduSession* findSession(std::string& strContent);
+    UTAPI CStreamSession* findSession(std::string& strContent);
 
-    UTAPI CMduSession* findSessionNotAddRef(uint64_svs streamID) ;
+    UTAPI CStreamSession* findSessionNotAddRef(uint64_svs streamID) ;
 
-    UTAPI void getAllSession(CMduSessionList& sessionList);
+    UTAPI void getAllSession(CStreamSessionList& sessionList);
 
     UTAPI void getSessionCount(uint32_t& inputNum,
                                     uint32_t& outputNum,
@@ -78,25 +78,25 @@ public:
     UTAPI void checkSessionStatus();
 
 private:
-    typedef std::map<uint64_svs, CMduSession*>                STREAM_SESSION_MAP;
-    typedef std::map<uint64_svs, CMduSession*>::iterator      STREAM_SESSION_ITER;
+    typedef std::map<uint64_svs, CStreamSession*>                STREAM_SESSION_MAP;
+    typedef std::map<uint64_svs, CStreamSession*>::iterator      STREAM_SESSION_ITER;
 
     typedef std::multimap<std::string, uint64_svs>            CONTENT_SESSION_MAP;
     typedef std::multimap<std::string, uint64_svs>::iterator  CONTENT_SESSION_ITER;
 
 private:
-    CMduSessionFactory();
-    CMduSessionFactory(const CMduSessionFactory&);
-    CMduSessionFactory& operator=(const CMduSessionFactory&);
+    CStreamSessionFactory();
+    CStreamSessionFactory(const CStreamSessionFactory&);
+    CStreamSessionFactory& operator=(const CStreamSessionFactory&);
 
-    UTAPI CMduSession* createConcreteSession(PEER_TYPE unPeerType,SESSION_TYPE unSessionType,bool bLocalFlag = false) const;
+    UTAPI CStreamSession* createConcreteSession(PEER_TYPE unPeerType,SESSION_TYPE unSessionType,bool bLocalFlag = false) const;
 
     UTAPI void startStatusCheckTimer();
 
     UTAPI void stopStatusCheckTimer();
 
 private:
-    static CMduSessionFactory*      g_sessionFactory;
+    static CStreamSessionFactory*      g_sessionFactory;
 
     STREAM_SESSION_MAP              m_SessionMap;
     CONTENT_SESSION_MAP             m_ContentMap;
@@ -106,9 +106,9 @@ private:
     CSessionStatusTimer*            m_pStatusTimer;
 
 #ifdef UNITTEST
-    friend class MockCMduSessionFactory;
+    friend class MockCStreamSessionFactory;
 #endif
 };
 
 
-#endif // __CMDUSESSIONFACTORY_H__
+#endif // __CSTREAMSESSIONFACTORY_H__

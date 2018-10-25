@@ -4,62 +4,62 @@
 #include "svs_vms_media_play_resp.h"
 #include "svs_rtsp_service.h"
 #include "svs_rtmp_service.h"
-CMduMediaPlayResp::CMduMediaPlayResp()
+CStreamMediaPlayResp::CStreamMediaPlayResp()
 {
     m_pPlayResp = NULL;
 }
 
-CMduMediaPlayResp::~CMduMediaPlayResp()
+CStreamMediaPlayResp::~CStreamMediaPlayResp()
 {
     m_pPlayResp = NULL;
 }
 
 
-int32_t CMduMediaPlayResp::create(char* pMsgData, uint32_t unLength)
+int32_t CStreamMediaPlayResp::create(char* pMsgData, uint32_t unLength)
 {
-    if (sizeof(SVS_MSG_MDU_SESSION_PLAY_RESP) != unLength)
+    if (sizeof(SVS_MSG_STREAM_SESSION_PLAY_RESP) != unLength)
     {
         SVS_LOG((SVS_LM_WARNING,"create media play response fail, length[%u] invalid.", unLength));
         return RET_FAIL;
     }
 
-    int32_t nRet = CMduSvsMessage::create(pMsgData, unLength);
+    int32_t nRet = CStreamSvsMessage::create(pMsgData, unLength);
     if (RET_OK != nRet)
     {
         return nRet;
     }
 
-    m_pPlayResp = (SVS_MSG_MDU_SESSION_PLAY_RESP*)(void*)getBinaryData();
+    m_pPlayResp = (SVS_MSG_STREAM_SESSION_PLAY_RESP*)(void*)getBinaryData();
 
     return RET_OK;
 }
 
-int32_t CMduMediaPlayResp::checkMessage()
+int32_t CStreamMediaPlayResp::checkMessage()
 {
 
     return RET_OK;
 }
 
-uint32_t CMduMediaPlayResp::getMsgType()
+uint32_t CStreamMediaPlayResp::getMsgType()
 {
-    return SVS_MSG_TYPE_MDU_SESSION_PLAY_RESP;
+    return SVS_MSG_TYPE_STREAM_SESSION_PLAY_RESP;
 }
 
-int32_t CMduMediaPlayResp::handleMessage()
+int32_t CStreamMediaPlayResp::handleMessage()
 {
     if(PLAY_URL_TYPE_RTSP == m_pPlayResp->UrlType)
     {
-        return CMduRtspService::instance().handleSvsMessage(*this);
+        return CStreamRtspService::instance().handleSvsMessage(*this);
     }
     else if(PLAY_URL_TYPE_RTMP == m_pPlayResp->UrlType)
     {
-        return CMduRtmpService::instance().handleSvsMessage(*this);
+        return CStreamRtmpService::instance().handleSvsMessage(*this);
     }
 
     return RET_FAIL;
 }
 
-uint32_t CMduMediaPlayResp::getLocalIndex() const
+uint32_t CStreamMediaPlayResp::getLocalIndex() const
 {
     if (NULL == m_pPlayResp)
     {
@@ -69,7 +69,7 @@ uint32_t CMduMediaPlayResp::getLocalIndex() const
     return m_pPlayResp->LocalIndex;
 }
 
-uint32_t CMduMediaPlayResp::getRespCode() const
+uint32_t CStreamMediaPlayResp::getRespCode() const
 {
     if (NULL == m_pPlayResp)
     {
@@ -79,7 +79,7 @@ uint32_t CMduMediaPlayResp::getRespCode() const
     return m_pPlayResp->RespCode;
 }
 
-uint8_t* CMduMediaPlayResp::getDeviceID() const
+uint8_t* CStreamMediaPlayResp::getDeviceID() const
 {
     if (NULL == m_pPlayResp)
     {
@@ -89,14 +89,14 @@ uint8_t* CMduMediaPlayResp::getDeviceID() const
 }
 
 
-void CMduMediaPlayResp::dump() const
+void CStreamMediaPlayResp::dump() const
 {
     if (NULL == m_pPlayResp)
     {
         return;
     }
 
-    CMduSvsMessage::dump();
+    CStreamSvsMessage::dump();
 
     SVS_LOG((SVS_LM_DEBUG,"MessageBody:"));
     SVS_LOG((SVS_LM_DEBUG,"\tLocalIndex: %u", m_pPlayResp->LocalIndex));

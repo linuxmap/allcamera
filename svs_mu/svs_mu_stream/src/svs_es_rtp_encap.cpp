@@ -104,7 +104,7 @@ void CEsRtpEncap::handleVideoEsStream(const char* pEsData, uint32_t unDataSize,
     nal_len = unDataSize - (uint32_t)(nal_start - buf_start);
 
     CRtpPacket  rtpPacket;
-    (void)rtpPacket.GeneratePacket(m_RtpBuffer, MDU_MSG_BLOCK_SIZE);
+    (void)rtpPacket.GeneratePacket(m_RtpBuffer, STREAM_MSG_BLOCK_SIZE);
 
     uint32_t unLeastSize = nal_len;
     char* pDataPos = (char*)nal_start;
@@ -184,7 +184,7 @@ void CEsRtpEncap::handleAudioEsStream(const char* pEsData, uint32_t unDataSize,
                             uint32_t unTimestamp,uint8_t ucStreamType, void* pUserData)
 {
     CRtpPacket  rtpPacket;
-    (void)rtpPacket.GeneratePacket(m_RtpBuffer, MDU_MSG_BLOCK_SIZE);
+    (void)rtpPacket.GeneratePacket(m_RtpBuffer, STREAM_MSG_BLOCK_SIZE);
 
     uint32_t unLeastSize = unDataSize;
     char* pDataPos = (char*)pEsData;

@@ -9,9 +9,9 @@
 #include "svs_adapter_config.h"
 #include "svs_daemon_thread.h"
 
-CMduMediaExchange* CMduMediaExchange::g_pMediaExchange = NULL;
+CStreamMediaExchange* CStreamMediaExchange::g_pMediaExchange = NULL;
 
-CMduMediaExchange::CMduMediaExchange()
+CStreamMediaExchange::CStreamMediaExchange()
 {
     m_ulThreadIdx = 0;
     m_ulThreadNum = 0;
@@ -20,7 +20,7 @@ CMduMediaExchange::CMduMediaExchange()
     m_pMediaExchangeMap  = NULL;
 }
 
-CMduMediaExchange::~CMduMediaExchange()
+CStreamMediaExchange::~CStreamMediaExchange()
 {
     try
     {
@@ -36,11 +36,11 @@ CMduMediaExchange::~CMduMediaExchange()
 }
 
 
-int32_t CMduMediaExchange::Init(uint32_t ulThreadNum)
+int32_t CStreamMediaExchange::Init(uint32_t ulThreadNum)
 {
     if (0 == ulThreadNum)
     {
-        SVS_LOG((SVS_LM_CRITICAL,"CMduMediaExchange::Init fail, thread num is zero."));
+        SVS_LOG((SVS_LM_CRITICAL,"CStreamMediaExchange::Init fail, thread num is zero."));
         return RET_ERR_PARAM;
     }
 
@@ -50,7 +50,7 @@ int32_t CMduMediaExchange::Init(uint32_t ulThreadNum)
     }
     catch(...)
     {
-        SVS_LOG((SVS_LM_CRITICAL,"CMduMediaExchange::Init fail, alloc queue fail. thread num[%u].",
+        SVS_LOG((SVS_LM_CRITICAL,"CStreamMediaExchange::Init fail, alloc queue fail. thread num[%u].",
             ulThreadNum));
         return RET_ERR_SYS_NEW;
     }
@@ -62,7 +62,7 @@ int32_t CMduMediaExchange::Init(uint32_t ulThreadNum)
     }
     catch(...)
     {
-        SVS_LOG((SVS_LM_CRITICAL,"CMduMediaExchange::Init fail, alloc map fail. thread num[%u].",
+        SVS_LOG((SVS_LM_CRITICAL,"CStreamMediaExchange::Init fail, alloc map fail. thread num[%u].",
             ulThreadNum));
         return RET_ERR_SYS_NEW;
     }
@@ -75,7 +75,7 @@ int32_t CMduMediaExchange::Init(uint32_t ulThreadNum)
     }
     catch(...)
     {
-        SVS_LOG((SVS_LM_CRITICAL,"CMduMediaExchange::Init fail, alloc stack fail. thread num[%u].",
+        SVS_LOG((SVS_LM_CRITICAL,"CStreamMediaExchange::Init fail, alloc stack fail. thread num[%u].",
             ulThreadNum));
         return RET_ERR_SYS_NEW;
     }
@@ -107,19 +107,19 @@ int32_t CMduMediaExchange::Init(uint32_t ulThreadNum)
 
     if (-1 == nRet)
     {
-        SVS_LOG((SVS_LM_CRITICAL,"CMduMediaExchange::Init fail, thread activate fail. thread num[%d].",
+        SVS_LOG((SVS_LM_CRITICAL,"CStreamMediaExchange::Init fail, thread activate fail. thread num[%d].",
             ulThreadNum));
 
         return RET_FAIL;
     }
 
-    SVS_LOG((SVS_LM_INFO,"CMduMediaExchange::Init success, thread num[%d].",
+    SVS_LOG((SVS_LM_INFO,"CStreamMediaExchange::Init success, thread num[%d].",
         ulThreadNum));
     return RET_OK;
 }
 
 
-void CMduMediaExchange::Destroy()
+void CStreamMediaExchange::Destroy()
 {
     m_bRunning = false;
 
@@ -139,7 +139,7 @@ void CMduMediaExchange::Destroy()
 }
 
 
-int32_t CMduMediaExchange::svc()
+int32_t CStreamMediaExchange::svc()
 {
     uint32_t unThreadIndex = getThreadIndex();
     SVS_LOG((SVS_LM_INFO,"start media exchange thread:[%d].", unThreadIndex));
@@ -150,18 +150,18 @@ int32_t CMduMediaExchange::svc()
     return RET_OK;
 }
 
-int32_t CMduMediaExchange::addData(ACE_Message_Block* pDataBlock)const
+int32_t CStreamMediaExchange::addData(ACE_Message_Block* pDataBlock)const
 {
     if (NULL == pDataBlock)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaExchange::addData fail, data block is null."));
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaExchange::addData fail, data block is null."));
         return RET_ERR_PARAM;
     }
 
-    MDU_TRANSMIT_PACKET* pPacket = (MDU_TRANSMIT_PACKET*) (void*) pDataBlock->rd_ptr();
+    STREAM_TRANSMIT_PACKET* pPacket = (STREAM_TRANSMIT_PACKET*) (void*) pDataBlock->rd_ptr();
     if (NULL == pPacket)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaExchange::addData fail, data block is null."));
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaExchange::addData fail, data block is null."));
         return RET_FAIL;
     }
 
@@ -171,7 +171,7 @@ int32_t CMduMediaExchange::addData(ACE_Message_Block* pDataBlock)const
     lRet = GenProcessThreadIdx(pPacket->PuStreamId, ulThreadIdx);
     if (RET_OK != lRet)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaExchange::addData fail, "
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaExchange::addData fail, "
                 "get thread index fail. pu stream id[%Q].",
                 pPacket->PuStreamId));
         return RET_FAIL;
@@ -180,7 +180,7 @@ int32_t CMduMediaExchange::addData(ACE_Message_Block* pDataBlock)const
     lRet = EnqueuePacket(ulThreadIdx, pDataBlock);
     if (RET_OK != lRet)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaExchange::addData fail, "
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaExchange::addData fail, "
                 "enqueue data block fail, pu stream id[%Q].",
                 pPacket->PuStreamId));
 
@@ -190,13 +190,13 @@ int32_t CMduMediaExchange::addData(ACE_Message_Block* pDataBlock)const
     return RET_OK;
 }
 //lint -e429
-int32_t CMduMediaExchange::addMediaProcessor(uint64_svs PuStreamId,CMduMediaProcessor* pstProcessor,
+int32_t CStreamMediaExchange::addMediaProcessor(uint64_svs PuStreamId,CStreamMediaProcessor* pstProcessor,
                                              uint32_t   unRecvTranType,uint32_t unSendTranType)const
 {
     if (NULL == pstProcessor)
     {
         SVS_LOG((SVS_LM_ERROR,
-            "CMduMediaExchange::addMediaProcessor fail, processor is null. pu stream id[%Q].",
+            "CStreamMediaExchange::addMediaProcessor fail, processor is null. pu stream id[%Q].",
              PuStreamId));
         return RET_FAIL;
     }
@@ -207,7 +207,7 @@ int32_t CMduMediaExchange::addMediaProcessor(uint64_svs PuStreamId,CMduMediaProc
     if (RET_OK != lRet)
     {
         SVS_LOG((SVS_LM_ERROR,
-            "CMduMediaExchange::addMediaProcessor fail, get thread index fail."
+            "CStreamMediaExchange::addMediaProcessor fail, get thread index fail."
             " pu stream id[%Q] processor[%p].",
             PuStreamId,
             pstProcessor));
@@ -215,7 +215,7 @@ int32_t CMduMediaExchange::addMediaProcessor(uint64_svs PuStreamId,CMduMediaProc
     }
 
     ACE_Message_Block* pMb = NULL;
-    size_t size = sizeof(MDU_TRANSMIT_PACKET) - 1 + sizeof(MDU_PROCESSOR_INFO);
+    size_t size = sizeof(STREAM_TRANSMIT_PACKET) - 1 + sizeof(STREAM_PROCESSOR_INFO);
     try
     {
         pMb = new ACE_Message_Block(size);
@@ -223,27 +223,27 @@ int32_t CMduMediaExchange::addMediaProcessor(uint64_svs PuStreamId,CMduMediaProc
     catch(...)
     {
         SVS_LOG((SVS_LM_ERROR,
-            "CMduMediaExchange::addMediaProcessor fail, alloc mb fail. "
+            "CStreamMediaExchange::addMediaProcessor fail, alloc mb fail. "
             "pu stream id[%Q] processor[%p].",
             PuStreamId,
             pstProcessor));
         return RET_ERR_SYS_NEW;
     }
 
-    MDU_TRANSMIT_PACKET* pPacket = (MDU_TRANSMIT_PACKET*) (void*) pMb->rd_ptr();
+    STREAM_TRANSMIT_PACKET* pPacket = (STREAM_TRANSMIT_PACKET*) (void*) pMb->rd_ptr();
     if (NULL == pPacket)
     {
         SVS_LOG((SVS_LM_ERROR,
-            "CMduMediaExchange::addMediaProcessor fail, data block is null."
+            "CStreamMediaExchange::addMediaProcessor fail, data block is null."
             " pu stream id[%Q] processor[%p].",
             PuStreamId,
             pstProcessor));
         return RET_FAIL;
     }
 
-    pPacket->enPacketType = MDU_PACKET_TYPE_ADD_SESSION;
+    pPacket->enPacketType = STREAM_PACKET_TYPE_ADD_SESSION;
     pPacket->PuStreamId = PuStreamId;
-    MDU_PROCESSOR_INFO* pSessionInfo = (MDU_PROCESSOR_INFO*)&pPacket->cData[0];
+    STREAM_PROCESSOR_INFO* pSessionInfo = (STREAM_PROCESSOR_INFO*)&pPacket->cData[0];
     pSessionInfo->pMediaProcessor = pstProcessor;
     pSessionInfo->unRecvTranType  = unRecvTranType;
     pSessionInfo->unSendTranType  = unSendTranType;
@@ -254,7 +254,7 @@ int32_t CMduMediaExchange::addMediaProcessor(uint64_svs PuStreamId,CMduMediaProc
     if (RET_OK != lRet)
     {
         SVS_LOG((SVS_LM_ERROR,
-            "CMduMediaExchange::addMediaProcessor fail, enqueue fail."
+            "CStreamMediaExchange::addMediaProcessor fail, enqueue fail."
             " pu stream id[%Q] processor[%p].",
             PuStreamId,
             pstProcessor));
@@ -266,7 +266,7 @@ int32_t CMduMediaExchange::addMediaProcessor(uint64_svs PuStreamId,CMduMediaProc
     }
 
     SVS_LOG((SVS_LM_INFO,
-        "CMduMediaExchange::addMediaProcessor success. enqueue success."
+        "CStreamMediaExchange::addMediaProcessor success. enqueue success."
         " pu stream id[%Q] processor[%p] thread index [%u].",
         PuStreamId,
         pstProcessor,
@@ -275,13 +275,13 @@ int32_t CMduMediaExchange::addMediaProcessor(uint64_svs PuStreamId,CMduMediaProc
     return RET_OK;
 }
 
-int32_t CMduMediaExchange::delMediaProcessor(uint64_svs PuStreamId,CMduMediaProcessor* pstProcessor,
+int32_t CStreamMediaExchange::delMediaProcessor(uint64_svs PuStreamId,CStreamMediaProcessor* pstProcessor,
                                              uint32_t   unRecvTranType)const
 {
     if (NULL == pstProcessor)
     {
         SVS_LOG((SVS_LM_ERROR,
-            "CMduMediaExchange::delMediaProcessor fail, processor is null. pu stream id[%Q].",
+            "CStreamMediaExchange::delMediaProcessor fail, processor is null. pu stream id[%Q].",
             PuStreamId));
         return RET_FAIL;
     }
@@ -292,7 +292,7 @@ int32_t CMduMediaExchange::delMediaProcessor(uint64_svs PuStreamId,CMduMediaProc
     if (RET_OK != lRet)
     {
         SVS_LOG((SVS_LM_ERROR,
-            "CMduMediaExchange::delMediaProcessor fail, get thread index fail."
+            "CStreamMediaExchange::delMediaProcessor fail, get thread index fail."
             " pu stream id[%Q] processor[%p].",
             PuStreamId,
             pstProcessor));
@@ -300,7 +300,7 @@ int32_t CMduMediaExchange::delMediaProcessor(uint64_svs PuStreamId,CMduMediaProc
     }
 
     ACE_Message_Block* pMb = NULL;
-    size_t size = sizeof(MDU_TRANSMIT_PACKET) - 1 + sizeof(MDU_PROCESSOR_INFO);
+    size_t size = sizeof(STREAM_TRANSMIT_PACKET) - 1 + sizeof(STREAM_PROCESSOR_INFO);
     try
     {
         pMb = new ACE_Message_Block(size);
@@ -308,27 +308,27 @@ int32_t CMduMediaExchange::delMediaProcessor(uint64_svs PuStreamId,CMduMediaProc
     catch(...)
     {
         SVS_LOG((SVS_LM_ERROR,
-            "CMduMediaExchange::delMediaProcessor fail, alloc mb fail. "
+            "CStreamMediaExchange::delMediaProcessor fail, alloc mb fail. "
             "pu stream id[%Q] processor[%p].",
             PuStreamId,
             pstProcessor));
         return RET_ERR_SYS_NEW;
     }
 
-    MDU_TRANSMIT_PACKET* pPacket = (MDU_TRANSMIT_PACKET*) (void*) pMb->rd_ptr();
+    STREAM_TRANSMIT_PACKET* pPacket = (STREAM_TRANSMIT_PACKET*) (void*) pMb->rd_ptr();
     if (NULL == pPacket)
     {
         SVS_LOG((SVS_LM_ERROR,
-            "CMduMediaExchange::delMediaProcessor fail, data block is null."
+            "CStreamMediaExchange::delMediaProcessor fail, data block is null."
             " pu stream id[%Q] processor[%p].",
             PuStreamId,
             pstProcessor));
         return RET_FAIL;
     }
 
-    pPacket->enPacketType = MDU_PACKET_TYPE_DEL_SESSION;
+    pPacket->enPacketType = STREAM_PACKET_TYPE_DEL_SESSION;
     pPacket->PuStreamId = PuStreamId;
-    MDU_PROCESSOR_INFO* pSessionInfo = (MDU_PROCESSOR_INFO*)&pPacket->cData[0];
+    STREAM_PROCESSOR_INFO* pSessionInfo = (STREAM_PROCESSOR_INFO*)&pPacket->cData[0];
     pSessionInfo->pMediaProcessor = pstProcessor;
     pSessionInfo->unRecvTranType  = unRecvTranType;
 
@@ -338,7 +338,7 @@ int32_t CMduMediaExchange::delMediaProcessor(uint64_svs PuStreamId,CMduMediaProc
     if (RET_OK != lRet)
     {
         SVS_LOG((SVS_LM_ERROR,
-            "CMduMediaExchange::delMediaProcessor fail, enqueue fail."
+            "CStreamMediaExchange::delMediaProcessor fail, enqueue fail."
             " pu stream id[%Q] processor[%p].",
             PuStreamId,
             pstProcessor));
@@ -350,7 +350,7 @@ int32_t CMduMediaExchange::delMediaProcessor(uint64_svs PuStreamId,CMduMediaProc
     }
 
     SVS_LOG((SVS_LM_INFO,
-        "CMduMediaExchange::delMediaProcessor success. enqueue success."
+        "CStreamMediaExchange::delMediaProcessor success. enqueue success."
         " pu stream id[%Q] processor[%p] thread index [%u].",
         PuStreamId,
         pstProcessor,
@@ -359,11 +359,11 @@ int32_t CMduMediaExchange::delMediaProcessor(uint64_svs PuStreamId,CMduMediaProc
     return RET_OK;
 }
 //lint +e429
-int32_t CMduMediaExchange::GenProcessThreadIdx(uint64_svs PuStreamId, uint32_t& ulThreadIdx)const
+int32_t CStreamMediaExchange::GenProcessThreadIdx(uint64_svs PuStreamId, uint32_t& ulThreadIdx)const
 {
     if (0 == m_ulThreadIdx)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaExchange::GenProcessThreadIdx fail, thread num is zero."));
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaExchange::GenProcessThreadIdx fail, thread num is zero."));
         return RET_ERR_SYS;
 
     }
@@ -372,7 +372,7 @@ int32_t CMduMediaExchange::GenProcessThreadIdx(uint64_svs PuStreamId, uint32_t& 
     return RET_OK;
 }
 //lint -e429
-int32_t CMduMediaExchange::EnqueuePacket
+int32_t CStreamMediaExchange::EnqueuePacket
 (
     uint32_t        ulThreadIdx,
     ACE_Message_Block*        pMb
@@ -380,19 +380,19 @@ int32_t CMduMediaExchange::EnqueuePacket
 {
     if (NULL == pMb)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaExchange::EnqueuePacket fail, mb is null."));
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaExchange::EnqueuePacket fail, mb is null."));
         return RET_ERR_PARAM;
     }
 
     if (NULL == m_pDataExchangeQueue)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaExchange::EnqueuePacket fail, data queue is null."));
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaExchange::EnqueuePacket fail, data queue is null."));
         return RET_ERR_SYS;
     }
 
     if (NULL == m_pDataExchangeQueue[ulThreadIdx])
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaExchange::EnqueuePacket fail, queue [%d] is null.",
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaExchange::EnqueuePacket fail, queue [%d] is null.",
                 ulThreadIdx));
         return RET_ERR_SYS;
     }
@@ -404,18 +404,18 @@ int32_t CMduMediaExchange::EnqueuePacket
 //lint +e429
 
 
-uint32_t CMduMediaExchange::getThreadIndex()
+uint32_t CStreamMediaExchange::getThreadIndex()
 {
     ACE_Guard<ACE_Thread_Mutex> locker(m_ExchangeMutex);
     return m_ulThreadIdx++;
 }
 
-void CMduMediaExchange::MediaExchangeThread(uint32_t ulThreadIdx)
+void CStreamMediaExchange::MediaExchangeThread(uint32_t ulThreadIdx)
 {
     if (NULL == m_pDataExchangeQueue)
     {
         SVS_LOG((SVS_LM_ERROR,
-            "CMduMediaExchange::MediaExchangeThread start fail. "
+            "CStreamMediaExchange::MediaExchangeThread start fail. "
             "queue is null. index[%u]",
             ulThreadIdx));
         return;
@@ -424,7 +424,7 @@ void CMduMediaExchange::MediaExchangeThread(uint32_t ulThreadIdx)
     if (NULL == m_pMediaExchangeMap)
     {
         SVS_LOG((SVS_LM_ERROR,
-            "CMduMediaExchange::MediaExchangeThread start fail. "
+            "CStreamMediaExchange::MediaExchangeThread start fail. "
             "map is null. index[%u]",
             ulThreadIdx));
         return;
@@ -436,17 +436,17 @@ void CMduMediaExchange::MediaExchangeThread(uint32_t ulThreadIdx)
     }
     catch(...)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaExchange::MediaExchangeThread start fail. "
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaExchange::MediaExchangeThread start fail. "
                 "alloc queue fail. index[%u]",
             ulThreadIdx));
         return;
     }
 
-    uint32_t unBlockCnt = CMduConfig::instance()->getServiceCapacity() * MDU_BLOCK_NUM_PER_CHANNEL;
+    uint32_t unBlockCnt = CStreamConfig::instance()->getServiceCapacity() * STREAM_BLOCK_NUM_PER_CHANNEL;
     unBlockCnt /= (m_ulThreadNum + 1);
     if (RET_OK != m_pDataExchangeQueue[ulThreadIdx]->init(unBlockCnt))
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaExchange::MediaExchangeThread start fail. "
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaExchange::MediaExchangeThread start fail. "
                 "init queue fail. index[%u]",
             ulThreadIdx));
         return;
@@ -458,16 +458,16 @@ void CMduMediaExchange::MediaExchangeThread(uint32_t ulThreadIdx)
     }
     catch(...)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaExchange::MediaExchangeThread start fail. "
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaExchange::MediaExchangeThread start fail. "
                 "alloc map fail. index[%u]",
             ulThreadIdx));
         return;
     }
 
     ACE_Message_Block* pMb = NULL;
-    MDU_TRANSMIT_PACKET* pPacket = NULL;
+    STREAM_TRANSMIT_PACKET* pPacket = NULL;
     CThread_Stat_Reporter report("MediaExchangeThread");
-    ACE_Time_Value timeout(0, MDU_MAX_QUEUE_DELAY);
+    ACE_Time_Value timeout(0, STREAM_MAX_QUEUE_DELAY);
     while (m_bRunning)
     {
         (void)m_pDataExchangeQueue[ulThreadIdx]->dequeue_head(pMb, &timeout);
@@ -477,7 +477,7 @@ void CMduMediaExchange::MediaExchangeThread(uint32_t ulThreadIdx)
             continue;
         }
 
-        pPacket = (MDU_TRANSMIT_PACKET*)(void*)pMb->rd_ptr();
+        pPacket = (STREAM_TRANSMIT_PACKET*)(void*)pMb->rd_ptr();
         if (NULL == pPacket)
         {
             report.ReportStat();
@@ -486,27 +486,27 @@ void CMduMediaExchange::MediaExchangeThread(uint32_t ulThreadIdx)
 
         switch(pPacket->enPacketType)
         {
-            case MDU_PACKET_TYPE_MEDIA_DATA:
+            case STREAM_PACKET_TYPE_MEDIA_DATA:
             {
                 ProcessMediaData(ulThreadIdx, pMb);
                 CMediaBlockBuffer::instance().freeMediaBlock(pMb);
                 break;
             }
-            case MDU_PACKET_TYPE_ADD_SESSION:
+            case STREAM_PACKET_TYPE_ADD_SESSION:
             {
                 ProcessAddSession(ulThreadIdx, pMb);
                 pMb->release();
                 break;
             }
-            case MDU_PACKET_TYPE_DEL_SESSION:
+            case STREAM_PACKET_TYPE_DEL_SESSION:
             {
                 ProcessDelSession(ulThreadIdx, pMb);
                 pMb->release();
                 break;
             }
-            case MDU_PACKET_TYPE_SESSION_EOS:
-            case MDU_PACKET_TYPE_SESSION_BOS:
-            case MDU_PACKET_TYPE_MAX:
+            case STREAM_PACKET_TYPE_SESSION_EOS:
+            case STREAM_PACKET_TYPE_SESSION_BOS:
+            case STREAM_PACKET_TYPE_MAX:
             default :
             {
                 SVS_LOG((SVS_LM_WARNING,
@@ -531,41 +531,41 @@ void CMduMediaExchange::MediaExchangeThread(uint32_t ulThreadIdx)
     return;
 }
 
-void CMduMediaExchange::ProcessMediaData(uint32_t ulThreadIdx, ACE_Message_Block* pMb)const
+void CStreamMediaExchange::ProcessMediaData(uint32_t ulThreadIdx, ACE_Message_Block* pMb)const
 {
     if (NULL == pMb)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaExchange::ProcessMediaData fail, mb is null."));
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaExchange::ProcessMediaData fail, mb is null."));
         return;
     }
 
-    MDU_TRANSMIT_PACKET* pDataPacket = NULL;
-    pDataPacket = (MDU_TRANSMIT_PACKET*)(void*)pMb->rd_ptr();
+    STREAM_TRANSMIT_PACKET* pDataPacket = NULL;
+    pDataPacket = (STREAM_TRANSMIT_PACKET*)(void*)pMb->rd_ptr();
     if (NULL == pDataPacket)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaExchange::ProcessMediaData fail, data packet is null."));
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaExchange::ProcessMediaData fail, data packet is null."));
         return;
     }
 
     if (NULL == m_pMediaExchangeMap)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaExchange::ProcessMediaData fail, exchange map ptr is null."));
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaExchange::ProcessMediaData fail, exchange map ptr is null."));
         return;
     }
 
     if (ulThreadIdx >= m_ulThreadNum)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaExchange::ProcessMediaData fail, thread index is invalid."));
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaExchange::ProcessMediaData fail, thread index is invalid."));
         return;
     }
 
     if (NULL == m_pMediaExchangeMap[ulThreadIdx])
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaExchange::ProcessMediaData fail, exchange map is null."));
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaExchange::ProcessMediaData fail, exchange map is null."));
         return;
     }
 
-    CMduMediaProcessorSet* pMPSet = NULL;
+    CStreamMediaProcessorSet* pMPSet = NULL;
     MediaExchangeIter iter;
     iter = m_pMediaExchangeMap[ulThreadIdx]->find(pDataPacket->PuStreamId);
     if (m_pMediaExchangeMap[ulThreadIdx]->end() == iter)
@@ -577,13 +577,13 @@ void CMduMediaExchange::ProcessMediaData(uint32_t ulThreadIdx, ACE_Message_Block
     if (NULL == pMPSet)
     {
         SVS_LOG((SVS_LM_ERROR,
-            "CMduMediaExchange::ProcessMediaData fail, media processor set is null."
+            "CStreamMediaExchange::ProcessMediaData fail, media processor set is null."
             " pu stream id[%Q].",
             pDataPacket->PuStreamId));
         return;
     }
     /* skip the transmit head */
-    pMb->rd_ptr(sizeof(MDU_TRANSMIT_PACKET) - 1);
+    pMb->rd_ptr(sizeof(STREAM_TRANSMIT_PACKET) - 1);
 
     (void)pMPSet->Send(pMb);
 
@@ -591,29 +591,29 @@ void CMduMediaExchange::ProcessMediaData(uint32_t ulThreadIdx, ACE_Message_Block
 }
 
 //lint -e429
-void CMduMediaExchange::ProcessAddSession(uint32_t ulThreadIdx, const ACE_Message_Block* pMb)const
+void CStreamMediaExchange::ProcessAddSession(uint32_t ulThreadIdx, const ACE_Message_Block* pMb)const
 {
     if (NULL == pMb)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaExchange::ProcessAddSession fail, mb is null."));
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaExchange::ProcessAddSession fail, mb is null."));
         return;
     }
 
-    MDU_TRANSMIT_PACKET* pAddSessionPacket = NULL;
-    pAddSessionPacket = (MDU_TRANSMIT_PACKET*)(void*)pMb->rd_ptr();
+    STREAM_TRANSMIT_PACKET* pAddSessionPacket = NULL;
+    pAddSessionPacket = (STREAM_TRANSMIT_PACKET*)(void*)pMb->rd_ptr();
     if (NULL == pAddSessionPacket)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaExchange::ProcessAddSession fail, add session packet is null."));
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaExchange::ProcessAddSession fail, add session packet is null."));
         return;
     }
-    MDU_PROCESSOR_INFO* pSessionInfo = (MDU_PROCESSOR_INFO*)&pAddSessionPacket->cData[0];
+    STREAM_PROCESSOR_INFO* pSessionInfo = (STREAM_PROCESSOR_INFO*)&pAddSessionPacket->cData[0];
 
     uint64_svs PuStreamId   = pAddSessionPacket->PuStreamId;
 
     if (NULL == pSessionInfo->pMediaProcessor)
     {
         SVS_LOG((SVS_LM_ERROR,
-            "CMduMediaExchange::ProcessAddSession fail, media processor is null."
+            "CStreamMediaExchange::ProcessAddSession fail, media processor is null."
             " pu stream id[%Q].",
             PuStreamId));
         return;
@@ -621,30 +621,30 @@ void CMduMediaExchange::ProcessAddSession(uint32_t ulThreadIdx, const ACE_Messag
 
     if (NULL == m_pMediaExchangeMap)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaExchange::ProcessAddSession fail, exchange map ptr is null."));
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaExchange::ProcessAddSession fail, exchange map ptr is null."));
         return;
     }
 
     if (ulThreadIdx >= m_ulThreadNum)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaExchange::ProcessAddSession fail, thread index is invalid."));
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaExchange::ProcessAddSession fail, thread index is invalid."));
         return;
     }
 
     if (NULL == m_pMediaExchangeMap[ulThreadIdx])
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaExchange::ProcessAddSession fail, exchange map is null."));
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaExchange::ProcessAddSession fail, exchange map is null."));
         return;
     }
 
     SVS_LOG((SVS_LM_INFO,
-                "CMduMediaExchange::ProcessAddSession, PUID:[%u],recvType:[%d] sendType:[%d].",
+                "CStreamMediaExchange::ProcessAddSession, PUID:[%u],recvType:[%d] sendType:[%d].",
                 PuStreamId,
                 pSessionInfo->unRecvTranType,
                 pSessionInfo->unSendTranType));
 
     bool bNewSet = false;
-    CMduMediaProcessorSet* pMPSet = NULL;
+    CStreamMediaProcessorSet* pMPSet = NULL;
     MediaExchangeIter iter;
     iter = m_pMediaExchangeMap[ulThreadIdx]->find(PuStreamId);
     if (m_pMediaExchangeMap[ulThreadIdx]->end() == iter)
@@ -654,17 +654,17 @@ void CMduMediaExchange::ProcessAddSession(uint32_t ulThreadIdx, const ACE_Messag
             if((MEDIA_TRANS_TYPE_PS == pSessionInfo->unRecvTranType)
                 &&(MEDIA_TRANS_TYPE_RTP == pSessionInfo->unSendTranType))
             {
-                pMPSet = new CMduPsMediaProcessorSet;
+                pMPSet = new CStreamPsMediaProcessorSet;
             }
             else
             {
-                pMPSet = new CMduMediaProcessorSet;
+                pMPSet = new CStreamMediaProcessorSet;
             }
         }
         catch(...)
         {
             SVS_LOG((SVS_LM_ERROR,
-                "CMduMediaExchange::ProcessAddSession fail, alloc media processor set fail."
+                "CStreamMediaExchange::ProcessAddSession fail, alloc media processor set fail."
                 " pu stream id[%Q].",PuStreamId));
             return;
         }
@@ -681,7 +681,7 @@ void CMduMediaExchange::ProcessAddSession(uint32_t ulThreadIdx, const ACE_Messag
     if (RET_OK != lRet)
     {
         SVS_LOG((SVS_LM_ERROR,
-            "CMduMediaExchange::ProcessAddSession fail, add media processor fail."
+            "CStreamMediaExchange::ProcessAddSession fail, add media processor fail."
             " pu stream id[%Q].",
             PuStreamId));
         delete pSessionInfo->pMediaProcessor;
@@ -698,50 +698,50 @@ void CMduMediaExchange::ProcessAddSession(uint32_t ulThreadIdx, const ACE_Messag
 }
 //lint +e429
 
-void CMduMediaExchange::ProcessDelSession(uint32_t ulThreadIdx, const ACE_Message_Block* pMb)const
+void CStreamMediaExchange::ProcessDelSession(uint32_t ulThreadIdx, const ACE_Message_Block* pMb)const
 {
     if (NULL == pMb)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaExchange::ProcessDelSession fail, mb is null."));
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaExchange::ProcessDelSession fail, mb is null."));
         return;
     }
 
-    MDU_TRANSMIT_PACKET* pDelSessionPacket = NULL;
-    pDelSessionPacket = (MDU_TRANSMIT_PACKET*)(void*)pMb->rd_ptr();
+    STREAM_TRANSMIT_PACKET* pDelSessionPacket = NULL;
+    pDelSessionPacket = (STREAM_TRANSMIT_PACKET*)(void*)pMb->rd_ptr();
     if (NULL == pDelSessionPacket)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaExchange::ProcessDelSession fail, del session packet is null."));
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaExchange::ProcessDelSession fail, del session packet is null."));
         return;
     }
-    MDU_PROCESSOR_INFO* pSessionInfo = (MDU_PROCESSOR_INFO*)&pDelSessionPacket->cData[0];
+    STREAM_PROCESSOR_INFO* pSessionInfo = (STREAM_PROCESSOR_INFO*)&pDelSessionPacket->cData[0];
 
     if (NULL == m_pMediaExchangeMap)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaExchange::ProcessDelSession fail, exchange map ptr is null."));
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaExchange::ProcessDelSession fail, exchange map ptr is null."));
         return;
     }
 
     if (ulThreadIdx >= m_ulThreadNum)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaExchange::ProcessDelSession fail, thread index is invalid."));
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaExchange::ProcessDelSession fail, thread index is invalid."));
         return;
     }
 
     if (NULL == m_pMediaExchangeMap[ulThreadIdx])
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaExchange::ProcessDelSession fail, exchange map is null."));
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaExchange::ProcessDelSession fail, exchange map is null."));
         return;
     }
     uint64_svs PuStreamId = pDelSessionPacket->PuStreamId;
 
-    CMduMediaProcessorSet* pMPSet = NULL;
+    CStreamMediaProcessorSet* pMPSet = NULL;
     MediaExchangeIter iter;
 
     iter = m_pMediaExchangeMap[ulThreadIdx]->find(PuStreamId);
     if (m_pMediaExchangeMap[ulThreadIdx]->end() == iter)
     {
         SVS_LOG((SVS_LM_ERROR,
-            "CMduMediaExchange::ProcessDelSession fail, can't find media processor set."
+            "CStreamMediaExchange::ProcessDelSession fail, can't find media processor set."
             " pu stream id[%Q].",
             PuStreamId));
         return;
@@ -754,7 +754,7 @@ void CMduMediaExchange::ProcessDelSession(uint32_t ulThreadIdx, const ACE_Messag
     if (NULL == pMPSet)
     {
         SVS_LOG((SVS_LM_ERROR,
-            "CMduMediaExchange::ProcessDelSession fail, media processor set is null."
+            "CStreamMediaExchange::ProcessDelSession fail, media processor set is null."
             " pu stream id[%Q].",
             PuStreamId));
         return;

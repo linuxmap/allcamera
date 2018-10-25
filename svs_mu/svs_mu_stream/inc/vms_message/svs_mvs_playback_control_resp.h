@@ -9,7 +9,7 @@
 
 #include "svs_vms_message.h"
 
-class CPlaybackControlResp : public CMduSvsMessage
+class CPlaybackControlResp : public CStreamSvsMessage
 {
 public:
     CPlaybackControlResp();
@@ -17,7 +17,7 @@ public:
 
     // 根据消息长度初始化消息，只初始化消息头，子类需要重载
     UTAPI int32_t create(char* pMsgData, uint32_t unLength);
-    // 该消息只有MDU创建，故不需要实现另外的Create方法
+    // 该消息只有STREAM创建，故不需要实现另外的Create方法
     UTAPI int32_t create(uint32_t unLength,
                uint32_t unTransNo);
 

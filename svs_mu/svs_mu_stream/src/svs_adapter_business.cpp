@@ -17,7 +17,7 @@
 #include "svs_adapter_def.h"
 #include "svs_adapter_sdp.h"
 
-CMduBusiness::CMduBusiness()
+CStreamBusiness::CStreamBusiness()
 {
     m_nRefCount         = 1;
     memset(m_szContentID, 0x0, CONTENT_ID_LEN + 1);
@@ -33,7 +33,7 @@ CMduBusiness::CMduBusiness()
     m_unEndTime         = 0;
 }
 
-CMduBusiness::~CMduBusiness()
+CStreamBusiness::~CStreamBusiness()
 {
     try
     {
@@ -48,17 +48,17 @@ CMduBusiness::~CMduBusiness()
     m_pSendProcessor    = NULL;
 }
 
-int32_t CMduBusiness::init(uint64_svs recvSessionId, uint64_svs sendSessionId, PLAY_TYPE enPlayType)
+int32_t CStreamBusiness::init(uint64_svs recvSessionId, uint64_svs sendSessionId, PLAY_TYPE enPlayType)
 {
     uint64_svs unRecvStream = recvSessionId;
     uint64_svs unSendStream = sendSessionId;
-    m_pRecvSession = CMduSessionFactory::instance()->findSession(unRecvStream);
+    m_pRecvSession = CStreamSessionFactory::instance()->findSession(unRecvStream);
     if (NULL == m_pRecvSession)
     {
         return RET_FAIL;
     }
 
-    m_pSendSession = CMduSessionFactory::instance()->findSession(unSendStream);
+    m_pSendSession = CStreamSessionFactory::instance()->findSession(unSendStream);
     if (NULL == m_pSendSession)
     {
         return RET_FAIL;
@@ -69,7 +69,7 @@ int32_t CMduBusiness::init(uint64_svs recvSessionId, uint64_svs sendSessionId, P
     m_enPlayType = enPlayType;
 
 
-    SVS_LOG((SVS_LM_INFO,"init mdu business, recv session[%Q] send session[%Q] service type[%d].",
+    SVS_LOG((SVS_LM_INFO,"init stream business, recv session[%Q] send session[%Q] service type[%d].",
                     m_pRecvSession->getStreamId(),
                     m_pSendSession->getStreamId(),
                     m_enPlayType));
@@ -77,15 +77,15 @@ int32_t CMduBusiness::init(uint64_svs recvSessionId, uint64_svs sendSessionId, P
     return RET_OK;
 }
 
-int32_t CMduBusiness::start()
+int32_t CStreamBusiness::start()
 {
     if ((NULL == m_pRecvSession) || (NULL == m_pSendSession))
     {
         return RET_FAIL;
     }
 
-    if ((MDU_SESSION_STATUS_WAIT_CHANNEL_REDAY <= m_pRecvSession->getStatus())
-        && (MDU_SESSION_STATUS_WAIT_CHANNEL_REDAY <= m_pSendSession->getStatus()))
+    if ((STREAM_SESSION_STATUS_WAIT_CHANNEL_REDAY <= m_pRecvSession->getStatus())
+        && (STREAM_SESSION_STATUS_WAIT_CHANNEL_REDAY <= m_pSendSession->getStatus()))
     {
         if (RET_OK != createMediaProcessor())
         {
@@ -98,7 +98,7 @@ int32_t CMduBusiness::start()
     return RET_OK;
 }
 
-int32_t CMduBusiness::stop()
+int32_t CStreamBusiness::stop()
 {
 
     destroyMediaProcessor();
@@ -107,20 +107,20 @@ int32_t CMduBusiness::stop()
         ACE_GUARD_RETURN(ACE_Recursive_Thread_Mutex, guard, m_Mutex, RET_FAIL);
         if (NULL != m_pRecvSession)
         {
-            CMduSessionFactory::instance()->releaseSession(m_pRecvSession);
+            CStreamSessionFactory::instance()->releaseSession(m_pRecvSession);
             m_pRecvSession = NULL;
         }
 
         if (NULL != m_pSendSession)
         {
-            CMduSessionFactory::instance()->releaseSession(m_pSendSession);
+            CStreamSessionFactory::instance()->releaseSession(m_pSendSession);
             m_pSendSession = NULL;
         }
     }
     return RET_OK;
 }
 
-void CMduBusiness::handleInnerMsg(const MDU_INNER_MSG& innerMsg, uint32_t unMsgSize)
+void CStreamBusiness::handleInnerMsg(const STREAM_INNER_MSG& innerMsg, uint32_t unMsgSize)
 {
     if ((NULL == m_pRecvSession) || (NULL == m_pSendSession))
     {
@@ -146,12 +146,12 @@ void CMduBusiness::handleInnerMsg(const MDU_INNER_MSG& innerMsg, uint32_t unMsgS
     return;
 }
 
-const char* CMduBusiness::getContentID() const
+const char* CStreamBusiness::getContentID() const
 {
     return m_szContentID;
 }
 
-uint64_svs CMduBusiness::getRecvStreamID() const
+uint64_svs CStreamBusiness::getRecvStreamID() const
 {
     if (NULL == m_pRecvSession)
     {
@@ -161,7 +161,7 @@ uint64_svs CMduBusiness::getRecvStreamID() const
     return m_pRecvSession->getStreamId();
 }
 
-uint64_svs CMduBusiness::getSendStreamID() const
+uint64_svs CStreamBusiness::getSendStreamID() const
 {
     if (NULL == m_pSendSession)
     {
@@ -172,7 +172,7 @@ uint64_svs CMduBusiness::getSendStreamID() const
 }
 
 
-CMduSession* CMduBusiness::getSession(uint64_svs unStreamID) const
+CStreamSession* CStreamBusiness::getSession(uint64_svs unStreamID) const
 {
     if (unStreamID == getRecvStreamID())
     {
@@ -189,7 +189,7 @@ CMduSession* CMduBusiness::getSession(uint64_svs unStreamID) const
     return NULL;
 }//lint !e1763
 
-void CMduBusiness::statFluxInfo()
+void CStreamBusiness::statFluxInfo()
 {
     ACE_GUARD(ACE_Recursive_Thread_Mutex, guard, m_Mutex);
     if (NULL == m_pRecvProcessor)
@@ -212,7 +212,7 @@ void CMduBusiness::statFluxInfo()
     return;
 }
 
-uint32_t CMduBusiness::getInputRate()
+uint32_t CStreamBusiness::getInputRate()
 {
     uint32_t rate = 0;
     ACE_GUARD_RETURN(ACE_Recursive_Thread_Mutex, guard, m_Mutex, rate);
@@ -223,46 +223,46 @@ uint32_t CMduBusiness::getInputRate()
 
     return rate;
 }
-uint32_t CMduBusiness::getOutputRate()const
+uint32_t CStreamBusiness::getOutputRate()const
 {
     return m_OutputRate;
 }
-uint64_t CMduBusiness::getFluxszie()const
+uint64_t CStreamBusiness::getFluxszie()const
 {
     return m_ullFluxSize;
 }
 
-uint32_t CMduBusiness::getStarttime()const
+uint32_t CStreamBusiness::getStarttime()const
 {
     return m_unStartTime;
 }
 
-uint32_t CMduBusiness::getEndtime()
+uint32_t CStreamBusiness::getEndtime()
 {
     return m_unEndTime;
 }
 
-PLAY_TYPE CMduBusiness::getPlayType()const
+PLAY_TYPE CStreamBusiness::getPlayType()const
 {
     return m_enPlayType;
 }
 
-int32_t CMduBusiness::addReference()
+int32_t CStreamBusiness::addReference()
 {
     return ++m_nRefCount;
 }
 
-int32_t CMduBusiness::decReference()
+int32_t CStreamBusiness::decReference()
 {
     return --m_nRefCount;
 }
 
 /*lint -e423*/
-void CMduBusiness::createDirectProcessor()
+void CStreamBusiness::createDirectProcessor()
 {
     if (NULL == m_pSendSession || NULL == m_pRecvSession)
     {
-        SVS_LOG((SVS_LM_WARNING,"mdu business create realtime processor fail, send session or recv session is null."));
+        SVS_LOG((SVS_LM_WARNING,"stream business create realtime processor fail, send session or recv session is null."));
         return;
     }
 
@@ -274,11 +274,11 @@ void CMduBusiness::createDirectProcessor()
 }
 
 
-int32_t CMduBusiness::createMediaProcessor()
+int32_t CStreamBusiness::createMediaProcessor()
 {
     if (NULL == m_pSendSession)
     {
-        SVS_LOG((SVS_LM_WARNING,"mdu business create media processor fail, session is null."));
+        SVS_LOG((SVS_LM_WARNING,"stream business create media processor fail, session is null."));
         return RET_FAIL;
     }
 
@@ -319,7 +319,7 @@ int32_t CMduBusiness::createMediaProcessor()
 }
 /*lint +e423*/
 
-int32_t CMduBusiness::registMediaProcessor()
+int32_t CStreamBusiness::registMediaProcessor()
 {
     uint64_svs   recvStreamId = getRecvStreamID();
     uint64_svs   sendStreamId = getSendStreamID();
@@ -354,7 +354,7 @@ int32_t CMduBusiness::registMediaProcessor()
         return RET_FAIL;
     }
 
-    if (RET_OK != CMduMediaExchange::instance()->addMediaProcessor(recvStreamId,
+    if (RET_OK != CStreamMediaExchange::instance()->addMediaProcessor(recvStreamId,
             m_pRecvProcessor, unRecvTransType, unSendTransType))
     {
         SVS_LOG((SVS_LM_WARNING,"add recv processor to media exchange fail, "
@@ -369,7 +369,7 @@ int32_t CMduBusiness::registMediaProcessor()
     return RET_OK;
 }
 
-void CMduBusiness::destroyMediaProcessor()
+void CStreamBusiness::destroyMediaProcessor()
 {
     uint64_svs   recvStreamId = getRecvStreamID();
 
@@ -385,18 +385,18 @@ void CMduBusiness::destroyMediaProcessor()
     if (NULL != m_pRecvProcessor)
     {
         ACE_GUARD(ACE_Recursive_Thread_Mutex, guard, m_Mutex);
-        (void)CMduMediaExchange::instance()->delMediaProcessor(getRecvStreamID(), m_pRecvProcessor, unTransType);
+        (void)CStreamMediaExchange::instance()->delMediaProcessor(getRecvStreamID(), m_pRecvProcessor, unTransType);
         m_pRecvProcessor = NULL;
     }
 
     if (NULL != m_pSendProcessor)
     {
-        (void) CMduMediaExchange::instance()->delMediaProcessor(getSendStreamID(), m_pSendProcessor, unTransType);
+        (void) CStreamMediaExchange::instance()->delMediaProcessor(getSendStreamID(), m_pSendProcessor, unTransType);
         m_pSendProcessor = NULL;
     }
 }
 
-void CMduBusiness::Dump(ACE_HANDLE handle)
+void CStreamBusiness::Dump(ACE_HANDLE handle)
 {
     if (NULL == m_pRecvSession)
     {
@@ -414,7 +414,7 @@ void CMduBusiness::Dump(ACE_HANDLE handle)
              m_pRecvSession->getStreamId(),
              m_pRecvSession->getContentID(),
              CSessionInfo::instance().getPeerType(m_pRecvSession->getPeerType()),
-             CMduBusinessManager::instance()->getBusinessCount(m_pRecvSession->getStreamId()),
+             CStreamBusinessManager::instance()->getBusinessCount(m_pRecvSession->getStreamId()),
              m_pRecvSession->getVideoAddr().get_host_addr(),
              m_pRecvSession->getVideoAddr().get_port_number(),
              m_pRecvSession->getPeerAddr().get_host_addr(),
@@ -431,7 +431,7 @@ void CMduBusiness::Dump(ACE_HANDLE handle)
     return;
 }
 
-void CMduBusiness::DumpSdp(uint64_svs ullStreamId, ACE_HANDLE handle)
+void CStreamBusiness::DumpSdp(uint64_svs ullStreamId, ACE_HANDLE handle)
 {
     if (NULL == m_pRecvSession)
     {

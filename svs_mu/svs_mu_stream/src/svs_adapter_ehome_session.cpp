@@ -22,36 +22,36 @@
 #include "svs_vms_playback_control_req.h"
 #include "svs_adapter_business_manager.h"
 
-CMduEhomeSession::CMduEhomeSession()
+CStreamEhomeSession::CStreamEhomeSession()
 {
     m_pPeerSession         = NULL;
     m_lEhomeSessionID      = -1;
 }
 
-CMduEhomeSession::~CMduEhomeSession()
+CStreamEhomeSession::~CStreamEhomeSession()
 {
 }
 
-int32_t CMduEhomeSession::initSesssion(PEER_TYPE unPeerType)
+int32_t CStreamEhomeSession::initSesssion(PEER_TYPE unPeerType)
 {
     m_stSessionInfo.SessionType    = RTP_SESSION;
     m_stSessionInfo.PeerType       = unPeerType;
     m_stSessionInfo.TransDirection = TRANS_DIRECTION_RECVONLY;
     m_stSessionInfo.MediaTransType = MEDIA_TRANS_TYPE_TCP;
     m_stSessionInfo.TransProtocol  = TRANS_PROTOCAL_UDP;
-    m_stSessionInfo.SpecifyIp      = CMduConfig::instance()->getInternalMediaIp();
+    m_stSessionInfo.SpecifyIp      = CStreamConfig::instance()->getInternalMediaIp();
     return RET_OK;
 }
 
 
-int32_t CMduEhomeSession::sendMediaData(ACE_Message_Block **pMbArray, uint32_t MsgCount)
+int32_t CStreamEhomeSession::sendMediaData(ACE_Message_Block **pMbArray, uint32_t MsgCount)
 {
     return RET_OK;
 }
 
-int32_t CMduEhomeSession::handleInnerMessage(const MDU_INNER_MSG &innerMsg,
+int32_t CStreamEhomeSession::handleInnerMessage(const STREAM_INNER_MSG &innerMsg,
                                        uint32_t unMsgSize,
-                                       CMduSession &peerSession)
+                                       CStreamSession &peerSession)
 {
     if( INNER_MSG_RTCP == innerMsg.usMsgType )
     {
@@ -63,28 +63,28 @@ int32_t CMduEhomeSession::handleInnerMessage(const MDU_INNER_MSG &innerMsg,
     return RET_OK;
 }
 
-int32_t CMduEhomeSession::sendVcrMessage(CRtspPacket &rtspPack)
+int32_t CStreamEhomeSession::sendVcrMessage(CRtspPacket &rtspPack)
 {
     return RET_OK;
 }
 
-int32_t CMduEhomeSession::dealSccVcrResp(const SVS_MSG_PLAYBACK_CONTROL_RESP* pMsg)
+int32_t CStreamEhomeSession::dealSccVcrResp(const SVS_MSG_PLAYBACK_CONTROL_RESP* pMsg)
 {
     return RET_OK;
 }
-int32_t CMduEhomeSession::sendSessionStopMessage(uint32_t unStopType)
+int32_t CStreamEhomeSession::sendSessionStopMessage(uint32_t unStopType)
 {
     return RET_OK;
 }
 
 
-ACE_INET_Addr CMduEhomeSession::getPeerAddr()const
+ACE_INET_Addr CStreamEhomeSession::getPeerAddr()const
 {
 
     return m_EhomePeerAddr;
 }
 
-ACE_INET_Addr CMduEhomeSession::getMediaAddr()const
+ACE_INET_Addr CStreamEhomeSession::getMediaAddr()const
 {
     return getPeerAddr();
 }
@@ -92,16 +92,16 @@ ACE_INET_Addr CMduEhomeSession::getMediaAddr()const
 
 
 
-int32_t CMduEhomeSession::sendNatResponse(CMduNatMessage &natMsg)
+int32_t CStreamEhomeSession::sendNatResponse(CStreamNatMessage &natMsg)
 {
     return RET_OK;
 }
 
 
-int32_t CMduEhomeSession::allocMediaPort()
+int32_t CStreamEhomeSession::allocMediaPort()
 {
     CHandle* pHandle = NULL;
-    int32_t nRet = CMduPortManager::instance()->allocEhomePort(getSpecifyIp(),pHandle);
+    int32_t nRet = CStreamPortManager::instance()->allocEhomePort(getSpecifyIp(),pHandle);
     if (RET_OK != nRet)
     {
         SVS_LOG((SVS_LM_ERROR,"stream[%Q] alloc video media port fail.",
@@ -115,7 +115,7 @@ int32_t CMduEhomeSession::allocMediaPort()
     return RET_OK;
 }
 
-int32_t CMduEhomeSession::startMediaPort()
+int32_t CStreamEhomeSession::startMediaPort()
 {
     int32_t iRet = m_pEhomeHandle->startHandle(getStreamId(),m_EhomePeerAddr);
     if (RET_OK != iRet)
@@ -130,7 +130,7 @@ int32_t CMduEhomeSession::startMediaPort()
     return iRet;
 }
 
-int32_t CMduEhomeSession::stopMediaPort()
+int32_t CStreamEhomeSession::stopMediaPort()
 {
 
     if (NULL != m_pEhomeHandle)
@@ -143,7 +143,7 @@ int32_t CMduEhomeSession::stopMediaPort()
     return RET_OK;
 }
 
-bool CMduEhomeSession::checkMediaChannelStatus()
+bool CStreamEhomeSession::checkMediaChannelStatus()
 {
     bool bRet = true;
 
@@ -151,12 +151,12 @@ bool CMduEhomeSession::checkMediaChannelStatus()
     return bRet;
 }
 
-int32_t CMduEhomeSession::setRemoteAddress()
+int32_t CStreamEhomeSession::setRemoteAddress()
 {
     return RET_OK;
 }
 
-int32_t CMduEhomeSession::sendStartRequest()
+int32_t CStreamEhomeSession::sendStartRequest()
 {
     return RET_OK;
 }

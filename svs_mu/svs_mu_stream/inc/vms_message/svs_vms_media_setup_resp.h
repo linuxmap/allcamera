@@ -1,20 +1,20 @@
 /*
- * MduMediaSetupResp.h
+ * StreamMediaSetupResp.h
  *
  *  Created on: 2016-5-18
  *      Author:
  */
 
-#ifndef MDUMEDIASETUPRESP_H_
-#define MDUMEDIASETUPRESP_H_
+#ifndef STREAMMEDIASETUPRESP_H_
+#define STREAMMEDIASETUPRESP_H_
 
 #include "svs_vms_message.h"
 
-class CMduMediaSetupResp: public CMduSvsMessage
+class CStreamMediaSetupResp: public CStreamSvsMessage
 {
 public:
-    CMduMediaSetupResp();
-    virtual ~CMduMediaSetupResp();
+    CStreamMediaSetupResp();
+    virtual ~CStreamMediaSetupResp();
 
     int32_t create(char* pMsgData, uint32_t unLength);
 
@@ -49,7 +49,7 @@ public:
     UTAPI uint16_t getConnAudioPort() const;
 
 private:
-    SVS_MSG_MDU_SESSION_SETUP_RESP  *m_pSetupResp;
+    SVS_MSG_STREAM_SESSION_SETUP_RESP  *m_pSetupResp;
 };
 
-#endif /* MDUMEDIASETUPRESP_H_ */
+#endif /* STREAMMEDIASETUPRESP_H_ */

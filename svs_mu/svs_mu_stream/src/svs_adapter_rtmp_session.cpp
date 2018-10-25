@@ -1,5 +1,5 @@
 /*
- * MduStdRtpSession.cpp
+ * StreamStdRtpSession.cpp
  *
  *  Created on: 2016-5-20
  *      Author:
@@ -15,7 +15,7 @@
 #include "svs_adapter_media_data_queue.h"
 #include "svs_adapter_media_block_buffer.h"
 
-CMduRtmpSession::CMduRtmpSession()
+CStreamRtmpSession::CStreamRtmpSession()
 {
     m_pHandle         = NULL;
     m_strRtspUrl      = "";
@@ -27,18 +27,18 @@ CMduRtmpSession::CMduRtmpSession()
     m_ulLastRecvTime  = SVS_GetSecondTime();
 }
 
-CMduRtmpSession::~CMduRtmpSession()
+CStreamRtmpSession::~CStreamRtmpSession()
 {
 
 }
 
-int32_t CMduRtmpSession::initRtmpSession(uint64_t ullPeerStreamID,
+int32_t CStreamRtmpSession::initRtmpSession(uint64_t ullPeerStreamID,
                                          PLAY_TYPE      enPlayType,
                                          const ACE_INET_Addr &localAddr,
                                          const ACE_INET_Addr &/*peerAddr*/)
 {
     m_ullPeerStreamID = ullPeerStreamID;
-    CMduSession *pPeerSession = CMduSessionFactory::instance()->findSession(m_ullPeerStreamID);
+    CStreamSession *pPeerSession = CStreamSessionFactory::instance()->findSession(m_ullPeerStreamID);
     if (!pPeerSession)
     {
         SVS_LOG((SVS_LM_WARNING,"init rtmp session[%Q] fail, can't find peer session[%Q].",
@@ -57,52 +57,52 @@ int32_t CMduRtmpSession::initRtmpSession(uint64_t ullPeerStreamID,
 
     m_ulVideoCodeType = pPeerSession->getVideoCodecType();
 
-    CMduSessionFactory::instance()->releaseSession(pPeerSession);
+    CStreamSessionFactory::instance()->releaseSession(pPeerSession);
 
-    setStatus(MDU_SESSION_STATUS_WAIT_START);
+    setStatus(STREAM_SESSION_STATUS_WAIT_START);
 
     SVS_LOG((SVS_LM_INFO,"init rtmp session[%Q] service type[%d] success.",
                     getStreamId(), getPlayType()));
     return RET_OK;
 }
 
-int32_t CMduRtmpSession::startRtmpSession()
+int32_t CStreamRtmpSession::startRtmpSession()
 {
 
     m_stSessionInfo.TransProtocol = TRANS_PROTOCAL_TCP;
 
-    setStatus(MDU_SESSION_STATUS_WAIT_CHANNEL_REDAY);
+    setStatus(STREAM_SESSION_STATUS_WAIT_CHANNEL_REDAY);
     SVS_LOG((SVS_LM_INFO,"start rtmp session[%Q]  success.", getStreamId()));
     return RET_OK;
 }
 
-int32_t CMduRtmpSession::sendStartRequest()
+int32_t CStreamRtmpSession::sendStartRequest()
 {
-    setStatus(MDU_SESSION_STATUS_DISPATCHING);
+    setStatus(STREAM_SESSION_STATUS_DISPATCHING);
     return RET_OK;
 }
 
-void CMduRtmpSession::setRtmpHandle(CMduRtmpSendHandle* pHandle)
+void CStreamRtmpSession::setRtmpHandle(CStreamRtmpSendHandle* pHandle)
 {
     m_pHandle    = pHandle;
     m_rtmpAddr   = pHandle->getPeerAddr();
     return;
 }
 
-void CMduRtmpSession::setPlayLoad(uint16_t unVedioPT,uint16_t unAudioPT )
+void CStreamRtmpSession::setPlayLoad(uint16_t unVedioPT,uint16_t unAudioPT )
 {
     m_unVedioPT = unVedioPT;
     m_unAudioPT = unAudioPT;
     return;
 }
 
-void CMduRtmpSession::setSessionId(uint64_t ullSessionId)
+void CStreamRtmpSession::setSessionId(uint64_t ullSessionId)
 {
     m_stSessionInfo.StreamID = ullSessionId;
     return;
 }
 
-int32_t CMduRtmpSession::initSesssion(PEER_TYPE unPeerType)
+int32_t CStreamRtmpSession::initSesssion(PEER_TYPE unPeerType)
 {
     m_stSessionInfo.SessionType = RTMP_SESSION;
     m_stSessionInfo.PeerType = unPeerType;
@@ -112,10 +112,10 @@ int32_t CMduRtmpSession::initSesssion(PEER_TYPE unPeerType)
     return RET_OK;
 }
 
-int32_t CMduRtmpSession::sendMediaData(ACE_Message_Block **pMbArray, uint32_t MsgCount)
+int32_t CStreamRtmpSession::sendMediaData(ACE_Message_Block **pMbArray, uint32_t MsgCount)
 {
 
-    if (MDU_SESSION_STATUS_DISPATCHING != getStatus())
+    if (STREAM_SESSION_STATUS_DISPATCHING != getStatus())
     {
         SVS_LOG((SVS_LM_INFO,"session[%Q] discard media data, the status[%d] invalid.",
                         getStreamId(), getStatus()));
@@ -128,44 +128,44 @@ int32_t CMduRtmpSession::sendMediaData(ACE_Message_Block **pMbArray, uint32_t Ms
     return m_pHandle->sendMediaData(pMbArray, MsgCount);
 }
 
-uint32_t CMduRtmpSession::getMediaTransType()const
+uint32_t CStreamRtmpSession::getMediaTransType()const
 {
     return MEDIA_TRANS_TYPE_RTMP;
 }
 
-int32_t CMduRtmpSession::sendVcrMessage(CRtspPacket &rtspPack)
+int32_t CStreamRtmpSession::sendVcrMessage(CRtspPacket &rtspPack)
 {
     SVS_LOG((SVS_LM_INFO,"session[%Q] send vcr message success.", getStreamId()));
     return RET_OK;
 }
 
-int32_t CMduRtmpSession::sendSessionStopMessage(uint32_t unStopType)
+int32_t CStreamRtmpSession::sendSessionStopMessage(uint32_t unStopType)
 {
     SVS_LOG((SVS_LM_INFO,"session[%Q] send stop message success.", getStreamId()));
     return RET_OK;
 }
 
-void CMduRtmpSession::setSdpInfo(CMediaSdp& rtspSdp)
+void CStreamRtmpSession::setSdpInfo(CMediaSdp& rtspSdp)
 {
     m_rtspSdp.copy(rtspSdp);
 }
-void CMduRtmpSession::getSdpInfo(CMediaSdp& rtspSdp)
+void CStreamRtmpSession::getSdpInfo(CMediaSdp& rtspSdp)
 {
     rtspSdp.copy(m_rtspSdp);
 }
-ACE_INET_Addr CMduRtmpSession::getPeerAddr()const
+ACE_INET_Addr CStreamRtmpSession::getPeerAddr()const
 {
     return m_rtmpAddr;
 }
 
-ACE_INET_Addr CMduRtmpSession::getMediaAddr()const
+ACE_INET_Addr CStreamRtmpSession::getMediaAddr()const
 {
     return m_rtmpAddr;
 }
 
-int32_t CMduRtmpSession::handleInnerMessage(const MDU_INNER_MSG &innerMsg,
+int32_t CStreamRtmpSession::handleInnerMessage(const STREAM_INNER_MSG &innerMsg,
                                           uint32_t unMsgSize,
-                                          CMduSession&  peerSession)
+                                          CStreamSession&  peerSession)
 {
     m_ulLastRecvTime = SVS_GetSecondTime();
 
@@ -174,19 +174,19 @@ int32_t CMduRtmpSession::handleInnerMessage(const MDU_INNER_MSG &innerMsg,
     return RET_OK;
 }
 
-int32_t CMduRtmpSession::allocMediaPort()
+int32_t CStreamRtmpSession::allocMediaPort()
 {
     return RET_OK;
 }
 
-int32_t CMduRtmpSession::startMediaPort()
+int32_t CStreamRtmpSession::startMediaPort()
 {
     SVS_LOG((SVS_LM_INFO,"Start media port success. stream id[%Q].",
             getStreamId()));
     return RET_OK;
 }
 
-int32_t CMduRtmpSession::stopMediaPort()
+int32_t CStreamRtmpSession::stopMediaPort()
 {
     SVS_LOG((SVS_LM_INFO,"Rtp udp session stop port success. stream id[%Q].",
                     getStreamId()));
@@ -196,10 +196,10 @@ int32_t CMduRtmpSession::stopMediaPort()
 
 /*lint +e818*/
 
-bool CMduRtmpSession::checkMediaChannelStatus()
+bool CStreamRtmpSession::checkMediaChannelStatus()
 {
     uint32_t ulCostTime = SVS_GetSecondTime() - m_ulLastRecvTime;
-    if (ulCostTime > MDU_MEDIA_CHANNEL_INVAILD_INTERVAL)
+    if (ulCostTime > STREAM_MEDIA_CHANNEL_INVAILD_INTERVAL)
     {
         SVS_LOG((SVS_LM_WARNING,"std session[%Q] not recv data at [%u]s, check media channel status fail.",
                          getStreamId(), ulCostTime));

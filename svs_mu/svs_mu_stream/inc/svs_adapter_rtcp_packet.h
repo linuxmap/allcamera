@@ -98,7 +98,7 @@ public:
 
     uint32_t getPeerSSRC() const;
 
-    // ��������Ip,����������CNAME:  mdu@local_ip
+    // ��������Ip,����������CNAME:  stream@local_ip
     void setLocalIp(uint32_t unLocalIp);
 
 public:

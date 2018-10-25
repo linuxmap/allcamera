@@ -10,7 +10,7 @@
 #include "svs_utility.h"
 
 
-CMduMediaPort::CMduMediaPort()
+CStreamMediaPort::CStreamMediaPort()
 {
     m_unPortNum = 0;
     m_pTcpMediaHandle = NULL;
@@ -18,12 +18,12 @@ CMduMediaPort::CMduMediaPort()
     m_unEhomePortNum = 0;
 }
 
-CMduMediaPort::~CMduMediaPort()
+CStreamMediaPort::~CStreamMediaPort()
 {
     m_pTcpMediaHandle = NULL;
 }
 
-int32_t CMduMediaPort::init(uint32_t unIp,
+int32_t CStreamMediaPort::init(uint32_t unIp,
                         uint16_t usTcpMediaPort,
                         const MediaPortConfig *pUdpConfig,
                         uint16_t usEnableEhome,
@@ -87,7 +87,7 @@ int32_t CMduMediaPort::init(uint32_t unIp,
 }
 
 
-void CMduMediaPort::close()
+void CStreamMediaPort::close()
 {
     try
     {
@@ -142,24 +142,24 @@ void CMduMediaPort::close()
     }
 
 
-    SVS_LOG((SVS_LM_INFO,"mdu media interface [%s] closed.", m_InterfaceAddr.get_host_addr()));
+    SVS_LOG((SVS_LM_INFO,"stream media interface [%s] closed.", m_InterfaceAddr.get_host_addr()));
     return;
 }
 
-uint32_t CMduMediaPort::getAllPortNum() const
+uint32_t CStreamMediaPort::getAllPortNum() const
 {
     return m_unPortNum;
 }
 
 
 
-CNetworkHandle* CMduMediaPort::getTcpMediaHandle()
+CNetworkHandle* CStreamMediaPort::getTcpMediaHandle()
 {
     return m_pTcpMediaHandle;
 }
 
 
-int32_t CMduMediaPort::allocRtpUdpPort(CNetworkHandle *&pRtpHandle,
+int32_t CStreamMediaPort::allocRtpUdpPort(CNetworkHandle *&pRtpHandle,
                                    CNetworkHandle *&pRtcpHandle)
 {
     ACE_Guard<ACE_RW_Thread_Mutex> locker(m_PortMutex);
@@ -185,7 +185,7 @@ int32_t CMduMediaPort::allocRtpUdpPort(CNetworkHandle *&pRtpHandle,
     return RET_OK;
 }
 
-int32_t CMduMediaPort::allocEhomeMediaPort(CHandle *&pHandle)
+int32_t CStreamMediaPort::allocEhomeMediaPort(CHandle *&pHandle)
 {
     CEhomeHandle *pEhomeHandle  = NULL;
     CEhomeHandle *pEhomeBestHandle  = NULL;
@@ -209,7 +209,7 @@ int32_t CMduMediaPort::allocEhomeMediaPort(CHandle *&pHandle)
 }
 
 
-int32_t CMduMediaPort::releaseRtpTcpPort(CNetworkHandle *&pHandle)const
+int32_t CStreamMediaPort::releaseRtpTcpPort(CNetworkHandle *&pHandle)const
 {
     if (NULL == pHandle)
     {
@@ -224,7 +224,7 @@ int32_t CMduMediaPort::releaseRtpTcpPort(CNetworkHandle *&pHandle)const
     return RET_OK;
 }
 
-int32_t CMduMediaPort::releaseRtpUdpPort(CNetworkHandle *&pRtpHandle,
+int32_t CStreamMediaPort::releaseRtpUdpPort(CNetworkHandle *&pRtpHandle,
                                      CNetworkHandle *&pRtcpHandle)
 {
     if ((NULL == pRtpHandle) || (NULL == pRtcpHandle))
@@ -254,13 +254,13 @@ int32_t CMduMediaPort::releaseRtpUdpPort(CNetworkHandle *&pRtpHandle,
 }
 
 
-int32_t CMduMediaPort::releaseEhomeMediaPort(CHandle *&pEhomeHandle)
+int32_t CStreamMediaPort::releaseEhomeMediaPort(CHandle *&pEhomeHandle)
 {
     //NOTHING TO DO
     return RET_OK;
 }
 
-int32_t CMduMediaPort::createRtpTcpPort(uint16_t usTcpMediaPort)
+int32_t CStreamMediaPort::createRtpTcpPort(uint16_t usTcpMediaPort)
 {
     ACE_INET_Addr addr(usTcpMediaPort, m_InterfaceAddr.get_ip_address());
     try
@@ -284,7 +284,7 @@ int32_t CMduMediaPort::createRtpTcpPort(uint16_t usTcpMediaPort)
 }
 
 
-int32_t CMduMediaPort::createRtpUdpPort(PORT_LIST &list)
+int32_t CStreamMediaPort::createRtpUdpPort(PORT_LIST &list)
 {
 
     for (PORT_LIST_ITER iter = list.begin();
@@ -351,7 +351,7 @@ int32_t CMduMediaPort::createRtpUdpPort(PORT_LIST &list)
     return RET_OK;
 }
 
-int32_t CMduMediaPort::createEhomePort(PORT_LIST &list)
+int32_t CStreamMediaPort::createEhomePort(PORT_LIST &list)
 {
     for (PORT_LIST_ITER iter = list.begin();
             iter != list.end(); iter++)

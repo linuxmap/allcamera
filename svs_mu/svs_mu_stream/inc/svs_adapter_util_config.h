@@ -55,7 +55,7 @@ typedef std::list<SECTION_ITEM>      SECTION_LIST; /* section-(k-v) map */
 
 enum CONFIG_DEALT_TYPE
 {
-    MDU_CONFIG = 0,
+    STREAM_CONFIG = 0,
     MRU_RECORD_CONFIG,      // ���ں� mbu�ǹ�����һ����
     MRU_STREAM_CONFIG,
     MRU_BACKUP_CONFIG,

@@ -141,7 +141,7 @@ int32_t CUdpHandle::startHandle(uint64_t ullStreamID, const ACE_INET_Addr &remot
 
     m_RemoteAddr = remoteAddr;
 
-    CMduSession *pSession = CMduSessionFactory::instance()->findSession(ullStreamID);
+    CStreamSession *pSession = CStreamSessionFactory::instance()->findSession(ullStreamID);
     if (NULL == pSession)
     {
         SVS_LOG((SVS_LM_WARNING,"session[%Q] udp handle get service type fail.", ullStreamID));
@@ -149,7 +149,7 @@ int32_t CUdpHandle::startHandle(uint64_t ullStreamID, const ACE_INET_Addr &remot
     }
 
     m_enPlayType = pSession->getPlayType();
-    CMduSessionFactory::instance()->releaseSession(pSession);
+    CStreamSessionFactory::instance()->releaseSession(pSession);
 
     m_unStreamCount++;
 
@@ -243,8 +243,8 @@ int32_t CUdpHandle::handle_input(ACE_HANDLE handle)
     }
 
     ACE_INET_Addr remoteAddr;
-    MDU_TRANSMIT_PACKET *pPacket = (MDU_TRANSMIT_PACKET *)(void*)pMsg->base();
-    pMsg->wr_ptr(sizeof(MDU_TRANSMIT_PACKET) - 1);
+    STREAM_TRANSMIT_PACKET *pPacket = (STREAM_TRANSMIT_PACKET *)(void*)pMsg->base();
+    pMsg->wr_ptr(sizeof(STREAM_TRANSMIT_PACKET) - 1);
     int32_t nSize = m_UdpSocket.recv(pPacket->cData, pMsg->space(), remoteAddr, MSG_DONTWAIT);
     if (0 >= nSize)
     {

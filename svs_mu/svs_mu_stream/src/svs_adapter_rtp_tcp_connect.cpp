@@ -183,8 +183,8 @@ int32_t CRtpTcpConnect::handleMediaData(const char* pData, uint32_t unDataSize)
     }
 
     // TODO 后期可能需要考虑优化数据拷贝
-    MDU_TRANSMIT_PACKET *pPacket = (MDU_TRANSMIT_PACKET *) (void*) pMsg->base();
-    pMsg->wr_ptr(sizeof(MDU_TRANSMIT_PACKET) - 1); // 包头中有一个字节是数据
+    STREAM_TRANSMIT_PACKET *pPacket = (STREAM_TRANSMIT_PACKET *) (void*) pMsg->base();
+    pMsg->wr_ptr(sizeof(STREAM_TRANSMIT_PACKET) - 1); // 包头中有一个字节是数据
 
     CRtpPacket rtpPacket;
     (void)rtpPacket.ParsePacket(pData + m_unDataOffset,m_unSize);
@@ -196,11 +196,11 @@ int32_t CRtpTcpConnect::handleMediaData(const char* pData, uint32_t unDataSize)
     pMsg->copy(pData + m_unDataOffset, m_unSize - unTailLen);
 
     pPacket->PuStreamId = m_ullStreamID;
-    pPacket->enPacketType = MDU_PACKET_TYPE_MEDIA_DATA;
+    pPacket->enPacketType = STREAM_PACKET_TYPE_MEDIA_DATA;
 
     int32_t nRet = RET_OK;
 
-    nRet = CMduMediaExchange::instance()->addData(pMsg);
+    nRet = CStreamMediaExchange::instance()->addData(pMsg);
 
     if (RET_OK != nRet)
     {
@@ -225,14 +225,14 @@ int32_t CRtpTcpConnect::handleControlMessage(const char* pData, uint32_t unDataS
         return 0;
     }
 
-    fillMduInnerMsg(pMsg->base(),
+    fillStreamInnerMsg(pMsg->base(),
                     m_ullStreamID,
                     this,
                     m_remoteAddr.get_ip_address(),
                     m_remoteAddr.get_port_number(),
                     (uint16_t) m_usInnerMsgType,
-                    sizeof(MDU_INNER_MSG));
-    pMsg->wr_ptr(sizeof(MDU_INNER_MSG));
+                    sizeof(STREAM_INNER_MSG));
+    pMsg->wr_ptr(sizeof(STREAM_INNER_MSG));
     if (-1 == pMsg->copy(pData + m_unDataOffset, m_unSize))
     {
         CMediaBlockBuffer::instance().freeMediaBlock(pMsg);
@@ -243,7 +243,7 @@ int32_t CRtpTcpConnect::handleControlMessage(const char* pData, uint32_t unDataS
         return (int32_t)(m_unSize + m_unDataOffset);
     }
 
-    if (RET_OK != CMduServiceTask::instance()->enqueueInnerMessage(pMsg))
+    if (RET_OK != CStreamServiceTask::instance()->enqueueInnerMessage(pMsg))
     {
         CMediaBlockBuffer::instance().freeMediaBlock(pMsg);
         SVS_LOG((SVS_LM_WARNING,"stream[%Q] rtp tcp port[%d] enqueue inner message fail.",
@@ -266,7 +266,7 @@ int32_t CRtpTcpConnect::getPlayType()
         return RET_FAIL;
     }
 
-    CMduSession *pSession = CMduSessionFactory::instance()->findSession(m_ullStreamID);
+    CStreamSession *pSession = CStreamSessionFactory::instance()->findSession(m_ullStreamID);
     if (NULL == pSession)
     {
         SVS_LOG((SVS_LM_WARNING,"tcp connect[%s:%d] get service type fail, can't find session[%Q].",
@@ -277,7 +277,7 @@ int32_t CRtpTcpConnect::getPlayType()
     }
 
     PLAY_TYPE enPlayType = pSession->getPlayType();
-    CMduSessionFactory::instance()->releaseSession(pSession);
+    CStreamSessionFactory::instance()->releaseSession(pSession);
 
     SVS_LOG((SVS_LM_INFO,"session[%Q] connect[%s:%d] get service type [%d].",
                     m_ullStreamID,

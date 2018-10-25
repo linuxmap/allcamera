@@ -1,5 +1,5 @@
-#ifndef __MDUSCCCONNECTOR_H__
-#define __MDUSCCCONNECTOR_H__
+#ifndef __STREAMSCCCONNECTOR_H__
+#define __STREAMSCCCONNECTOR_H__
 
 #include "svs_ace_header.h"
 #include "svs_adapter_vms_client_handle.h"
@@ -12,19 +12,19 @@ public:
 };
 
 /**
-* @class   MduSccConnector
+* @class   StreamSccConnector
 * @brief   SCC连接器
-* Description: Mdu服务中与SCC的连接，负责注册、心跳检测及重注册，还有SVS消息的接收/发送
+* Description: Stream服务中与SCC的连接，负责注册、心跳检测及重注册，还有SVS消息的接收/发送
 */
-class CMduSccConnector : public CSvsClientHandle
+class CStreamSccConnector : public CSvsClientHandle
 {
     friend class CBusinessReportTimer;
 public:
-    CMduSccConnector();
+    CStreamSccConnector();
 
-    virtual ~CMduSccConnector();
+    virtual ~CStreamSccConnector();
 
-    /// 打开与SCC的连接，相关配置直接从MduConfig中获取
+    /// 打开与SCC的连接，相关配置直接从StreamConfig中获取
     int32_t openConnector(ACE_Message_Queue<ACE_SYNCH>* pRcvQueue);
 
     /// 关闭与SCC的连接
@@ -51,7 +51,7 @@ protected:
 
     void stopBusinessReportTimer();
 private:
-    void sendDistributeTask(uint32_t unNum, uint32_t unSeq, const CMduSession* pSession);
+    void sendDistributeTask(uint32_t unNum, uint32_t unSeq, const CStreamSession* pSession);
     void setTagIp(uint32_t unIpType, uint32_t unIndex, uint32_t unIpAddr,
                     char* pBuf, uint32_t& unBufLen)const;
 private:
@@ -63,4 +63,4 @@ private:
     int32_t                         m_lReportTimerID;
 };
 
-#endif // __MDUSCCCONNECTOR_H__
+#endif // __STREAMSCCCONNECTOR_H__

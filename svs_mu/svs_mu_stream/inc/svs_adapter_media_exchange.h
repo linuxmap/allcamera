@@ -1,5 +1,5 @@
-#ifndef __CMDUMEDIAEXCHANGE_H__
-#define __CMDUMEDIAEXCHANGE_H__
+#ifndef __CSTREAMMEDIAEXCHANGE_H__
+#define __CSTREAMMEDIAEXCHANGE_H__
 
 #include <list>
 #include <map>
@@ -8,50 +8,50 @@
 
 typedef enum
 {
-    MDU_PACKET_TYPE_MEDIA_DATA   = 0,
-    MDU_PACKET_TYPE_ADD_SESSION  = 1,
-    MDU_PACKET_TYPE_DEL_SESSION  = 2,
-    MDU_PACKET_TYPE_SESSION_EOS  = 3,
-    MDU_PACKET_TYPE_SESSION_BOS  = 4,
+    STREAM_PACKET_TYPE_MEDIA_DATA   = 0,
+    STREAM_PACKET_TYPE_ADD_SESSION  = 1,
+    STREAM_PACKET_TYPE_DEL_SESSION  = 2,
+    STREAM_PACKET_TYPE_SESSION_EOS  = 3,
+    STREAM_PACKET_TYPE_SESSION_BOS  = 4,
 
-    MDU_PACKET_TYPE_MAX
-}MDU_PACKET_TYPE;
+    STREAM_PACKET_TYPE_MAX
+}STREAM_PACKET_TYPE;
 
 
 #pragma pack(push, 1)
 
 typedef struct
 {
-    CMduMediaProcessor* pMediaProcessor;
+    CStreamMediaProcessor* pMediaProcessor;
     uint32_t            unRecvTranType;
     uint32_t            unSendTranType;
-}MDU_PROCESSOR_INFO;
+}STREAM_PROCESSOR_INFO;
 
 typedef struct
 {
-    MDU_PACKET_TYPE     enPacketType;
+    STREAM_PACKET_TYPE     enPacketType;
     uint64_svs          PuStreamId;
     uint8_t             Reserved[4];
     char                cData[1];
-}MDU_TRANSMIT_PACKET;
+}STREAM_TRANSMIT_PACKET;
 #pragma pack(pop)
 
-class CMduMediaExchange : public ACE_Task<ACE_MT_SYNCH>
+class CStreamMediaExchange : public ACE_Task<ACE_MT_SYNCH>
 {
 private:
-    CMduMediaExchange();
-    CMduMediaExchange(const CMduMediaExchange&);
-    CMduMediaExchange& operator=(const CMduMediaExchange&);
+    CStreamMediaExchange();
+    CStreamMediaExchange(const CStreamMediaExchange&);
+    CStreamMediaExchange& operator=(const CStreamMediaExchange&);
 public:
-    ~CMduMediaExchange();
+    ~CStreamMediaExchange();
 
-    static CMduMediaExchange* instance()
+    static CStreamMediaExchange* instance()
     {
         if (NULL == g_pMediaExchange)
         {
             try
             {
-                g_pMediaExchange = new CMduMediaExchange;
+                g_pMediaExchange = new CStreamMediaExchange;
             }
             catch(...)
             {
@@ -70,10 +70,10 @@ public:
 
     int32_t addData(ACE_Message_Block* pDataBlock)const;
 
-    int32_t addMediaProcessor(uint64_svs PuStreamId,CMduMediaProcessor* pstProcessor,
+    int32_t addMediaProcessor(uint64_svs PuStreamId,CStreamMediaProcessor* pstProcessor,
                               uint32_t   unRecvTranType,uint32_t unSendTranType)const;
 
-    int32_t delMediaProcessor(uint64_svs PuStreamId,CMduMediaProcessor* pstProcessor,
+    int32_t delMediaProcessor(uint64_svs PuStreamId,CStreamMediaProcessor* pstProcessor,
                               uint32_t   unRecvTranType )const;
 private:
     int32_t GenProcessThreadIdx(uint64_svs PuStreamId,uint32_t& ulThreadIdx)const;
@@ -89,8 +89,8 @@ private:
     void ProcessDelSession(uint32_t ulThreadIdx, const ACE_Message_Block* pMb)const;
 
 private:
-    static CMduMediaExchange*       g_pMediaExchange;
-    typedef std::map<uint64_svs, CMduMediaProcessorSet*>      MediaExchangeMap;
+    static CStreamMediaExchange*       g_pMediaExchange;
+    typedef std::map<uint64_svs, CStreamMediaProcessorSet*>      MediaExchangeMap;
     typedef MediaExchangeMap::iterator                          MediaExchangeIter;
 
     MediaExchangeMap**              m_pMediaExchangeMap;

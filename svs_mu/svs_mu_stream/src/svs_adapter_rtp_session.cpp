@@ -1,5 +1,5 @@
 /*
- * MduRtpSession.cpp
+ * StreamRtpSession.cpp
  *
  *  Created on: 2016-2-10
  *      Author:
@@ -29,7 +29,7 @@
 #include "svs_adapter_business_manager.h"
 //#include "svs_adapter_business.h"
 
-CMduRtpSession::CMduRtpSession() : m_rtspInitSem(0)
+CStreamRtpSession::CStreamRtpSession() : m_rtspInitSem(0)
 {
     memset(m_pUdpHandle, 0x0, sizeof(CNetworkHandle*) * HANDLE_TYPE_MAX);
 
@@ -55,7 +55,7 @@ CMduRtpSession::CMduRtpSession() : m_rtspInitSem(0)
     bPlaybackDragFlag      = false;
 }
 
-CMduRtpSession::~CMduRtpSession()
+CStreamRtpSession::~CStreamRtpSession()
 {
     try
     {
@@ -65,7 +65,7 @@ CMduRtpSession::~CMduRtpSession()
         {
             m_pTcpHandle->stopHandle(getStreamId());
             CNetworkHandle *pHandle = m_pTcpHandle;
-            (void) CMduPortManager::instance()->releaseRtpTcpPort(getSpecifyIp(), pHandle);
+            (void) CStreamPortManager::instance()->releaseRtpTcpPort(getSpecifyIp(), pHandle);
             SVS_LOG((SVS_LM_INFO,"Rtp tcp session stop port success. stream id[%Q].",
                         getStreamId()));
         }
@@ -78,10 +78,10 @@ CMduRtpSession::~CMduRtpSession()
                 (void) m_pUdpHandle[i]->stopHandle(getStreamId());
             }
         }
-        (void) CMduPortManager::instance()->releaseRtpUdpPort(getSpecifyIp(),
+        (void) CStreamPortManager::instance()->releaseRtpUdpPort(getSpecifyIp(),
                                                               m_pUdpHandle[VIDEO_RTP_HANDLE],
                                                               m_pUdpHandle[VIDEO_RTCP_HANDLE]);
-        (void) CMduPortManager::instance()->releaseRtpUdpPort(getSpecifyIp(),
+        (void) CStreamPortManager::instance()->releaseRtpUdpPort(getSpecifyIp(),
                                                               m_pUdpHandle[AUDIO_RTP_HANDLE],
                                                               m_pUdpHandle[AUDIO_RTCP_HANDLE]);
         memset(m_pUdpHandle, 0x0, sizeof(CNetworkHandle*) * HANDLE_TYPE_MAX);
@@ -89,7 +89,7 @@ CMduRtpSession::~CMduRtpSession()
         // �ͷŶԶ˻Ự
         if (NULL != m_pPeerSession)
         {
-            CMduSessionFactory::instance()->releaseSession(m_pPeerSession);
+            CStreamSessionFactory::instance()->releaseSession(m_pPeerSession);
             m_pPeerSession = NULL;
         }
 
@@ -102,19 +102,19 @@ CMduRtpSession::~CMduRtpSession()
     m_pTcpHandle = NULL;
 }
 
-int32_t CMduRtpSession::initSesssion(PEER_TYPE unPeerType)
+int32_t CStreamRtpSession::initSesssion(PEER_TYPE unPeerType)
 {
     m_stSessionInfo.SessionType    = RTP_SESSION;
     m_stSessionInfo.PeerType       = unPeerType;
     m_stSessionInfo.TransDirection = TRANS_DIRECTION_RECVONLY;
     m_stSessionInfo.MediaTransType = MEDIA_TRANS_TYPE_RTP;
     m_stSessionInfo.TransProtocol  = TRANS_PROTOCAL_UDP;
-    m_stSessionInfo.SpecifyIp      = CMduConfig::instance()->getInternalMediaIp();
+    m_stSessionInfo.SpecifyIp      = CStreamConfig::instance()->getInternalMediaIp();
     return RET_OK;
 }
 
 
-int32_t CMduRtpSession::sendMediaData(ACE_Message_Block **pMbArray, uint32_t MsgCount)
+int32_t CStreamRtpSession::sendMediaData(ACE_Message_Block **pMbArray, uint32_t MsgCount)
 {
     if (NULL == pMbArray)
     {
@@ -123,7 +123,7 @@ int32_t CMduRtpSession::sendMediaData(ACE_Message_Block **pMbArray, uint32_t Msg
         return RET_FAIL;
     }
 
-    if (MDU_SESSION_STATUS_DISPATCHING != getStatus())
+    if (STREAM_SESSION_STATUS_DISPATCHING != getStatus())
     {
         SVS_LOG((SVS_LM_INFO,"session[%Q] discard media data, the status[%d] invalid.",
                         getStreamId(), getStatus()));
@@ -140,9 +140,9 @@ int32_t CMduRtpSession::sendMediaData(ACE_Message_Block **pMbArray, uint32_t Msg
     return RET_OK;
 }
 
-int32_t CMduRtpSession::handleInnerMessage(const MDU_INNER_MSG &innerMsg,
+int32_t CStreamRtpSession::handleInnerMessage(const STREAM_INNER_MSG &innerMsg,
                                        uint32_t unMsgSize,
-                                       CMduSession &peerSession)
+                                       CStreamSession &peerSession)
 {
     if( INNER_MSG_RTCP == innerMsg.usMsgType )
     {
@@ -165,7 +165,7 @@ int32_t CMduRtpSession::handleInnerMessage(const MDU_INNER_MSG &innerMsg,
     return handleRtspMessage(innerMsg, unMsgSize, peerSession);
 }
 
-int32_t CMduRtpSession::sendVcrMessage(CRtspPacket &rtspPack)
+int32_t CStreamRtpSession::sendVcrMessage(CRtspPacket &rtspPack)
 {
     rtspPack.setSessionID(getStreamId());
     rtspPack.setRtspUrl(m_strRtspUrl);
@@ -244,7 +244,7 @@ int32_t CMduRtpSession::sendVcrMessage(CRtspPacket &rtspPack)
     return RET_OK;
 }
 
-int32_t CMduRtpSession::parseRtspVcrMessage(const CRtspPacket &rtspMsg,
+int32_t CStreamRtpSession::parseRtspVcrMessage(const CRtspPacket &rtspMsg,
                                         uint32_t &unOperCode,
                                         uint32_t &unPlayTimeType,
                                         uint32_t &unPlayStartTime,
@@ -346,7 +346,7 @@ int32_t CMduRtpSession::parseRtspVcrMessage(const CRtspPacket &rtspMsg,
     return RET_OK;
 }
 
-int32_t CMduRtpSession::NumRate2PlayRate(double dNumRate, uint32_t &unPlayRate) const
+int32_t CStreamRtpSession::NumRate2PlayRate(double dNumRate, uint32_t &unPlayRate) const
 {
     if (0 == dNumRate)
     {
@@ -381,14 +381,14 @@ int32_t CMduRtpSession::NumRate2PlayRate(double dNumRate, uint32_t &unPlayRate) 
     return RET_FAIL;
 }
 
-void CMduRtpSession::setTimeStamp(uint32_t unTimeStamp)
+void CStreamRtpSession::setTimeStamp(uint32_t unTimeStamp)
 {
     m_timeStamp = unTimeStamp;
 
     bPlaybackDragFlag = true;
 }
 
-bool  CMduRtpSession::getTimeStamp(uint32_t& unTimeStamp)
+bool  CStreamRtpSession::getTimeStamp(uint32_t& unTimeStamp)
 {
     if(bPlaybackDragFlag)
     {
@@ -401,14 +401,14 @@ bool  CMduRtpSession::getTimeStamp(uint32_t& unTimeStamp)
     return false;
 }
 
-int32_t CMduRtpSession::dealSccVcrResp(const SVS_MSG_PLAYBACK_CONTROL_RESP* pMsg)
+int32_t CStreamRtpSession::dealSccVcrResp(const SVS_MSG_PLAYBACK_CONTROL_RESP* pMsg)
 {
     if(NULL == pMsg)
     {
         return RET_FAIL;
     }
 
-    CMduBusiness* pBusiness = CMduBusinessManager::instance()->findBusiness(getStreamId());
+    CStreamBusiness* pBusiness = CStreamBusinessManager::instance()->findBusiness(getStreamId());
 
     if(NULL == pBusiness)
     {
@@ -417,12 +417,12 @@ int32_t CMduRtpSession::dealSccVcrResp(const SVS_MSG_PLAYBACK_CONTROL_RESP* pMsg
     }
     uint64_t ullPeerSessionID = pBusiness->getSendStreamID();
 
-    CMduSession *pPeerSession = CMduSessionFactory::instance()->findSession(ullPeerSessionID);
+    CStreamSession *pPeerSession = CStreamSessionFactory::instance()->findSession(ullPeerSessionID);
 
     if(NULL == pPeerSession)
     {
         SVS_LOG((SVS_LM_WARNING,"session[%Q] find peersession[%Q] fail.", getStreamId(),ullPeerSessionID));
-        CMduBusinessManager::instance()->releaseBusiness(pBusiness);
+        CStreamBusinessManager::instance()->releaseBusiness(pBusiness);
         return RET_FAIL;
     }
     CRtspPacket rtspPack;
@@ -450,25 +450,25 @@ int32_t CMduRtpSession::dealSccVcrResp(const SVS_MSG_PLAYBACK_CONTROL_RESP* pMsg
     if (0 != rtspPack.generateRtspResp(strMessage))
     {
         SVS_LOG((SVS_LM_WARNING,"Session[%Q] handle vcr response fail, generate rtsp response fail.",ullPeerSessionID));
-        CMduSessionFactory::instance()->releaseSession(pPeerSession);
-        CMduBusinessManager::instance()->releaseBusiness(pBusiness);
+        CStreamSessionFactory::instance()->releaseSession(pPeerSession);
+        CStreamBusinessManager::instance()->releaseBusiness(pBusiness);
         return RET_FAIL;
     }
 
     if (RET_OK != pPeerSession->sendVcrMessage(rtspPack))
     {
         SVS_LOG((SVS_LM_WARNING,"Session[%Q]  send vcr response fail.",ullPeerSessionID));
-        CMduSessionFactory::instance()->releaseSession(pPeerSession);
-        CMduBusinessManager::instance()->releaseBusiness(pBusiness);
+        CStreamSessionFactory::instance()->releaseSession(pPeerSession);
+        CStreamBusinessManager::instance()->releaseBusiness(pBusiness);
         return RET_FAIL;
     }
-    CMduSessionFactory::instance()->releaseSession(pPeerSession);
-    CMduBusinessManager::instance()->releaseBusiness(pBusiness);
+    CStreamSessionFactory::instance()->releaseSession(pPeerSession);
+    CStreamBusinessManager::instance()->releaseBusiness(pBusiness);
 
     SVS_LOG((SVS_LM_INFO,"rtp session[%Q] handle vcr response message success, respcode[%x].",ullPeerSessionID, pMsg->RespCode));
     return RET_OK;
 }
-int32_t CMduRtpSession::sendSessionStopMessage(uint32_t unStopType)
+int32_t CStreamRtpSession::sendSessionStopMessage(uint32_t unStopType)
 {
     // EOS��Ϣֻ��¼��ط������в��У��ط�����ֻ��TCP����
     if (NULL == m_pTcpHandle)
@@ -476,8 +476,8 @@ int32_t CMduRtpSession::sendSessionStopMessage(uint32_t unStopType)
         return RET_FAIL;
     }
 
-    if ((MDU_PACKET_TYPE_SESSION_EOS != unStopType)
-            && (MDU_PACKET_TYPE_SESSION_BOS != unStopType))
+    if ((STREAM_PACKET_TYPE_SESSION_EOS != unStopType)
+            && (STREAM_PACKET_TYPE_SESSION_BOS != unStopType))
     {
         return RET_FAIL;
     }
@@ -516,7 +516,7 @@ int32_t CMduRtpSession::sendSessionStopMessage(uint32_t unStopType)
 }
 
 
-ACE_INET_Addr CMduRtpSession::getPeerAddr()const
+ACE_INET_Addr CStreamRtpSession::getPeerAddr()const
 {
     if (TRANS_PROTOCAL_TCP == getTransProtocol())
     {
@@ -526,12 +526,12 @@ ACE_INET_Addr CMduRtpSession::getPeerAddr()const
     return m_UdpPeerAddr[VIDEO_RTP_HANDLE];
 }
 
-ACE_INET_Addr CMduRtpSession::getMediaAddr()const
+ACE_INET_Addr CStreamRtpSession::getMediaAddr()const
 {
     return getPeerAddr();
 }
 
-void CMduRtpSession::getVideoInfo(SDP_MEDIA_INFO &info)
+void CStreamRtpSession::getVideoInfo(SDP_MEDIA_INFO &info)
 {
     MEDIA_INFO_LIST VideoinfoList;
     SDP_MEDIA_INFO* Videoinfo = NULL;
@@ -549,7 +549,7 @@ void CMduRtpSession::getVideoInfo(SDP_MEDIA_INFO &info)
     return;
 }
 
-void CMduRtpSession::getAudioInfo(SDP_MEDIA_INFO &info)
+void CStreamRtpSession::getAudioInfo(SDP_MEDIA_INFO &info)
 {
     MEDIA_INFO_LIST AudioinfoList;
     SDP_MEDIA_INFO* Audioinfo = NULL;
@@ -567,7 +567,7 @@ void CMduRtpSession::getAudioInfo(SDP_MEDIA_INFO &info)
 }
 
 
-int32_t CMduRtpSession::sendNatResponse(CMduNatMessage &natMsg)
+int32_t CStreamRtpSession::sendNatResponse(CStreamNatMessage &natMsg)
 {
     if (TRANS_PROTOCAL_TCP == getTransProtocol())
     {
@@ -578,7 +578,7 @@ int32_t CMduRtpSession::sendNatResponse(CMduNatMessage &natMsg)
 }
 
 
-int32_t CMduRtpSession::allocMediaPort()
+int32_t CStreamRtpSession::allocMediaPort()
 {
     if (RTSP_SESSION == getSessionType())
     {
@@ -605,7 +605,7 @@ int32_t CMduRtpSession::allocMediaPort()
     return allocUdpMediaPort();
 }
 
-int32_t CMduRtpSession::startMediaPort()
+int32_t CStreamRtpSession::startMediaPort()
 {
     if (RTSP_SESSION == getSessionType())
     {
@@ -659,7 +659,7 @@ int32_t CMduRtpSession::startMediaPort()
     return startUdpMediaPort();
 }
 
-int32_t CMduRtpSession::stopMediaPort()
+int32_t CStreamRtpSession::stopMediaPort()
 {
     if (RTSP_SESSION == getSessionType())
     {
@@ -691,7 +691,7 @@ int32_t CMduRtpSession::stopMediaPort()
     return RET_OK;
 }
 
-bool CMduRtpSession::checkMediaChannelStatus()
+bool CStreamRtpSession::checkMediaChannelStatus()
 {
     bool bRet = true;
 
@@ -731,7 +731,7 @@ bool CMduRtpSession::checkMediaChannelStatus()
     return bRet;
 }
 
-int32_t CMduRtpSession::setRemoteAddress()
+int32_t CStreamRtpSession::setRemoteAddress()
 {
     if (TRANS_PROTOCAL_TCP == getTransProtocol())
     {
@@ -769,9 +769,9 @@ int32_t CMduRtpSession::setRemoteAddress()
     return RET_OK;
 }
 
-int32_t CMduRtpSession::allocUdpMediaPort()
+int32_t CStreamRtpSession::allocUdpMediaPort()
 {
-    int32_t nRet = CMduPortManager::instance()->allocRtpUdpPort(getSpecifyIp(),
+    int32_t nRet = CStreamPortManager::instance()->allocRtpUdpPort(getSpecifyIp(),
                                                         m_pUdpHandle[VIDEO_RTP_HANDLE],
                                                         m_pUdpHandle[VIDEO_RTCP_HANDLE]);
     if (RET_OK != nRet)
@@ -782,7 +782,7 @@ int32_t CMduRtpSession::allocUdpMediaPort()
     }
     m_VideoAddr.set(m_pUdpHandle[VIDEO_RTP_HANDLE]->getLocalAddr());
 
-    nRet = CMduPortManager::instance()->allocRtpUdpPort(getSpecifyIp(),
+    nRet = CStreamPortManager::instance()->allocRtpUdpPort(getSpecifyIp(),
                                 m_pUdpHandle[AUDIO_RTP_HANDLE],
                                 m_pUdpHandle[AUDIO_RTCP_HANDLE]);
     if (RET_OK != nRet)
@@ -805,13 +805,13 @@ int32_t CMduRtpSession::allocUdpMediaPort()
     return nRet;
 }
 
-int32_t CMduRtpSession::allocTcpMediaPort()
+int32_t CStreamRtpSession::allocTcpMediaPort()
 {
     CNetworkHandle *pHandle = NULL;
-    int32_t nRet = CMduPortManager::instance()->allocRtpTcpPort(getSpecifyIp(), pHandle);
+    int32_t nRet = CStreamPortManager::instance()->allocRtpTcpPort(getSpecifyIp(), pHandle);
     if ((RET_OK != nRet) || (NULL == pHandle))
     {
-        SVS_LOG((SVS_LM_WARNING,"session[%Q] alloc tcp port fail, mdu port manager return fail.",
+        SVS_LOG((SVS_LM_WARNING,"session[%Q] alloc tcp port fail, stream port manager return fail.",
                     getStreamId()));
         return RET_FAIL;
     }
@@ -827,11 +827,11 @@ int32_t CMduRtpSession::allocTcpMediaPort()
     return RET_OK;
 }
 
-int32_t CMduRtpSession::startUdpMediaPort()
+int32_t CStreamRtpSession::startUdpMediaPort()
 {
     if ((uint16_t)-1 == m_unVedioPT)
     {
-        (void) CMduPortManager::instance()->releaseRtpUdpPort(getSpecifyIp(),
+        (void) CStreamPortManager::instance()->releaseRtpUdpPort(getSpecifyIp(),
                                         m_pUdpHandle[VIDEO_RTP_HANDLE],
                                         m_pUdpHandle[VIDEO_RTCP_HANDLE]);
         m_pUdpHandle[VIDEO_RTP_HANDLE]  = NULL;
@@ -865,7 +865,7 @@ int32_t CMduRtpSession::startUdpMediaPort()
 
     if ((uint16_t)-1 == m_unAudioPT)
     {
-        (void) CMduPortManager::instance()->releaseRtpUdpPort(getSpecifyIp(),
+        (void) CStreamPortManager::instance()->releaseRtpUdpPort(getSpecifyIp(),
                                     m_pUdpHandle[AUDIO_RTP_HANDLE],
                                     m_pUdpHandle[AUDIO_RTCP_HANDLE]);
         m_pUdpHandle[AUDIO_RTP_HANDLE]  = NULL;
@@ -901,7 +901,7 @@ int32_t CMduRtpSession::startUdpMediaPort()
     return RET_OK;
 }
 
-int32_t CMduRtpSession::startTcpMediaPort()
+int32_t CStreamRtpSession::startTcpMediaPort()
 {
     if (NULL == m_pTcpHandle)
     {
@@ -935,7 +935,7 @@ int32_t CMduRtpSession::startTcpMediaPort()
     return m_pTcpHandle->startHandle(getStreamId(), m_TcpPeerAddr);
 }
 
-bool CMduRtpSession::checkTcpMediaChannelStatus()
+bool CStreamRtpSession::checkTcpMediaChannelStatus()
 {
     if (NULL == m_pTcpHandle)
     {
@@ -944,7 +944,7 @@ bool CMduRtpSession::checkTcpMediaChannelStatus()
         return false;
     }
 
-    if (!m_pTcpHandle->checkHandleStatus(getStreamId(), MDU_MEDIA_CHANNEL_INVAILD_INTERVAL))
+    if (!m_pTcpHandle->checkHandleStatus(getStreamId(), STREAM_MEDIA_CHANNEL_INVAILD_INTERVAL))
     {
         SVS_LOG((SVS_LM_WARNING,"session[%Q] check media channel fail, tcp handle status invalid.",
                 getStreamId()));
@@ -956,7 +956,7 @@ bool CMduRtpSession::checkTcpMediaChannelStatus()
             && (CONN_SETUP_TYPE_ACTIVE == m_unConnSetupType))
     {
         uint32_t ulCurTime = SVS_GetSecondTime();
-        if (ulCurTime - m_ulLastNatTime >= MDU_MEDIA_CHANNEL_HEARTBEAT_INTERVAL)
+        if (ulCurTime - m_ulLastNatTime >= STREAM_MEDIA_CHANNEL_HEARTBEAT_INTERVAL)
         {
             sendNatRequest();
         }
@@ -968,13 +968,13 @@ bool CMduRtpSession::checkTcpMediaChannelStatus()
 }
 
 
-bool CMduRtpSession::checkUdpMediaChannelStatus() const
+bool CStreamRtpSession::checkUdpMediaChannelStatus() const
 {
     // UDP������ֻҪ��һ��ý��ͨ���������������Ϊ�Ự״̬��
     if (NULL != m_pUdpHandle[VIDEO_RTP_HANDLE])
     {
         if (m_pUdpHandle[VIDEO_RTP_HANDLE]->checkHandleStatus(getStreamId(),
-                                                    MDU_MEDIA_CHANNEL_INVAILD_INTERVAL))
+                                                    STREAM_MEDIA_CHANNEL_INVAILD_INTERVAL))
         {
             SVS_LOG((SVS_LM_DEBUG,"session[%Q] check video rtp channel success.",
                     getStreamId()));
@@ -985,7 +985,7 @@ bool CMduRtpSession::checkUdpMediaChannelStatus() const
     if (NULL != m_pUdpHandle[VIDEO_RTCP_HANDLE])
     {
         if (m_pUdpHandle[VIDEO_RTCP_HANDLE]->checkHandleStatus(getStreamId(),
-                                                              MDU_MEDIA_CHANNEL_INVAILD_INTERVAL))
+                                                              STREAM_MEDIA_CHANNEL_INVAILD_INTERVAL))
         {
             SVS_LOG((SVS_LM_DEBUG,"session[%Q] check video rtcp channel success.",
                     getStreamId()));
@@ -996,7 +996,7 @@ bool CMduRtpSession::checkUdpMediaChannelStatus() const
     if (NULL != m_pUdpHandle[AUDIO_RTP_HANDLE])
     {
         if (m_pUdpHandle[AUDIO_RTP_HANDLE]->checkHandleStatus(getStreamId(),
-                                                              MDU_MEDIA_CHANNEL_INVAILD_INTERVAL))
+                                                              STREAM_MEDIA_CHANNEL_INVAILD_INTERVAL))
         {
             SVS_LOG((SVS_LM_DEBUG,"session[%Q] check audio rtp channel success.",
                                 getStreamId()));
@@ -1007,7 +1007,7 @@ bool CMduRtpSession::checkUdpMediaChannelStatus() const
     if (NULL != m_pUdpHandle[AUDIO_RTCP_HANDLE])
     {
         if (m_pUdpHandle[AUDIO_RTCP_HANDLE]->checkHandleStatus(getStreamId(),
-                                                              MDU_MEDIA_CHANNEL_INVAILD_INTERVAL))
+                                                              STREAM_MEDIA_CHANNEL_INVAILD_INTERVAL))
         {
             SVS_LOG((SVS_LM_DEBUG,"session[%Q] check audio rtcp channel success.",
                                 getStreamId()));
@@ -1020,7 +1020,7 @@ bool CMduRtpSession::checkUdpMediaChannelStatus() const
     return false;
 }
 
-int32_t CMduRtpSession::sendUdpNatResponse(const CMduNatMessage &natMsg)
+int32_t CStreamRtpSession::sendUdpNatResponse(const CStreamNatMessage &natMsg)
 {
     int32_t nHandleIndex = 0;
     for (nHandleIndex = 0; nHandleIndex < HANDLE_TYPE_MAX; nHandleIndex++)
@@ -1093,7 +1093,7 @@ int32_t CMduRtpSession::sendUdpNatResponse(const CMduNatMessage &natMsg)
     return RET_OK;
 }
 
-int32_t CMduRtpSession::sendTcpNatResponse(const CMduNatMessage &natMsg)
+int32_t CStreamRtpSession::sendTcpNatResponse(const CStreamNatMessage &natMsg)
 {
     if (NULL == m_pTcpHandle)
     {
@@ -1102,7 +1102,7 @@ int32_t CMduRtpSession::sendTcpNatResponse(const CMduNatMessage &natMsg)
 
     if (!m_bHasPeerAddr)
     {
-        // NAT��Խ��ý��ͨ���ĵ�һ����Ϣ����ʱ��Ҫ����Զ˵�ַ��ʹ��MDU�ܹ�������Peer�������
+        // NAT��Խ��ý��ͨ���ĵ�һ����Ϣ����ʱ��Ҫ����Զ˵�ַ��ʹ��STREAM�ܹ�������Peer�������
         m_TcpPeerAddr.set(natMsg.m_usNatPort, natMsg.m_unNatIp);
         m_bHasPeerAddr = true;
     }
@@ -1148,7 +1148,7 @@ int32_t CMduRtpSession::sendTcpNatResponse(const CMduNatMessage &natMsg)
 }
 
 
-void CMduRtpSession::setChannelNum(char cPt, char& channelNum)const
+void CStreamRtpSession::setChannelNum(char cPt, char& channelNum)const
 {
     if ( (char)m_unVedioPT == cPt )
     {
@@ -1161,7 +1161,7 @@ void CMduRtpSession::setChannelNum(char cPt, char& channelNum)const
 }
 
 /*lint -e818*/
-int32_t CMduRtpSession::sendUdpMediaData(ACE_Message_Block **pMbArray, uint32_t MsgCount)
+int32_t CStreamRtpSession::sendUdpMediaData(ACE_Message_Block **pMbArray, uint32_t MsgCount)
 {
     if (NULL == pMbArray)
     {
@@ -1221,7 +1221,7 @@ int32_t CMduRtpSession::sendUdpMediaData(ACE_Message_Block **pMbArray, uint32_t 
 }
 
 
-int32_t CMduRtpSession::sendTcpMediaData(ACE_Message_Block **pMbArray, uint32_t MsgCount)
+int32_t CStreamRtpSession::sendTcpMediaData(ACE_Message_Block **pMbArray, uint32_t MsgCount)
 {
     if ((NULL == m_pTcpHandle) || (NULL == pMbArray))
     {
@@ -1278,7 +1278,7 @@ int32_t CMduRtpSession::sendTcpMediaData(ACE_Message_Block **pMbArray, uint32_t 
 }
 /*lint +e818*/
 
-int32_t CMduRtpSession::sendMessage(const void* pPeerHandle,
+int32_t CStreamRtpSession::sendMessage(const void* pPeerHandle,
                                 const char* pData,
                                 uint32_t unDataSize)
 {
@@ -1338,9 +1338,9 @@ int32_t CMduRtpSession::sendMessage(const void* pPeerHandle,
 }
 
 /// ����RTSP��Ϣ
-int32_t CMduRtpSession::handleRtspMessage(const MDU_INNER_MSG &innerMsg,
+int32_t CStreamRtpSession::handleRtspMessage(const STREAM_INNER_MSG &innerMsg,
                                    uint32_t unMsgSize,
-                                   CMduSession &peerSession)
+                                   CStreamSession &peerSession)
 {
     char *pRtspMsg = (char*) &innerMsg + innerMsg.unBodyOffset;
     uint32_t unRtspSize = unMsgSize - innerMsg.unBodyOffset;
@@ -1361,7 +1361,7 @@ int32_t CMduRtpSession::handleRtspMessage(const MDU_INNER_MSG &innerMsg,
     if ((PEER_TYPE_STREAM == getPeerType())
             && (CONN_SETUP_TYPE_ACTIVE == m_unConnSetupType))
     {
-        // ��������ʱ���¼�MDU���ϼ�MDU֮����Ϣ��IDΪ�ϼ�MDU�ĻỰID
+        // ��������ʱ���¼�STREAM���ϼ�STREAM֮����Ϣ��IDΪ�ϼ�STREAM�ĻỰID
         if (m_ullConnStreamID != rtspPack.getSessionID())
         {
             SVS_LOG((SVS_LM_WARNING,"session[%Q] handle rtsp message fail, invalid session id[%Q].",
@@ -1372,7 +1372,7 @@ int32_t CMduRtpSession::handleRtspMessage(const MDU_INNER_MSG &innerMsg,
     }
     else
     {
-        // ������£���Ϣ�лỰIDΪMDU����ID
+        // ������£���Ϣ�лỰIDΪSTREAM����ID
         if (getStreamId() != rtspPack.getSessionID())
         {
             SVS_LOG((SVS_LM_WARNING,"session[%Q] handle rtsp message fail, invalid session id[%Q].",
@@ -1408,7 +1408,7 @@ int32_t CMduRtpSession::handleRtspMessage(const MDU_INNER_MSG &innerMsg,
         rtspPack.getNatInfo(natInfo);
 
         // ����NAT��Խ��Ϣ
-        CMduNatMessage natMsg;
+        CStreamNatMessage natMsg;
         natMsg.init(innerMsg.pRecvHandle,
                     rtspPack.getCseq(),
                     NULL,
@@ -1429,7 +1429,7 @@ int32_t CMduRtpSession::handleRtspMessage(const MDU_INNER_MSG &innerMsg,
     return handleRtspVcrMessage(rtspPack, innerMsg.pRecvHandle, peerSession);
 }
 
-void CMduRtpSession::sendNatRequest()
+void CStreamRtpSession::sendNatRequest()
 {
     if (NULL == m_pTcpHandle)
     {
@@ -1480,9 +1480,9 @@ void CMduRtpSession::sendNatRequest()
     return;
 }
 
-int32_t CMduRtpSession::handleRtspVcrMessage(CRtspPacket &rtspMsg,
+int32_t CStreamRtpSession::handleRtspVcrMessage(CRtspPacket &rtspMsg,
                                         const void* pRecvHandle,
-                                        CMduSession &peerSession)
+                                        CStreamSession &peerSession)
 {
     SVS_LOG((SVS_LM_INFO,"session[%Q] handle rtsp vcr message.", getStreamId()));
 
@@ -1534,9 +1534,9 @@ int32_t CMduRtpSession::handleRtspVcrMessage(CRtspPacket &rtspMsg,
 }
 
 // ����RTSP��Ӧ��Ϣ
-int32_t CMduRtpSession::handleRtspRespMessage(CRtspPacket &rtspMsg,
+int32_t CStreamRtpSession::handleRtspRespMessage(CRtspPacket &rtspMsg,
                                          const void* /*pRecvHandle*/,
-                                         CMduSession &peerSession)
+                                         CStreamSession &peerSession)
 {
     if (rtspMsg.hasNetInfo())
     {
@@ -1547,14 +1547,14 @@ int32_t CMduRtpSession::handleRtspRespMessage(CRtspPacket &rtspMsg,
             return RET_OK;
         }
 
-        if (MDU_SESSION_STATUS_WAIT_CHANNEL_REDAY != getStatus())
+        if (STREAM_SESSION_STATUS_WAIT_CHANNEL_REDAY != getStatus())
         {
             return RET_OK;
         }
 
-        setStatus(MDU_SESSION_STATUS_DISPATCHING);
+        setStatus(STREAM_SESSION_STATUS_DISPATCHING);
 
-        if (MDU_SESSION_STATUS_RECVED_NAT_REQ > peerSession.getStatus())
+        if (STREAM_SESSION_STATUS_RECVED_NAT_REQ > peerSession.getStatus())
         {
             return RET_OK;
         }
@@ -1584,7 +1584,7 @@ int32_t CMduRtpSession::handleRtspRespMessage(CRtspPacket &rtspMsg,
     return RET_OK;
 }
 
-int32_t CMduRtpSession::handleRtspHeartbeatMsg(const MDU_INNER_MSG &innerMsg,
+int32_t CStreamRtpSession::handleRtspHeartbeatMsg(const STREAM_INNER_MSG &innerMsg,
                                            CRtspPacket &rtspPack)
 {
     std::string strResp;
@@ -1607,7 +1607,7 @@ int32_t CMduRtpSession::handleRtspHeartbeatMsg(const MDU_INNER_MSG &innerMsg,
     return RET_OK;
 }
 
-int32_t CMduRtpSession::startRtspPullSession()
+int32_t CStreamRtpSession::startRtspPullSession()
 {
     CRtspDescribeMessage request;
     request.setMsgType(RTSP_MSG_REQ);
@@ -1642,7 +1642,7 @@ int32_t CMduRtpSession::startRtspPullSession()
     return RET_OK;
 }
 
-int32_t CMduRtpSession::allocStdMediaPort()
+int32_t CStreamRtpSession::allocStdMediaPort()
 {
     int32_t nRet = RET_OK;
     if (TRANS_PROTOCAL_TCP == getTransProtocol())
@@ -1667,7 +1667,7 @@ int32_t CMduRtpSession::allocStdMediaPort()
     return nRet;
 }
 
-int32_t CMduRtpSession::startStdMediaPort()
+int32_t CStreamRtpSession::startStdMediaPort()
 {
     int32_t nRet = RET_OK;
     if (TRANS_PROTOCAL_UDP == getTransProtocol())
@@ -1696,7 +1696,7 @@ int32_t CMduRtpSession::startStdMediaPort()
     return nRet;
 }
 
-void CMduRtpSession::stopRtspPullSession()
+void CStreamRtpSession::stopRtspPullSession()
 {
     (void)m_rtspInitSem.release();
     CRtspTeardownMessage request;
@@ -1722,7 +1722,7 @@ void CMduRtpSession::stopRtspPullSession()
     return;
 }
 
-int32_t CMduRtpSession::sendStdVcrMessage(CRtspPacket &rtspPack)
+int32_t CStreamRtpSession::sendStdVcrMessage(CRtspPacket &rtspPack)
 {
     std::string strRtsp;
     if (RtspResponseMethod == rtspPack.getMethodIndex())
@@ -1783,9 +1783,9 @@ int32_t CMduRtpSession::sendStdVcrMessage(CRtspPacket &rtspPack)
     return RET_OK;
 }
 
-int32_t CMduRtpSession::handleStdRtspMessage(const MDU_INNER_MSG &innerMsg,
+int32_t CStreamRtpSession::handleStdRtspMessage(const STREAM_INNER_MSG &innerMsg,
                                          uint32_t unMsgSize,
-                                         CMduSession &peerSession)
+                                         CStreamSession &peerSession)
 {
     char *pMsgData = (char*)&innerMsg + innerMsg.unBodyOffset;
     uint32_t unRtspSize = unMsgSize - innerMsg.unBodyOffset;
@@ -1846,7 +1846,7 @@ int32_t CMduRtpSession::handleStdRtspMessage(const MDU_INNER_MSG &innerMsg,
     return nRet;
 }
 
-int32_t CMduRtpSession::handleStdRtspDescribeResp(CRtspMessage &rtspMessage)
+int32_t CStreamRtpSession::handleStdRtspDescribeResp(CRtspMessage &rtspMessage)
 {
     CRtspDescribeMessage *pMessage = dynamic_cast<CRtspDescribeMessage *>(&rtspMessage);
     if (!pMessage)
@@ -1949,7 +1949,7 @@ int32_t CMduRtpSession::handleStdRtspDescribeResp(CRtspMessage &rtspMessage)
     return RET_OK;
 }
 
-int32_t CMduRtpSession::handleStdRtspSetupResp(CRtspMessage &rtspMessage, CMduSession &peerSession)
+int32_t CStreamRtpSession::handleStdRtspSetupResp(CRtspMessage &rtspMessage, CStreamSession &peerSession)
 {
     CRtspSetupMessage *pMessage = dynamic_cast<CRtspSetupMessage *> (&rtspMessage);
     if (!pMessage)
@@ -2034,7 +2034,7 @@ int32_t CMduRtpSession::handleStdRtspSetupResp(CRtspMessage &rtspMessage, CMduSe
     }
 
     (void)peerSession.handleRecvedNatRequest();
-    setStatus(MDU_SESSION_STATUS_RECVED_NAT_REQ);
+    setStatus(STREAM_SESSION_STATUS_RECVED_NAT_REQ);
 
     int32_t nRet = RET_OK;
     if (SETUP_STATUS_VIDEO == m_enSetupStatus)
@@ -2055,7 +2055,7 @@ int32_t CMduRtpSession::handleStdRtspSetupResp(CRtspMessage &rtspMessage, CMduSe
     return nRet;
 }
 
-int32_t CMduRtpSession::sendStartRequest()
+int32_t CStreamRtpSession::sendStartRequest()
 {
     if ((RTSP_SESSION == getSessionType())
             && (PLAY_TYPE_LIVE == getPlayType()) )
@@ -2117,7 +2117,7 @@ int32_t CMduRtpSession::sendStartRequest()
     return RET_OK;
 }
 
-int32_t CMduRtpSession::handleVideoRtspSetupResp(CRtspSetupMessage &setupMessage)
+int32_t CStreamRtpSession::handleVideoRtspSetupResp(CRtspSetupMessage &setupMessage)
 {
     if (TRANS_PROTOCAL_TCP == getTransProtocol())
     {
@@ -2212,7 +2212,7 @@ int32_t CMduRtpSession::handleVideoRtspSetupResp(CRtspSetupMessage &setupMessage
     return RET_OK;
 }
 
-int32_t CMduRtpSession::handleAudioRtspSetupResp(CRtspSetupMessage &setupMessage)
+int32_t CStreamRtpSession::handleAudioRtspSetupResp(CRtspSetupMessage &setupMessage)
 {
     m_strAudioSession = setupMessage.getSession();
     if (TRANS_PROTOCAL_TCP == getTransProtocol())
@@ -2251,7 +2251,7 @@ int32_t CMduRtpSession::handleAudioRtspSetupResp(CRtspSetupMessage &setupMessage
     return RET_OK;
 }
 
-int32_t CMduRtpSession::handleStdRtspPlayResp(CRtspMessage &rtspMessage, CMduSession &peerSession)
+int32_t CStreamRtpSession::handleStdRtspPlayResp(CRtspMessage &rtspMessage, CStreamSession &peerSession)
 {
     CRtspPlayMessage *pMessage = dynamic_cast<CRtspPlayMessage *> (&rtspMessage);
     if (!pMessage)
@@ -2274,7 +2274,7 @@ int32_t CMduRtpSession::handleStdRtspPlayResp(CRtspMessage &rtspMessage, CMduSes
         return RET_OK;
     }
 
-    if (MDU_SESSION_STATUS_DISPATCHING != getStatus())
+    if (STREAM_SESSION_STATUS_DISPATCHING != getStatus())
     {
 
         MEDIA_INFO_LIST AudioinfoList;
@@ -2325,7 +2325,7 @@ int32_t CMduRtpSession::handleStdRtspPlayResp(CRtspMessage &rtspMessage, CMduSes
             m_bAudioPlay = true;
         }
 
-        setStatus(MDU_SESSION_STATUS_DISPATCHING);
+        setStatus(STREAM_SESSION_STATUS_DISPATCHING);
     }
 
     std::string strMsg;
@@ -2351,22 +2351,22 @@ int32_t CMduRtpSession::handleStdRtspPlayResp(CRtspMessage &rtspMessage, CMduSes
     return RET_OK;
 }
 
-int32_t CMduRtpSession::handleStdRtspPauseResp(CRtspMessage & /*rtspMessage*/,
-                                           CMduSession &/*peerSession*/) const
+int32_t CStreamRtpSession::handleStdRtspPauseResp(CRtspMessage & /*rtspMessage*/,
+                                           CStreamSession &/*peerSession*/) const
 {
     SVS_LOG((SVS_LM_INFO,"session[%Q] handle pause response success.",
                      getStreamId()));
     return RET_OK;
 }
 
-int32_t CMduRtpSession::handleStdRtspTeardownResp(CRtspMessage & /*rtspMessage*/) const
+int32_t CStreamRtpSession::handleStdRtspTeardownResp(CRtspMessage & /*rtspMessage*/) const
 {
     SVS_LOG((SVS_LM_INFO,"session[%Q] handle teardown response success.",
                      getStreamId()));
     return RET_OK;
 }
 
-int32_t CMduRtpSession::handleStdRtspAnnounceReq(CRtspMessage &rtspMessage, CMduSession &peerSession)
+int32_t CStreamRtpSession::handleStdRtspAnnounceReq(CRtspMessage &rtspMessage, CStreamSession &peerSession)
 {
     CRtspAnnounceMessage *pMessage = dynamic_cast<CRtspAnnounceMessage *> (&rtspMessage);
     if (!pMessage)
@@ -2374,7 +2374,7 @@ int32_t CMduRtpSession::handleStdRtspAnnounceReq(CRtspMessage &rtspMessage, CMdu
         return RET_FAIL;
     }
 
-    if (RET_OK != peerSession.sendSessionStopMessage(MDU_PACKET_TYPE_SESSION_EOS))
+    if (RET_OK != peerSession.sendSessionStopMessage(STREAM_PACKET_TYPE_SESSION_EOS))
     {
         SVS_LOG((SVS_LM_WARNING,"session[%Q] ask peer session[%Q] send eos notify fail.",
                         getStreamId(), peerSession.getStreamId()));
@@ -2401,7 +2401,7 @@ int32_t CMduRtpSession::handleStdRtspAnnounceReq(CRtspMessage &rtspMessage, CMdu
     return RET_OK;
 }
 
-void CMduRtpSession::sendRtcpMessage()
+void CStreamRtpSession::sendRtcpMessage()
 {
     char buf[KILO] = { 0 };
     char* pRtcpBuff = buf + RTP_INTERLEAVE_LENGTH;
@@ -2466,7 +2466,7 @@ void CMduRtpSession::sendRtcpMessage()
     return;
 }
 
-void CMduRtpSession::resetRtpPt(CRtpPacket &rtpPack)
+void CStreamRtpSession::resetRtpPt(CRtpPacket &rtpPack)
 {
 
     if (NULL == m_pPeerSession)
@@ -2478,7 +2478,7 @@ void CMduRtpSession::resetRtpPt(CRtpPacket &rtpPack)
         }
 
 
-        m_pPeerSession = CMduSessionFactory::instance()->findSession(ullRecvId);
+        m_pPeerSession = CStreamSessionFactory::instance()->findSession(ullRecvId);
     }
 
     if (NULL == m_pPeerSession)

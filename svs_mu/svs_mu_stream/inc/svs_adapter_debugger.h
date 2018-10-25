@@ -1,5 +1,5 @@
-#ifndef __CMDUDEBUGGER_H__
-#define __CMDUDEBUGGER_H__
+#ifndef __CSTREAMDEBUGGER_H__
+#define __CSTREAMDEBUGGER_H__
 
 #include <svs_ace_header.h>
 #include <map>
@@ -10,11 +10,11 @@
 
 
 
-class CMduDebugger:public ACE_Svc_Handler<ACE_SOCK_STREAM,ACE_MT_SYNCH>
+class CStreamDebugger:public ACE_Svc_Handler<ACE_SOCK_STREAM,ACE_MT_SYNCH>
 {
-#define MDU_MAX_DEBUG_NUM              10
-#define MDU_DEBUG_CMD_LEN              128
-#define MDU_DEBUG_INFO_LEN             2048
+#define STREAM_MAX_DEBUG_NUM              10
+#define STREAM_DEBUG_CMD_LEN              128
+#define STREAM_DEBUG_INFO_LEN             2048
 
 #define SVS_ADDR_LEN_MAX  32
 #define SVS_LOG_RECV_TIMEOUT 5
@@ -80,8 +80,8 @@ protected:
         Login_MAX
     };
 public:
-    CMduDebugger();
-    virtual ~CMduDebugger();
+    CStreamDebugger();
+    virtual ~CStreamDebugger();
 
     int32_t svc(void);
     int32_t open(void *);
@@ -147,15 +147,15 @@ protected:
     int32_t sendNegotiate();
     int32_t sendIAC(uint8_t cmd,uint8_t option);
 
-    typedef int32_t (CMduDebugger::*pMsgProcessor)(std::string& strCmd);
+    typedef int32_t (CStreamDebugger::*pMsgProcessor)(std::string& strCmd);
     typedef std::map<std::string, pMsgProcessor> MessageMap;
     typedef MessageMap::iterator                 MessageIter;
 
 protected:
     char m_szInetAddr[SVS_ADDR_LEN_MAX];
-    char m_szRecvBuf[MDU_DEBUG_CMD_LEN + 1];
-    char m_szSendBuf[MDU_DEBUG_INFO_LEN + 1];
-    char m_szLastRecvBuf[MDU_DEBUG_CMD_LEN + 1];
+    char m_szRecvBuf[STREAM_DEBUG_CMD_LEN + 1];
+    char m_szSendBuf[STREAM_DEBUG_INFO_LEN + 1];
+    char m_szLastRecvBuf[STREAM_DEBUG_CMD_LEN + 1];
 
     static int32_t m_iClientNum;
     int32_t        m_iHeartbeatNum;
@@ -170,7 +170,7 @@ protected:
     MessageMap m_businessMessage;
 };
 
-typedef ACE_Acceptor <CMduDebugger, ACE_SOCK_ACCEPTOR> CMduDebugAcceptor;
+typedef ACE_Acceptor <CStreamDebugger, ACE_SOCK_ACCEPTOR> CStreamDebugAcceptor;
 
 #endif
 

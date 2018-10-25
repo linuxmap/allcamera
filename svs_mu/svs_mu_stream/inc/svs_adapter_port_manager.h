@@ -1,18 +1,18 @@
-#ifndef __CMDUPORTMANAGER_H__
-#define __CMDUPORTMANAGER_H__
+#ifndef __CSTREAMPORTMANAGER_H__
+#define __CSTREAMPORTMANAGER_H__
 #include <map>
 #include "svs_adapter_config.h"
 #include "svs_adapter_media_port.h"
 
-class CMduPortManager
+class CStreamPortManager
 {
 public:
-    virtual ~CMduPortManager();
+    virtual ~CStreamPortManager();
 
-    static CMduPortManager *instance()
+    static CStreamPortManager *instance()
     {
-        static CMduPortManager mduPortManager;
-        return &mduPortManager;
+        static CStreamPortManager streamPortManager;
+        return &streamPortManager;
     }
 
     int32_t initManager();
@@ -39,11 +39,11 @@ public:
 
     int32_t releaseEhomePort(uint32_t unSpecifyIp, CHandle *&pHandle);
 private:
-    CMduPortManager();
+    CStreamPortManager();
 
-    CMduMediaPort* getMediaPort(uint32_t unSpecifyIp);
+    CStreamMediaPort* getMediaPort(uint32_t unSpecifyIp);
 private:
-    typedef std::map<uint32_t, CMduMediaPort*>  MEDIA_INTERFACE_MAP;
+    typedef std::map<uint32_t, CStreamMediaPort*>  MEDIA_INTERFACE_MAP;
     typedef MEDIA_INTERFACE_MAP::iterator       MEDIA_INTERFACE_MAP_ITER;
 private:
     MEDIA_INTERFACE_MAP   m_MediaInterfaceMap;
@@ -51,4 +51,4 @@ private:
     CNetworkHandle*       m_pSvsFrameHandle;
 };
 
-#endif // __CMDUPORTMANAGER_H__
+#endif // __CSTREAMPORTMANAGER_H__

@@ -10,7 +10,7 @@
 
 #include "svs_vms_message.h"
 
-class CFileEndNotifyReq : public CMduSvsMessage
+class CFileEndNotifyReq : public CStreamSvsMessage
 {
 public:
     CFileEndNotifyReq();

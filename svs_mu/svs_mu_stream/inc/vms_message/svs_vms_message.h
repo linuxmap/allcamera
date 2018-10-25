@@ -1,25 +1,25 @@
 /*
- * CMduSvsMessage.h
+ * CStreamSvsMessage.h
  *
  *  Created on: 2010-12-30
  *      Author:
  */
 
-#ifndef CMDUSVSMESSAGE_H_
-#define CMDUSVSMESSAGE_H_
+#ifndef CSTREAMSVSMESSAGE_H_
+#define CSTREAMSVSMESSAGE_H_
 #include "svs_ace_header.h"
 #include <vms/vms.h>
 #include "svs_vms_system_api.h"
 
-#define MDU_SVS_MSAG_HEADER_SIZE  sizeof(SVS_MSG_HEADER)
+#define STREAM_SVS_MSAG_HEADER_SIZE  sizeof(SVS_MSG_HEADER)
 
 #define TLV_MIN_LENGTH            (sizeof(uint32_t) + sizeof(uint32_t))
 
-class CMduSvsMessage
+class CStreamSvsMessage
 {
 public:
-    CMduSvsMessage();
-    virtual ~CMduSvsMessage();
+    CStreamSvsMessage();
+    virtual ~CStreamSvsMessage();
 
     virtual int32_t create(char* pMsgData, uint32_t unLength);
 
@@ -57,4 +57,4 @@ private:
     bool               m_bDeleteBuffer;
 };
 
-#endif /* CMDUSVSMESSAGE_H_ */
+#endif /* CSTREAMSVSMESSAGE_H_ */

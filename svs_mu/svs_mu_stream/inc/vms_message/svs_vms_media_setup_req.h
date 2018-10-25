@@ -1,20 +1,20 @@
 /*
- * MduMediaSetupReq.h
+ * StreamMediaSetupReq.h
  *
  *  Created on: 2016-5-18
  *      Author:
  */
 
-#ifndef MDUMEDIASETUPREQ_H_
-#define MDUMEDIASETUPREQ_H_
+#ifndef STREAMMEDIASETUPREQ_H_
+#define STREAMMEDIASETUPREQ_H_
 
 #include "svs_vms_message.h"
 
-class CMduMediaSetupReq: public CMduSvsMessage
+class CStreamMediaSetupReq: public CStreamSvsMessage
 {
 public:
-    CMduMediaSetupReq();
-    virtual ~CMduMediaSetupReq();
+    CStreamMediaSetupReq();
+    virtual ~CStreamMediaSetupReq();
 
     int32_t create(uint32_t unLength,
                 uint32_t unTransNo);
@@ -31,9 +31,9 @@ public:
     void dump() const;
 
 private:
-    SVS_MSG_MDU_SESSION_SETUP_REQ   *m_pReq;
+    SVS_MSG_STREAM_SESSION_SETUP_REQ   *m_pReq;
     std::string                      m_strRtspUrl;
     std::string                      m_strSdp;
 };
 
-#endif /* MDUMEDIASETUPREQ_H_ */
+#endif /* STREAMMEDIASETUPREQ_H_ */

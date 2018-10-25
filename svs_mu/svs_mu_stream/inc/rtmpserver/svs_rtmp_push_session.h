@@ -1,12 +1,12 @@
 /*
- * MduRtspPushSession.h
+ * StreamRtspPushSession.h
  *
  *  Created on: 2016-5-16
  *      Author:
  */
 
-#ifndef MDURTMPPUSHSESSION_H_
-#define MDURTMPPUSHSESSION_H_
+#ifndef STREAMRTMPPUSHSESSION_H_
+#define STREAMRTMPPUSHSESSION_H_
 
 #include "svs_ace_header.h"
 #include "svs_adapter_session.h"
@@ -64,18 +64,18 @@ typedef std::list<ACE_Message_Block*>  RTMP_SEND_LIST;
 typedef RTMP_SEND_LIST::iterator       RTMP_SEND_LIST_ITER;
 
 
-class CMduRtmpPushSession: public ACE_Event_Handler,CMduRtmpSendHandle,IRtpFrameHandler
+class CStreamRtmpPushSession: public ACE_Event_Handler,CStreamRtmpSendHandle,IRtpFrameHandler
 {
 public:
-    CMduRtmpPushSession();
-    virtual ~CMduRtmpPushSession();
+    CStreamRtmpPushSession();
+    virtual ~CStreamRtmpPushSession();
 
 public:
     int32_t open(uint32_t unIndex, const ACE_INET_Addr &peerAddr);
 
     void close();
 
-    int32_t handleSvsMessage(CMduSvsMessage &message);
+    int32_t handleSvsMessage(CStreamSvsMessage &message);
 
     int32_t handle_input(ACE_HANDLE handle);
 
@@ -176,8 +176,8 @@ private:
 
     Static_PreAssign_Buffer*     m_pRecvBuffer;
 
-    CMduRtmpSession*             m_pRtmpSession;
-    CMduSession*                 m_pPeerSession;
+    CStreamRtmpSession*             m_pRtmpSession;
+    CStreamSession*                 m_pPeerSession;
 
     std::string                  m_strContentID;
     std::string                  m_strUri;
@@ -195,4 +195,4 @@ private:
     CRtpFrameOrganizer           m_RtpFrameOrganizer;
 };
 
-#endif /* MDURTSPPUSHSESSION_H_ */
+#endif /* STREAMRTSPPUSHSESSION_H_ */

@@ -1,5 +1,5 @@
 /*
- * MduRtspPushSession.cpp
+ * StreamRtspPushSession.cpp
  *
  *  Created on: 2016-5-16
  *      Author:
@@ -47,7 +47,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-CMduRtmpPushSession::CMduRtmpPushSession()
+CStreamRtmpPushSession::CStreamRtmpPushSession()
 {
     m_unSessionIndex  = 0;
     m_enPlayType      = PLAY_TYPE_LIVE;
@@ -78,7 +78,7 @@ CMduRtmpPushSession::CMduRtmpPushSession()
     }
 }
 
-CMduRtmpPushSession::~CMduRtmpPushSession()
+CStreamRtmpPushSession::~CStreamRtmpPushSession()
 {
     m_unSessionIndex  = 0;
     m_sockHandle      = ACE_INVALID_HANDLE;
@@ -93,7 +93,7 @@ CMduRtmpPushSession::~CMduRtmpPushSession()
     m_lRedoTimerId     = -1;
 }
 
-int32_t CMduRtmpPushSession::open(uint32_t unIndex, const ACE_INET_Addr &peerAddr)
+int32_t CStreamRtmpPushSession::open(uint32_t unIndex, const ACE_INET_Addr &peerAddr)
 {
     m_unSessionIndex  = unIndex;
     m_PeerAddr       = peerAddr;
@@ -152,7 +152,7 @@ int32_t CMduRtmpPushSession::open(uint32_t unIndex, const ACE_INET_Addr &peerAdd
     return RET_OK;
 }
 
-void CMduRtmpPushSession::close()
+void CStreamRtmpPushSession::close()
 {
     (void)ACE_OS::shutdown(m_sockHandle, SHUT_RDWR);
     SVS_LOG((SVS_LM_INFO,"close rtmp push session[%u] success.handle[%d]",
@@ -160,7 +160,7 @@ void CMduRtmpPushSession::close()
     return;
 }
 
-void CMduRtmpPushSession::setStatus(RTMP_SESSION_STATUS unStatus)
+void CStreamRtmpPushSession::setStatus(RTMP_SESSION_STATUS unStatus)
 {
     RTMP_SESSION_STATUS unOldStatus = m_enSessionStatus;
     m_enSessionStatus        = unStatus;
@@ -170,21 +170,21 @@ void CMduRtmpPushSession::setStatus(RTMP_SESSION_STATUS unStatus)
     return;
 }
 
-RTMP_SESSION_STATUS CMduRtmpPushSession::getStatus() const
+RTMP_SESSION_STATUS CStreamRtmpPushSession::getStatus() const
 {
     return m_enSessionStatus;
 }
-ACE_INET_Addr CMduRtmpPushSession::getPeerAddr()const
+ACE_INET_Addr CStreamRtmpPushSession::getPeerAddr()const
 {
     return m_PeerAddr;
 }
 
-ACE_INET_Addr CMduRtmpPushSession::getLocalAddr()const
+ACE_INET_Addr CStreamRtmpPushSession::getLocalAddr()const
 {
     return m_LocalAddr;
 }
 
-int32_t CMduRtmpPushSession::sendMediaData(ACE_Message_Block **pMbArray, uint32_t MsgCount)
+int32_t CStreamRtmpPushSession::sendMediaData(ACE_Message_Block **pMbArray, uint32_t MsgCount)
 {
     if(RTMP_SESSION_STATUS_PLAY != m_enSessionStatus) {
         return RET_OK;
@@ -197,7 +197,7 @@ int32_t CMduRtmpPushSession::sendMediaData(ACE_Message_Block **pMbArray, uint32_
 
     return RET_OK;
 }
-void CMduRtmpPushSession::handleRtpFrame(RTP_FRAME_LIST &rtpFrameList)
+void CStreamRtmpPushSession::handleRtpFrame(RTP_FRAME_LIST &rtpFrameList)
 {
     if(0 == rtpFrameList.size())
     {
@@ -226,9 +226,9 @@ void CMduRtmpPushSession::handleRtpFrame(RTP_FRAME_LIST &rtpFrameList)
 }
 
 
-int32_t CMduRtmpPushSession::handleSvsMessage(CMduSvsMessage &message)
+int32_t CStreamRtmpPushSession::handleSvsMessage(CStreamSvsMessage &message)
 {
-    CMduMediaSetupResp *pResp = dynamic_cast<CMduMediaSetupResp*>(&message);
+    CStreamMediaSetupResp *pResp = dynamic_cast<CStreamMediaSetupResp*>(&message);
     if (!pResp)
     {
         SVS_LOG((SVS_LM_WARNING,"rtmp push session[%u] handle svs message fail, invalid message.",
@@ -261,7 +261,7 @@ int32_t CMduRtmpPushSession::handleSvsMessage(CMduSvsMessage &message)
 }
 
 
-int32_t CMduRtmpPushSession::handle_input(ACE_HANDLE handle)
+int32_t CStreamRtmpPushSession::handle_input(ACE_HANDLE handle)
 {
     if ((NULL == m_pRecvBuffer) || (ACE_INVALID_HANDLE == m_sockHandle))
     {
@@ -339,7 +339,7 @@ int32_t CMduRtmpPushSession::handle_input(ACE_HANDLE handle)
     return 0;
 }
 
-int32_t CMduRtmpPushSession::handle_timeout(const ACE_Time_Value &tv, const void *arg)
+int32_t CStreamRtmpPushSession::handle_timeout(const ACE_Time_Value &tv, const void *arg)
 {
     SVS_LOG((SVS_LM_INFO,"rtmp push session[%u] retry process rtmp message.", m_unSessionIndex));
 
@@ -348,7 +348,7 @@ int32_t CMduRtmpPushSession::handle_timeout(const ACE_Time_Value &tv, const void
     return 0;
 }
 
-int32_t CMduRtmpPushSession::handle_close(ACE_HANDLE /*handle*/, ACE_Reactor_Mask /*close_mask*/)
+int32_t CStreamRtmpPushSession::handle_close(ACE_HANDLE /*handle*/, ACE_Reactor_Mask /*close_mask*/)
 {
     if (ACE_INVALID_HANDLE == m_sockHandle)
     {
@@ -383,7 +383,7 @@ int32_t CMduRtmpPushSession::handle_close(ACE_HANDLE /*handle*/, ACE_Reactor_Mas
     return 0;
 }
 
-void CMduRtmpPushSession::setHandle(ACE_HANDLE handle, const ACE_INET_Addr &localAddr)
+void CStreamRtmpPushSession::setHandle(ACE_HANDLE handle, const ACE_INET_Addr &localAddr)
 {
     m_sockHandle = handle;
     m_LocalAddr  = localAddr;
@@ -394,21 +394,21 @@ void CMduRtmpPushSession::setHandle(ACE_HANDLE handle, const ACE_INET_Addr &loca
     return;
 }
 
-ACE_HANDLE CMduRtmpPushSession::get_handle() const
+ACE_HANDLE CStreamRtmpPushSession::get_handle() const
 {
     return m_sockHandle;
 }
 
-uint32_t CMduRtmpPushSession::getSessionIndex() const
+uint32_t CStreamRtmpPushSession::getSessionIndex() const
 {
     return m_unSessionIndex;
 }
 
-int32_t CMduRtmpPushSession::check()
+int32_t CStreamRtmpPushSession::check()
 {
     uint32_t ulCostTime = SVS_GetSecondTime() - m_ulStatusTime;
     if ((RTMP_SESSION_STATUS_PLAY >= getStatus())
-            && (ulCostTime > MDU_STATUS_TIMEOUT_INTERVAL))
+            && (ulCostTime > STREAM_STATUS_TIMEOUT_INTERVAL))
     {
         SVS_LOG((SVS_LM_WARNING,"rtmp push session[%u] check status abnormal,"
                 " close session.",
@@ -419,8 +419,8 @@ int32_t CMduRtmpPushSession::check()
 
     if (m_pRtmpSession)
     {
-        if ((MDU_SESSION_STATUS_ABNORMAL == m_pRtmpSession->getStatus())
-                || (MDU_SESSION_STATUS_RELEASED == m_pRtmpSession->getStatus()))
+        if ((STREAM_SESSION_STATUS_ABNORMAL == m_pRtmpSession->getStatus())
+                || (STREAM_SESSION_STATUS_RELEASED == m_pRtmpSession->getStatus()))
         {
             SVS_LOG((SVS_LM_WARNING,"rtmp push session[%u] check status abnormal,"
                     " close rtp session[%Q].",
@@ -431,7 +431,7 @@ int32_t CMduRtmpPushSession::check()
     }
 
     if ((RTMP_SESSION_STATUS_TEARDOWN == getStatus())
-            && (ulCostTime > MDU_STATUS_ABNORMAL_INTERVAL))
+            && (ulCostTime > STREAM_STATUS_ABNORMAL_INTERVAL))
     {
         SVS_LOG((SVS_LM_INFO,"check rtmp push session[%u] teardown, release session.",
                         m_unSessionIndex));
@@ -441,7 +441,7 @@ int32_t CMduRtmpPushSession::check()
     return RET_OK;
 }
 
-int32_t CMduRtmpPushSession::setSockOpt()
+int32_t CStreamRtmpPushSession::setSockOpt()
 {
     if (ACE_INVALID_HANDLE == m_sockHandle)
     {
@@ -459,7 +459,7 @@ int32_t CMduRtmpPushSession::setSockOpt()
     return RET_OK;
 }
 
-int32_t CMduRtmpPushSession::sendMessage(const char* pData, uint32_t unDataSize)
+int32_t CStreamRtmpPushSession::sendMessage(const char* pData, uint32_t unDataSize)
 {
 
     ACE_Time_Value timeout(1);
@@ -473,7 +473,7 @@ int32_t CMduRtmpPushSession::sendMessage(const char* pData, uint32_t unDataSize)
 
     return RET_OK;
 }
-int32_t CMduRtmpPushSession::sendRtmpData(uint8_t type, uint32_t endpoint,const std::string &buf,
+int32_t CStreamRtmpPushSession::sendRtmpData(uint8_t type, uint32_t endpoint,const std::string &buf,
                                     unsigned long timestamp,int channel_num)
 {
     if (endpoint == STREAM_ID) {
@@ -515,7 +515,7 @@ int32_t CMduRtmpPushSession::sendRtmpData(uint8_t type, uint32_t endpoint,const 
 }
 
 
-int32_t CMduRtmpPushSession::sendMediaSetupReq(CSVSMediaLink* linkInof)
+int32_t CStreamRtmpPushSession::sendMediaSetupReq(CSVSMediaLink* linkInof)
 {
     std::string   strSdpInfo;
     std::string   strUrl = linkInof->Url();
@@ -530,19 +530,19 @@ int32_t CMduRtmpPushSession::sendMediaSetupReq(CSVSMediaLink* linkInof)
         return RET_FAIL;
     }
 
-    uint32_t unMsgLen = sizeof(SVS_MSG_MDU_SESSION_SETUP_REQ) ;
+    uint32_t unMsgLen = sizeof(SVS_MSG_STREAM_SESSION_SETUP_REQ) ;
 
-    CMduSvsMessage *pMessage = NULL;
-    nRet = CMduMsgFactory::instance()->createSvsMsg(SVS_MSG_TYPE_MDU_SESSION_SETUP_REQ,
+    CStreamSvsMessage *pMessage = NULL;
+    nRet = CStreamMsgFactory::instance()->createSvsMsg(SVS_MSG_TYPE_STREAM_SESSION_SETUP_REQ,
                                                     unMsgLen, 0,pMessage);
     if ((RET_OK != nRet) || (NULL == pMessage))
     {
-        SVS_LOG((SVS_LM_WARNING,"rtmp push session[%u] create mdu session setup request fail.",
+        SVS_LOG((SVS_LM_WARNING,"rtmp push session[%u] create stream session setup request fail.",
                         m_unSessionIndex));
         return RET_FAIL;
     }
 
-    CMduMediaSetupReq *pReq = dynamic_cast<CMduMediaSetupReq*>(pMessage);
+    CStreamMediaSetupReq *pReq = dynamic_cast<CStreamMediaSetupReq*>(pMessage);
     if (!pReq)
     {
         return RET_FAIL;
@@ -558,41 +558,41 @@ int32_t CMduRtmpPushSession::sendMediaSetupReq(CSVSMediaLink* linkInof)
                              ulTransType,strAddr.c_str(),usPort);
     if (RET_OK != nRet)
     {
-        CMduMsgFactory::instance()->destroySvsMsg(pMessage);
-        SVS_LOG((SVS_LM_WARNING,"rtmp push session[%u] init mdu session setup request fail.",
+        CStreamMsgFactory::instance()->destroySvsMsg(pMessage);
+        SVS_LOG((SVS_LM_WARNING,"rtmp push session[%u] init stream session setup request fail.",
                                 m_unSessionIndex));
         return RET_FAIL;
     }
 
     if (RET_OK != pReq->handleMessage())
     {
-        CMduMsgFactory::instance()->destroySvsMsg(pMessage);
-        SVS_LOG((SVS_LM_WARNING,"rtmp push session[%u] handle mdu session setup request fail.",
+        CStreamMsgFactory::instance()->destroySvsMsg(pMessage);
+        SVS_LOG((SVS_LM_WARNING,"rtmp push session[%u] handle stream session setup request fail.",
                 m_unSessionIndex));
         return RET_FAIL;
     }
 
-    CMduMsgFactory::instance()->destroySvsMsg(pMessage);
-    SVS_LOG((SVS_LM_INFO,"rtmp push session[%u] send mdu session setup request success.",
+    CStreamMsgFactory::instance()->destroySvsMsg(pMessage);
+    SVS_LOG((SVS_LM_INFO,"rtmp push session[%u] send stream session setup request success.",
             m_unSessionIndex));
     return RET_OK;
 }
 
-void CMduRtmpPushSession::sendKeyFrameReq()
+void CStreamRtmpPushSession::sendKeyFrameReq()
 {
-    uint32_t unMsgLen = sizeof(SVS_MSG_MDU_KEY_FRAME_REQ);
+    uint32_t unMsgLen = sizeof(SVS_MSG_STREAM_KEY_FRAME_REQ);
 
-    CMduSvsMessage *pMessage = NULL;
-    int32_t nRet = CMduMsgFactory::instance()->createSvsMsg(SVS_MSG_TYPE_MEDIA_KEYFRAME_REQ,
+    CStreamSvsMessage *pMessage = NULL;
+    int32_t nRet = CStreamMsgFactory::instance()->createSvsMsg(SVS_MSG_TYPE_MEDIA_KEYFRAME_REQ,
                                                     unMsgLen, 0,pMessage);
     if ((RET_OK != nRet) || (NULL == pMessage))
     {
-        SVS_LOG((SVS_LM_WARNING,"rtmp push session[%u] create mdu key frame request fail.",
+        SVS_LOG((SVS_LM_WARNING,"rtmp push session[%u] create stream key frame request fail.",
                         m_unSessionIndex));
         return ;
     }
 
-    CMduMediaKeyFrameReq *pReq = dynamic_cast<CMduMediaKeyFrameReq*>(pMessage);
+    CStreamMediaKeyFrameReq *pReq = dynamic_cast<CStreamMediaKeyFrameReq*>(pMessage);
     if (!pReq)
     {
         return ;
@@ -602,46 +602,46 @@ void CMduRtmpPushSession::sendKeyFrameReq()
 
     if (RET_OK != nRet)
     {
-        CMduMsgFactory::instance()->destroySvsMsg(pMessage);
-        SVS_LOG((SVS_LM_WARNING,"rtmp push session[%u] init mdu key frame request fail.",
+        CStreamMsgFactory::instance()->destroySvsMsg(pMessage);
+        SVS_LOG((SVS_LM_WARNING,"rtmp push session[%u] init stream key frame request fail.",
                                 m_unSessionIndex));
         return ;
     }
 
     if (RET_OK != pReq->handleMessage())
     {
-        CMduMsgFactory::instance()->destroySvsMsg(pMessage);
-        SVS_LOG((SVS_LM_WARNING,"rtmp push session[%u] handle mdu key frame request fail.",
+        CStreamMsgFactory::instance()->destroySvsMsg(pMessage);
+        SVS_LOG((SVS_LM_WARNING,"rtmp push session[%u] handle stream key frame request fail.",
                 m_unSessionIndex));
         return ;
     }
 
-    CMduMsgFactory::instance()->destroySvsMsg(pMessage);
-    SVS_LOG((SVS_LM_INFO,"rtmp push session[%u] send mdu key frame request success.",
+    CStreamMsgFactory::instance()->destroySvsMsg(pMessage);
+    SVS_LOG((SVS_LM_INFO,"rtmp push session[%u] send stream key frame request success.",
             m_unSessionIndex));
     return;
 }
 
-int32_t CMduRtmpPushSession::createMediaSession()
+int32_t CStreamRtmpPushSession::createMediaSession()
 {
-    CMduSession *pSession = CMduSessionFactory::instance()->createSession(PEER_TYPE_CU, RTSP_SESSION,true);
+    CStreamSession *pSession = CStreamSessionFactory::instance()->createSession(PEER_TYPE_CU, RTSP_SESSION,true);
     if (!pSession)
     {
         SVS_LOG((SVS_LM_ERROR,"rtmp push session[%u] create media session fail.", m_unSessionIndex));
         return RET_FAIL;
     }
 
-    CMduRtmpSession* pRtmpSession = dynamic_cast<CMduRtmpSession*>(pSession);
+    CStreamRtmpSession* pRtmpSession = dynamic_cast<CStreamRtmpSession*>(pSession);
     if (!pRtmpSession)
     {
-        CMduSessionFactory::instance()->releaseSession(pSession);
+        CStreamSessionFactory::instance()->releaseSession(pSession);
         SVS_LOG((SVS_LM_ERROR,"rtmp push session[%u] create std media session fail.", m_unSessionIndex));
         return RET_FAIL;
     }
 
     if (!m_pPeerSession)
     {
-        CMduSessionFactory::instance()->releaseSession(pSession);
+        CStreamSessionFactory::instance()->releaseSession(pSession);
         SVS_LOG((SVS_LM_WARNING,"rtmp push session[%u] handle rtmp play request fail, "
                 "can't find peer session ContentID[%s]",
                 m_unSessionIndex, m_strContentID.c_str()));
@@ -671,7 +671,7 @@ int32_t CMduRtmpPushSession::createMediaSession()
                                                  m_LocalAddr,
                                                  m_PeerAddr))
     {
-        CMduSessionFactory::instance()->releaseSession(pSession);
+        CStreamSessionFactory::instance()->releaseSession(pSession);
         SVS_LOG((SVS_LM_WARNING,"rtmp push session[%u] init rtmp session fail.", m_unSessionIndex));
         return RET_FAIL;
     }
@@ -684,7 +684,7 @@ int32_t CMduRtmpPushSession::createMediaSession()
     }
 
 
-    CMduBusiness *pBusiness = CMduBusinessManager::instance()->createBusiness(ullPeerSessionId,
+    CStreamBusiness *pBusiness = CStreamBusinessManager::instance()->createBusiness(ullPeerSessionId,
                                                                         pRtmpSession->getStreamId(),
                                                                         pRtmpSession->getPlayType());
     if (!pBusiness)
@@ -692,7 +692,7 @@ int32_t CMduRtmpPushSession::createMediaSession()
         SVS_LOG((SVS_LM_WARNING,"rtmp push session[%u] create business fail, pu[%Q] cu[%Q].",
                         m_unSessionIndex, pSession->getStreamId(), ullPeerSessionId));
 
-        CMduSessionFactory::instance()->releaseSession(pSession);
+        CStreamSessionFactory::instance()->releaseSession(pSession);
         m_pRtmpSession = NULL;
         return RET_FAIL;
     }
@@ -702,9 +702,9 @@ int32_t CMduRtmpPushSession::createMediaSession()
         SVS_LOG((SVS_LM_WARNING,"rtmp push session[%u] start business fail, pu[%Q] cu[%Q].",
                 m_unSessionIndex, pSession->getStreamId(), ullPeerSessionId));
 
-        CMduSessionFactory::instance()->releaseSession(pSession);
+        CStreamSessionFactory::instance()->releaseSession(pSession);
 
-        CMduBusinessManager::instance()->releaseBusiness(pBusiness);
+        CStreamBusinessManager::instance()->releaseBusiness(pBusiness);
         m_pRtmpSession = NULL;
         return RET_FAIL;
     }
@@ -715,7 +715,7 @@ int32_t CMduRtmpPushSession::createMediaSession()
     return RET_OK;
 }
 
-void CMduRtmpPushSession::destroyMediaSession()
+void CStreamRtmpPushSession::destroyMediaSession()
 {
     uint64_t ullPeerSessionId = 0;
     uint64_t ullRtmpSessionId = 0;
@@ -723,17 +723,17 @@ void CMduRtmpPushSession::destroyMediaSession()
     if (m_pRtmpSession)
     {
         ullRtmpSessionId = m_pRtmpSession->getStreamId();
-        CMduBusiness *pBusiness = CMduBusinessManager::instance()->findBusiness(ullRtmpSessionId);
+        CStreamBusiness *pBusiness = CStreamBusinessManager::instance()->findBusiness(ullRtmpSessionId);
         if (!pBusiness)
         {
             SVS_LOG((SVS_LM_WARNING,"rtmp push session[%u] not find the buinsess.", m_unSessionIndex));
             return;
         }
 
-        CMduBusinessManager::instance()->releaseBusiness(pBusiness);
-        CMduBusinessManager::instance()->releaseBusiness(pBusiness);
+        CStreamBusinessManager::instance()->releaseBusiness(pBusiness);
+        CStreamBusinessManager::instance()->releaseBusiness(pBusiness);
 
-        CMduSessionFactory::instance()->releaseSession(ullRtmpSessionId);
+        CStreamSessionFactory::instance()->releaseSession(ullRtmpSessionId);
         m_pRtmpSession = NULL;
     }
     else
@@ -747,38 +747,38 @@ void CMduRtmpPushSession::destroyMediaSession()
         /* the peer session is create by self,so release twice*/
         SVS_LOG((SVS_LM_DEBUG,"rtmp push session:[%Q], release PeerSession:[%Q].",
                                                           ullRtmpSessionId,ullPeerSessionId));
-        CMduSessionFactory::instance()->releaseSession(m_pPeerSession);
+        CStreamSessionFactory::instance()->releaseSession(m_pPeerSession);
         m_pPeerSession = NULL;
     }
 
 
     //try to find the peer session ,if the session is not exit,so call stop source
-    CMduSession* pPeerSession = CMduSessionFactory::instance()->findSession(ullPeerSessionId);
+    CStreamSession* pPeerSession = CStreamSessionFactory::instance()->findSession(ullPeerSessionId);
     if(NULL != pPeerSession)
     {
-        CMduSessionFactory::instance()->releaseSession(ullPeerSessionId);
+        CStreamSessionFactory::instance()->releaseSession(ullPeerSessionId);
         return;
     }
 
-    CMduSvsMessage *pReq = NULL;
-    int32_t nRet = CMduMsgFactory::instance()->createSvsMsg(SVS_MSG_TYPE_MDU_SESSION_TEARDOWN_REQ,
-                                                        sizeof(SVS_MSG_MDU_SESSION_TEARDOWN_REQ),
+    CStreamSvsMessage *pReq = NULL;
+    int32_t nRet = CStreamMsgFactory::instance()->createSvsMsg(SVS_MSG_TYPE_STREAM_SESSION_TEARDOWN_REQ,
+                                                        sizeof(SVS_MSG_STREAM_SESSION_TEARDOWN_REQ),
                                                         0,
                                                         pReq);
     if ((RET_OK != nRet) || (NULL == pReq))
     {
         SVS_LOG((SVS_LM_WARNING,"rtmp session[%u] create tear down fail, create msg fail.",
                         m_unSessionIndex));
-        CMduMsgFactory::instance()->destroySvsMsg(pReq);
+        CStreamMsgFactory::instance()->destroySvsMsg(pReq);
         return;
     }
 
-    CMduMediaTearDownReq* pTearDownRequest = (CMduMediaTearDownReq*) (void*) pReq;
+    CStreamMediaTearDownReq* pTearDownRequest = (CStreamMediaTearDownReq*) (void*) pReq;
     if (RET_OK != pTearDownRequest->initMsgBody(m_unSessionIndex,m_strContentID.c_str()))
     {
         SVS_LOG((SVS_LM_WARNING,"rtmp session[%u] init tear down fail, create msg fail.",
                           m_unSessionIndex));
-        CMduMsgFactory::instance()->destroySvsMsg(pReq);
+        CStreamMsgFactory::instance()->destroySvsMsg(pReq);
         return;
     }
 
@@ -792,14 +792,14 @@ void CMduRtmpPushSession::destroyMediaSession()
         SVS_LOG((SVS_LM_INFO,"rtmp session[%u] handle tear down success.", m_unSessionIndex));
     }
 
-    CMduMsgFactory::instance()->destroySvsMsg(pReq);
+    CStreamMsgFactory::instance()->destroySvsMsg(pReq);
 
     SVS_LOG((SVS_LM_INFO,"rtmp session[%u] destroy media session success.", m_unSessionIndex));
     return;
 }
 
 
-int32_t CMduRtmpPushSession::processRecvedMessage(const char* pData, uint32_t unDataSize)
+int32_t CStreamRtmpPushSession::processRecvedMessage(const char* pData, uint32_t unDataSize)
 {
     if ((NULL == pData) || (0 == unDataSize))
     {
@@ -885,7 +885,7 @@ int32_t CMduRtmpPushSession::processRecvedMessage(const char* pData, uint32_t un
     return nDealLen;
 }
 
-int32_t CMduRtmpPushSession::handleHandShake(const char* pData, uint32_t unDataSize)
+int32_t CStreamRtmpPushSession::handleHandShake(const char* pData, uint32_t unDataSize)
 {
     uint32_t nMessageLen = unDataSize;
     char*   pMessgae    = (char*)pData;
@@ -941,7 +941,7 @@ int32_t CMduRtmpPushSession::handleHandShake(const char* pData, uint32_t unDataS
     return nDealLen;
 }
 
-void CMduRtmpPushSession::handleMessage(RTMP_Message *msg)
+void CStreamRtmpPushSession::handleMessage(RTMP_Message *msg)
 {
     size_t pos = 0;
 
@@ -1014,7 +1014,7 @@ void CMduRtmpPushSession::handleMessage(RTMP_Message *msg)
     }
 }
 
-void CMduRtmpPushSession::handleInvoke(const RTMP_Message *msg, Decoder *dec)
+void CStreamRtmpPushSession::handleInvoke(const RTMP_Message *msg, Decoder *dec)
 {
     std::string method = amf_load_string(dec);
     double txid = amf_load_number(dec);
@@ -1043,7 +1043,7 @@ void CMduRtmpPushSession::handleInvoke(const RTMP_Message *msg, Decoder *dec)
     }
 }
 
-void CMduRtmpPushSession::handleSetdataframe(Decoder *dec)
+void CStreamRtmpPushSession::handleSetdataframe(Decoder *dec)
 {
     SVS_LOG((SVS_LM_WARNING,"rtmp session[%u] handle,not a publisher.",m_unSessionIndex));
     return;
@@ -1069,7 +1069,7 @@ void CMduRtmpPushSession::handleSetdataframe(Decoder *dec)
     */
 }
 
-void CMduRtmpPushSession::handleConnect(double txid, Decoder *dec)
+void CStreamRtmpPushSession::handleConnect(double txid, Decoder *dec)
 {
     amf_object_t params = amf_load_object(dec);
     std::string app = get(params, std::string("app")).as_string();
@@ -1106,7 +1106,7 @@ void CMduRtmpPushSession::handleConnect(double txid, Decoder *dec)
     m_enSessionStatus = RTMP_SESSION_STATUS_CONNECTED;
 }
 
-void CMduRtmpPushSession::handleFcpublish(double txid, Decoder *dec)
+void CStreamRtmpPushSession::handleFcpublish(double txid, Decoder *dec)
 {
     SVS_LOG((SVS_LM_WARNING,"rtmp session[%u] handle,not a publisher.",m_unSessionIndex));
     return;
@@ -1134,13 +1134,13 @@ void CMduRtmpPushSession::handleFcpublish(double txid, Decoder *dec)
     */
 }
 
-void CMduRtmpPushSession::handleCreateStream(double txid, Decoder *dec)
+void CStreamRtmpPushSession::handleCreateStream(double txid, Decoder *dec)
 {
     /* todo: start the business */
     sendRtmpReply(txid, AMFValue(), double(STREAM_ID));
 }
 
-void CMduRtmpPushSession::handlePublish(double txid, Decoder *dec)
+void CStreamRtmpPushSession::handlePublish(double txid, Decoder *dec)
 {
     amf_load(dec); /* NULL */
 
@@ -1164,9 +1164,9 @@ void CMduRtmpPushSession::handlePublish(double txid, Decoder *dec)
     sendRtmpReply(txid);
 }
 
-void CMduRtmpPushSession::handleStartPlayback()
+void CStreamRtmpPushSession::handleStartPlayback()
 {
-    CMduSession *pPeerSession = NULL;
+    CStreamSession *pPeerSession = NULL;
     CSVSMediaLink MediaLink;
     if (RTMP_SESSION_STATUS_CONNECTED != getStatus())
     {
@@ -1187,7 +1187,7 @@ void CMduRtmpPushSession::handleStartPlayback()
 
     if(SVS_MEDIA_LINK_RESULT_AUTH_FAIL == nRet)
     {
-        if(CMduConfig::instance()->getUrlEffectiveWhile())
+        if(CStreamConfig::instance()->getUrlEffectiveWhile())
         {
             close();
             SVS_LOG((SVS_LM_WARNING,"rtmp push session[%u] handle start play fail, auth invalid.",m_unSessionIndex));
@@ -1198,7 +1198,7 @@ void CMduRtmpPushSession::handleStartPlayback()
     m_strContentID = MediaLink.ContentID();
     MediaLink.UrlType(PLAY_URL_TYPE_RTMP);
 
-    pPeerSession = CMduSessionFactory::instance()->findSession(m_strContentID);
+    pPeerSession = CStreamSessionFactory::instance()->findSession(m_strContentID);
     if (NULL == pPeerSession)
     {
         if (RET_OK != sendMediaSetupReq(&MediaLink))
@@ -1273,7 +1273,7 @@ void CMduRtmpPushSession::handleStartPlayback()
     m_enSessionStatus = RTMP_SESSION_STATUS_PLAY;
 }
 
-void CMduRtmpPushSession::handlePlay(double txid, Decoder *dec)
+void CStreamRtmpPushSession::handlePlay(double txid, Decoder *dec)
 {
     amf_load(dec); /* NULL */
 
@@ -1287,7 +1287,7 @@ void CMduRtmpPushSession::handlePlay(double txid, Decoder *dec)
     sendRtmpReply(txid);
 }
 
-void CMduRtmpPushSession::handlePlay2(double txid, Decoder *dec)
+void CStreamRtmpPushSession::handlePlay2(double txid, Decoder *dec)
 {
     amf_load(dec); /* NULL */
 
@@ -1302,7 +1302,7 @@ void CMduRtmpPushSession::handlePlay2(double txid, Decoder *dec)
     sendRtmpReply(txid);
 }
 
-void CMduRtmpPushSession::handlePause(double txid, Decoder *dec)
+void CStreamRtmpPushSession::handlePause(double txid, Decoder *dec)
 {
     amf_load(dec); /* NULL */
 
@@ -1331,7 +1331,7 @@ void CMduRtmpPushSession::handlePause(double txid, Decoder *dec)
 }
 
 
-int32_t CMduRtmpPushSession::checkTransDirection(uint32_t unPeerType, uint32_t unTransDirection) const
+int32_t CStreamRtmpPushSession::checkTransDirection(uint32_t unPeerType, uint32_t unTransDirection) const
 {
     if (PEER_TYPE_PU == unPeerType)
     {
@@ -1366,10 +1366,10 @@ int32_t CMduRtmpPushSession::checkTransDirection(uint32_t unPeerType, uint32_t u
     return RET_FAIL;
 }
 
-int32_t CMduRtmpPushSession::createDistribute(CSVSMediaLink* linkinfo,std::string& strSdpInfo)
+int32_t CStreamRtmpPushSession::createDistribute(CSVSMediaLink* linkinfo,std::string& strSdpInfo)
 {
     std::string strUrl;
-    CMduSession *pPeerSession  = NULL;
+    CStreamSession *pPeerSession  = NULL;
 
     if(NULL == linkinfo)
     {
@@ -1379,7 +1379,7 @@ int32_t CMduRtmpPushSession::createDistribute(CSVSMediaLink* linkinfo,std::strin
     m_strContentID = linkinfo->ContentID();
 
     //create the peer session first
-    pPeerSession = CMduSessionFactory::instance()->createSourceSession(m_strContentID, PEER_TYPE_PU, RTP_SESSION,false);
+    pPeerSession = CStreamSessionFactory::instance()->createSourceSession(m_strContentID, PEER_TYPE_PU, RTP_SESSION,false);
     if (NULL == pPeerSession)
     {
         SVS_LOG((SVS_LM_ERROR,"Create distribute fail, create peer session fail."));
@@ -1388,7 +1388,7 @@ int32_t CMduRtmpPushSession::createDistribute(CSVSMediaLink* linkinfo,std::strin
     if (RET_OK != pPeerSession->init(m_strContentID.c_str(),linkinfo->PlayType()))
     {
         SVS_LOG((SVS_LM_ERROR,"Create distribute fail,session init fail."));
-        CMduSessionFactory::instance()->releaseSession(pPeerSession);
+        CStreamSessionFactory::instance()->releaseSession(pPeerSession);
         return RET_FAIL;
     }
 
@@ -1403,8 +1403,8 @@ int32_t CMduRtmpPushSession::createDistribute(CSVSMediaLink* linkinfo,std::strin
 
     std::string strAddr = pPeerSession->getVideoAddr().get_host_addr();
 
-    std::string strSerID = CMduConfig::instance()->getServiceId();
-    //CMduSccConnector* pConnect = CMduServiceTask::instance()->getSccConnector();
+    std::string strSerID = CStreamConfig::instance()->getServiceId();
+    //CStreamSccConnector* pConnect = CStreamServiceTask::instance()->getSccConnector();
     //if (NULL != pConnect)
     //{
     //    strSerID = pConnect->getZoneID();
@@ -1488,7 +1488,7 @@ int32_t CMduRtmpPushSession::createDistribute(CSVSMediaLink* linkinfo,std::strin
     return RET_OK;
 }
 
-void CMduRtmpPushSession::sendRtmpReply(double txid, const AMFValue &reply,const AMFValue &status)
+void CStreamRtmpPushSession::sendRtmpReply(double txid, const AMFValue &reply,const AMFValue &status)
 {
     if (txid <= 0.0)
         return;
@@ -1499,16 +1499,16 @@ void CMduRtmpPushSession::sendRtmpReply(double txid, const AMFValue &reply,const
     amf_write(&invoke, status);
     sendRtmpData(MSG_INVOKE, CONTROL_ID, invoke.buf, 0, CHAN_RESULT);
 }
-void CMduRtmpPushSession::simulateSendRtcpMsg()
+void CStreamRtmpPushSession::simulateSendRtcpMsg()
 {
     return;
 }
 
-void CMduRtmpPushSession::sendH264FramebyRtmp(RTP_FRAME_LIST &rtpFrameList)
+void CStreamRtmpPushSession::sendH264FramebyRtmp(RTP_FRAME_LIST &rtpFrameList)
 {
     return;
 }
-void CMduRtmpPushSession::sendCommonFramebyRtmp(RTP_FRAME_LIST &rtpFrameList)
+void CStreamRtmpPushSession::sendCommonFramebyRtmp(RTP_FRAME_LIST &rtpFrameList)
 {
     return;
 }

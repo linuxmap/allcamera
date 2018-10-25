@@ -12,55 +12,55 @@
 #include "svs_vms_media_teardown_resp.h"
 #include "svs_adapter_business_manager.h"
 
-CMduMediaTearDownReq::CMduMediaTearDownReq()
+CStreamMediaTearDownReq::CStreamMediaTearDownReq()
 {
     m_pRequst = NULL;
 }
 
-CMduMediaTearDownReq::~CMduMediaTearDownReq()
+CStreamMediaTearDownReq::~CStreamMediaTearDownReq()
 {
     m_pRequst = NULL;
 }
 
 
-int32_t CMduMediaTearDownReq::create(uint32_t unLength,
+int32_t CStreamMediaTearDownReq::create(uint32_t unLength,
                                     uint32_t unTransNo)
 {
 
-    int32_t nRet = CMduSvsMessage::create(unLength, unTransNo);
+    int32_t nRet = CStreamSvsMessage::create(unLength, unTransNo);
     if (RET_OK != nRet)
     {
         return nRet;
     }
 
-    m_pRequst = (SVS_MSG_MDU_SESSION_TEARDOWN_REQ*)(void*)getBinaryData();
+    m_pRequst = (SVS_MSG_STREAM_SESSION_TEARDOWN_REQ*)(void*)getBinaryData();
 
     return RET_OK;
 }
 
 
-uint32_t CMduMediaTearDownReq::getMsgType()
+uint32_t CStreamMediaTearDownReq::getMsgType()
 {
-    return SVS_MSG_TYPE_MDU_SESSION_TEARDOWN_REQ;
+    return SVS_MSG_TYPE_STREAM_SESSION_TEARDOWN_REQ;
 }
 
-int32_t CMduMediaTearDownReq::handleMessage()
+int32_t CStreamMediaTearDownReq::handleMessage()
 {
     if (NULL == m_pRequst)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaTearDownReq::handleMessage fail, msg is null."));
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaTearDownReq::handleMessage fail, msg is null."));
         return RET_FAIL;
     }
 
-    return CMduServiceTask::instance()->sendMsgToSCC(this);
+    return CStreamServiceTask::instance()->sendMsgToSCC(this);
 }
 
-int32_t CMduMediaTearDownReq::initMsgBody(uint32_t LocalIndex,const char* pszDevID)
+int32_t CStreamMediaTearDownReq::initMsgBody(uint32_t LocalIndex,const char* pszDevID)
 {
 
     if (NULL == m_pRequst)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMediaTearDownReq::initMsgBody fail, msg is null."));
+        SVS_LOG((SVS_LM_ERROR,"CStreamMediaTearDownReq::initMsgBody fail, msg is null."));
         return RET_FAIL;
     }
     m_pRequst->LocalIndex = LocalIndex;
@@ -70,14 +70,14 @@ int32_t CMduMediaTearDownReq::initMsgBody(uint32_t LocalIndex,const char* pszDev
 
 
 
-void CMduMediaTearDownReq::dump() const
+void CStreamMediaTearDownReq::dump() const
 {
     if (NULL == m_pRequst)
     {
         return;
     }
 
-    CMduSvsMessage::dump();
+    CStreamSvsMessage::dump();
 
     SVS_LOG((SVS_LM_DEBUG,"MessageBody:"));
     SVS_LOG((SVS_LM_DEBUG,"\tLocalIndex: %d", m_pRequst->LocalIndex));

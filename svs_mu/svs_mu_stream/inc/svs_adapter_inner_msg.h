@@ -1,12 +1,12 @@
 /*
- * MduInnerMsg.h
+ * StreamInnerMsg.h
  *
  *  Created on: 2016-1-12
  *      Author:
  */
 
-#ifndef MDUINNERMSG_H_
-#define MDUINNERMSG_H_
+#ifndef STREAMINNERMSG_H_
+#define STREAMINNERMSG_H_
 /*lint --e{528}*/
 enum _enINNER_MSG_TYPE
 {
@@ -20,7 +20,7 @@ enum _enINNER_MSG_TYPE
 };
 
 
-typedef struct _stMDU_INNER_MSG
+typedef struct _stSTREAM_INNER_MSG
 {
     uint64_t         ullStreamID;
     void*            pRecvHandle;
@@ -30,10 +30,10 @@ typedef struct _stMDU_INNER_MSG
     uint32_t         unBodyOffset;
 
 
-} MDU_INNER_MSG;
+} STREAM_INNER_MSG;
 
 
-static inline void fillMduInnerMsg(char *pData,
+static inline void fillStreamInnerMsg(char *pData,
         const uint64_t ullStreamID,
         const void* pRecvHandle,
         const uint32_t remoteIp,
@@ -41,7 +41,7 @@ static inline void fillMduInnerMsg(char *pData,
         const uint16_t usMsgType,
         const uint32_t unBodyOffset)
 {
-    MDU_INNER_MSG* pInnerMsg = (MDU_INNER_MSG*)(void*)pData;
+    STREAM_INNER_MSG* pInnerMsg = (STREAM_INNER_MSG*)(void*)pData;
     pInnerMsg->ullStreamID   = ullStreamID;
     pInnerMsg->pRecvHandle   = (void*)pRecvHandle;
     pInnerMsg->unRemoteIp    = remoteIp;
@@ -51,4 +51,4 @@ static inline void fillMduInnerMsg(char *pData,
 }
 
 /*lint -restore*/
-#endif /* MDUINNERMSG_H_ */
+#endif /* STREAMINNERMSG_H_ */

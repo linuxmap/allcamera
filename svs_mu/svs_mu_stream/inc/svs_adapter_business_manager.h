@@ -5,8 +5,8 @@
  *      Author:
  */
 
-#ifndef MDUBUSINESSMANAGER_H_
-#define MDUBUSINESSMANAGER_H_
+#ifndef STREAMBUSINESSMANAGER_H_
+#define STREAMBUSINESSMANAGER_H_
 
 #include <map>
 #include "svs_ace_header.h"
@@ -19,30 +19,30 @@ public:
 };
 
 
-typedef std::multimap<uint64_svs, CMduBusiness*>           STREAM_BUSINESS_MAP;
-typedef std::multimap<uint64_svs, CMduBusiness*>::iterator STREAM_BUSINESS_MAP_ITER;
+typedef std::multimap<uint64_svs, CStreamBusiness*>           STREAM_BUSINESS_MAP;
+typedef std::multimap<uint64_svs, CStreamBusiness*>::iterator STREAM_BUSINESS_MAP_ITER;
 
-typedef std::list<CMduBusiness*>                           BUSINESS_LIST;
-typedef std::list<CMduBusiness*>::iterator                 BUSINESS_LIST_ITER;
+typedef std::list<CStreamBusiness*>                           BUSINESS_LIST;
+typedef std::list<CStreamBusiness*>::iterator                 BUSINESS_LIST_ITER;
 
 
 
-class CMduBusinessManager
+class CStreamBusinessManager
 {
 public:
-    virtual ~CMduBusinessManager();
+    virtual ~CStreamBusinessManager();
 
-    static CMduBusinessManager* instance();
+    static CStreamBusinessManager* instance();
 
     int32_t initManager();
 
     void closeManager();
 
-    CMduBusiness* createBusiness(uint64_svs recvSessionId,
+    CStreamBusiness* createBusiness(uint64_svs recvSessionId,
                                  uint64_svs sendSessionId,
                                  PLAY_TYPE enPlayType);
 
-    CMduBusiness* findBusiness(uint64_svs streamID);
+    CStreamBusiness* findBusiness(uint64_svs streamID);
 
     void findBusiness(uint64_svs streamID, BUSINESS_LIST &list);
 
@@ -50,7 +50,7 @@ public:
 
     void getAllBusiness(BUSINESS_LIST& businessList);
 
-    void releaseBusiness(CMduBusiness* &pBusiness);
+    void releaseBusiness(CStreamBusiness* &pBusiness);
 
     void releaseBusiness(BUSINESS_LIST &list);
 
@@ -65,17 +65,17 @@ public:
     uint32_t getOutputRate()const;
 
 private:
-    CMduBusinessManager();
+    CStreamBusinessManager();
 
-    void destroyBusiness(CMduBusiness *&pBusiness);
+    void destroyBusiness(CStreamBusiness *&pBusiness);
 
     void startFluxTimer();
 
     void stopFluxTimer();
 
-    bool isBusinessInList(const CMduBusiness *pBusiness, BUSINESS_LIST& businessList)const;
+    bool isBusinessInList(const CStreamBusiness *pBusiness, BUSINESS_LIST& businessList)const;
 private:
-    static CMduBusinessManager*  m_pMduBusinessManager;
+    static CStreamBusinessManager*  m_pStreamBusinessManager;
 
     STREAM_BUSINESS_MAP          m_BusinessMap;
     ACE_Thread_Mutex             m_BusinessMapMutex;
@@ -86,4 +86,4 @@ private:
     uint32_t                     m_OutputRate;           // Mbps
 };
 
-#endif /* MDUBUSINESSMANAGER_H_ */
+#endif /* STREAMBUSINESSMANAGER_H_ */

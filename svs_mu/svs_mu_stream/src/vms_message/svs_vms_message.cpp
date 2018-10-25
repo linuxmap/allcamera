@@ -1,5 +1,5 @@
 /*
- * CMduSvsMessage.cpp
+ * CStreamSvsMessage.cpp
  *
  *  Created on: 2010-12-30
  *      Author:
@@ -9,7 +9,7 @@
 #include "svs_adapter_config.h"
 #include "svs_vms_msg_factory.h"
 
-CMduSvsMessage::CMduSvsMessage()
+CStreamSvsMessage::CStreamSvsMessage()
 {
     m_unMsgLength   = 0;
     m_pMsgHeader    = NULL;
@@ -17,7 +17,7 @@ CMduSvsMessage::CMduSvsMessage()
     m_bDeleteBuffer = false;
 }
 
-CMduSvsMessage::~CMduSvsMessage()
+CStreamSvsMessage::~CStreamSvsMessage()
 {
     if (m_bDeleteBuffer)
     {
@@ -30,17 +30,17 @@ CMduSvsMessage::~CMduSvsMessage()
     m_bDeleteBuffer = false;
 }
 
-int32_t CMduSvsMessage::create(char* pMsgData, uint32_t unLength)
+int32_t CStreamSvsMessage::create(char* pMsgData, uint32_t unLength)
 {
     if (NULL == pMsgData)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduSvsMessage::create fail, msg is null."));
+        SVS_LOG((SVS_LM_ERROR,"CStreamSvsMessage::create fail, msg is null."));
         return RET_ERR_PARAM;
     }
 
     if (sizeof(SVS_MSG_HEADER) > unLength)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduSvsMessage::create fail, len [%u] is too short.",
+        SVS_LOG((SVS_LM_ERROR,"CStreamSvsMessage::create fail, len [%u] is too short.",
             unLength));
         return RET_ERR_PARAM;
     }
@@ -54,12 +54,12 @@ int32_t CMduSvsMessage::create(char* pMsgData, uint32_t unLength)
 }
 
 //lint -e429
-int32_t CMduSvsMessage::create(uint32_t unLength,
+int32_t CStreamSvsMessage::create(uint32_t unLength,
                         uint32_t unTransNo)
 {
     if ((0 == unLength) || (sizeof(SVS_MSG_HEADER) >= unLength))
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduSvsMessage::create fail, len [%d] is invalid.",
+        SVS_LOG((SVS_LM_ERROR,"CStreamSvsMessage::create fail, len [%d] is invalid.",
             unLength));
         return RET_ERR_PARAM;
     }
@@ -71,7 +71,7 @@ int32_t CMduSvsMessage::create(uint32_t unLength,
     }
     catch(...)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduSvsMessage::create fail, alloc msg buffer[%u] fail.",
+        SVS_LOG((SVS_LM_ERROR,"CStreamSvsMessage::create fail, alloc msg buffer[%u] fail.",
             unLength));
         return RET_ERR_SYS_NEW;
     }
@@ -87,7 +87,7 @@ int32_t CMduSvsMessage::create(uint32_t unLength,
 }
 //lint +e429
 
-int32_t CMduSvsMessage::checkMessage()
+int32_t CStreamSvsMessage::checkMessage()
 {
     // ��鹫���ֶ�
     if (NULL == m_pMsgHeader)
@@ -110,20 +110,20 @@ int32_t CMduSvsMessage::checkMessage()
 
 
 /*lint -e1763*/
-char* CMduSvsMessage::getBinaryData() const
+char* CStreamSvsMessage::getBinaryData() const
 {
     return m_pBinaryData;
 }
 /*lint +e1763*/
 
-uint32_t CMduSvsMessage::getLength()const
+uint32_t CStreamSvsMessage::getLength()const
 {
     return m_unMsgLength;
 }
 
 // ���ֵ�ķ�Χ
 // �������ֵ����Сֵ
-int32_t CMduSvsMessage::checkValueRange
+int32_t CStreamSvsMessage::checkValueRange
 (
     uint32_t ulValue,
     uint32_t ulMinValue,
@@ -145,7 +145,7 @@ int32_t CMduSvsMessage::checkValueRange
     return RET_OK;
 }
 
-int32_t CMduSvsMessage::checkTransDirection(uint32_t unPeerType, uint32_t unTransDirection) const
+int32_t CStreamSvsMessage::checkTransDirection(uint32_t unPeerType, uint32_t unTransDirection) const
 {
     if (PEER_TYPE_PU == unPeerType)
     {
@@ -180,7 +180,7 @@ int32_t CMduSvsMessage::checkTransDirection(uint32_t unPeerType, uint32_t unTran
     return RET_FAIL;
 }
 
-void CMduSvsMessage::dump() const
+void CStreamSvsMessage::dump() const
 {
     // ������Ϣֻ��ӡSVS_MSG_HEADER
     if (NULL == m_pMsgHeader)
@@ -200,7 +200,7 @@ void CMduSvsMessage::dump() const
 }
 
 /****************����Ϊ�ڲ�����ʵ��****************/
-int32_t CMduSvsMessage::initHeader(uint32_t unTransNo)
+int32_t CStreamSvsMessage::initHeader(uint32_t unTransNo)
 {
     if (NULL == m_pMsgHeader)
     {
@@ -211,11 +211,11 @@ int32_t CMduSvsMessage::initHeader(uint32_t unTransNo)
     m_pMsgHeader->PacketLength    = m_unMsgLength;
     if (0 != unTransNo)
     {
-        m_pMsgHeader->TransactionNo = CMduMsgFactory::instance()->getRespTransactionNo(unTransNo);
+        m_pMsgHeader->TransactionNo = CStreamMsgFactory::instance()->getRespTransactionNo(unTransNo);
     }
     else
     {
-        m_pMsgHeader->TransactionNo = CMduMsgFactory::instance()->getReqTransactionNo();
+        m_pMsgHeader->TransactionNo = CStreamMsgFactory::instance()->getReqTransactionNo();
     }
 
 

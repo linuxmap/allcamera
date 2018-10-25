@@ -1,5 +1,5 @@
 /*
- * MduDistributeReq.cpp
+ * StreamDistributeReq.cpp
  *
  *  Created on: 2010-12-30
  *      Author:
@@ -32,7 +32,7 @@ int32_t CPlaybackControlReq::create(char* pMsgData, uint32_t unLength)
         return RET_FAIL;
     }
 
-    int32_t nRet = CMduSvsMessage::create(pMsgData, unLength);
+    int32_t nRet = CStreamSvsMessage::create(pMsgData, unLength);
     if (RET_OK != nRet)
     {
         SVS_LOG((SVS_LM_WARNING,"create playback control request message fail, create svs message fail."));
@@ -48,7 +48,7 @@ int32_t CPlaybackControlReq::create(char* pMsgData, uint32_t unLength)
 int32_t CPlaybackControlReq::create(uint32_t unLength,
                             uint32_t unTransNo)
 {
-    int32_t nRet = CMduSvsMessage::create(unLength, unTransNo);
+    int32_t nRet = CStreamSvsMessage::create(unLength, unTransNo);
     if (RET_OK != nRet)
     {
         return nRet;
@@ -84,7 +84,7 @@ int32_t CPlaybackControlReq::initMsgBody(uint64_svs BusinessID,
 
 int32_t CPlaybackControlReq::checkMessage()
 {
-    int32_t iRet = CMduSvsMessage::checkMessage();
+    int32_t iRet = CStreamSvsMessage::checkMessage();
     if (RET_OK != iRet)
     {
         SVS_LOG((SVS_LM_WARNING,"Check distribute request message fail, message header is incorrect. iRet[0x%x].",
@@ -110,7 +110,7 @@ int32_t CPlaybackControlReq::handleMessage()
 
     if(m_bActiveReq)
     {
-        return CMduServiceTask::instance()->sendMsgToSCC(this);
+        return CStreamServiceTask::instance()->sendMsgToSCC(this);
     }
 
     uint64_svs streamId = m_pControlMsg->BusinessID;
@@ -126,8 +126,8 @@ int32_t CPlaybackControlReq::handleMessage()
     }
 
 
-    CMduSvsMessage *pResp = NULL;
-    int32_t nRet = CMduMsgFactory::instance()->createSvsMsg(SVS_MSG_TYPE_PLAYBACK_CONTROL_RESP,
+    CStreamSvsMessage *pResp = NULL;
+    int32_t nRet = CStreamMsgFactory::instance()->createSvsMsg(SVS_MSG_TYPE_PLAYBACK_CONTROL_RESP,
                                                 sizeof(SVS_MSG_PLAYBACK_CONTROL_RESP),
                                                 m_pControlMsg->MsgHeader.TransactionNo,
                                                 pResp);
@@ -135,7 +135,7 @@ int32_t CPlaybackControlReq::handleMessage()
     {
         SVS_LOG((SVS_LM_ERROR,"Create playback control resp msg fail. stream id[%Q].",
                 streamId));
-        CMduMsgFactory::instance()->destroySvsMsg(pResp);
+        CStreamMsgFactory::instance()->destroySvsMsg(pResp);
         return RET_FAIL;
     }
 
@@ -150,7 +150,7 @@ int32_t CPlaybackControlReq::handleMessage()
     {
         SVS_LOG((SVS_LM_ERROR,"Init playback control resp msg fail. stream id[%Q].",
                 streamId));
-        CMduMsgFactory::instance()->destroySvsMsg(pResp);
+        CStreamMsgFactory::instance()->destroySvsMsg(pResp);
         return RET_FAIL;
     }
 
@@ -159,11 +159,11 @@ int32_t CPlaybackControlReq::handleMessage()
     {
         SVS_LOG((SVS_LM_ERROR,"Handle playback control resp msg fail. stream id[%Q].",
                 streamId));
-        CMduMsgFactory::instance()->destroySvsMsg(pResp);
+        CStreamMsgFactory::instance()->destroySvsMsg(pResp);
         return RET_FAIL;
     }
 
-    CMduMsgFactory::instance()->destroySvsMsg(pResp);
+    CStreamMsgFactory::instance()->destroySvsMsg(pResp);
     SVS_LOG((SVS_LM_INFO,"Handle playback control request message success. stream id[%Q].",
             streamId));
     return RET_OK;
@@ -172,25 +172,25 @@ int32_t CPlaybackControlReq::handleMessage()
 
 int32_t CPlaybackControlReq::sendVcrMsg(uint64_svs streamId)const
 {
-    CMduSession *pSession = CMduSessionFactory::instance()->findSession(streamId);
+    CStreamSession *pSession = CStreamSessionFactory::instance()->findSession(streamId);
     if (NULL == pSession)
     {
         SVS_LOG((SVS_LM_WARNING,"can't send playback control request message, stream[%Q] is invalid.", streamId));
-        return SVS_MSG_MDU_STREAMID_NOT_MATCH;
+        return SVS_MSG_STREAM_STREAMID_NOT_MATCH;
     }
     int32_t iRet = RET_OK;
     /*
-    CMduSvsFrameSession* pSvsSession = dynamic_cast<CMduSvsFrameSession*>(pSession);
+    CStreamSvsFrameSession* pSvsSession = dynamic_cast<CStreamSvsFrameSession*>(pSession);
     if (NULL == pSvsSession)
     {
-        CMduSessionFactory::instance()->releaseSession(pSession);
+        CStreamSessionFactory::instance()->releaseSession(pSession);
         SVS_LOG((SVS_LM_WARNING,"send playback control request message fail, session[%Q] isn't svs session.", streamId));
         return SVS_MSG_MU_INTERNAL_ERR;
     }
 
     iRet = RET_OK;//pSvsSession->dealSccVcrMsg(m_pControlMsg);
     */
-    CMduSessionFactory::instance()->releaseSession(pSession);
+    CStreamSessionFactory::instance()->releaseSession(pSession);
 
     SVS_LOG((SVS_LM_INFO,"deal scc playback control message success, session[%Q] ret[%d].", streamId, iRet));
 
@@ -204,7 +204,7 @@ void CPlaybackControlReq::dump() const
         return;
     }
 
-    CMduSvsMessage::dump();
+    CStreamSvsMessage::dump();
 
     SVS_LOG((SVS_LM_DEBUG,"MessageBody:"));
 

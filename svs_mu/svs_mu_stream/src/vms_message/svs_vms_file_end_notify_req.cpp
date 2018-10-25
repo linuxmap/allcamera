@@ -1,5 +1,5 @@
 /*
- * MduFluxReportReq.cpp
+ * StreamFluxReportReq.cpp
  *
  *  Created on: 2016-3-22
  *      Author:
@@ -38,7 +38,7 @@ int32_t CFileEndNotifyReq::create(char* pMsgData, uint32_t unLength)
     }
 
     // �ȵ��ø���ĳ�ʼ���ӿ�
-    int32_t nRet = CMduSvsMessage::create(pMsgData, unLength);
+    int32_t nRet = CStreamSvsMessage::create(pMsgData, unLength);
     if (RET_OK != nRet)
     {
         SVS_LOG((SVS_LM_WARNING,"create file end notify request message fail, create svs message fail."));
@@ -54,7 +54,7 @@ int32_t CFileEndNotifyReq::create(uint32_t unLength,
                                uint32_t unTransNo)
 {
     // �ȵ��ø���ĳ�ʼ���ӿ�
-    int32_t nRet = CMduSvsMessage::create(unLength, unTransNo);
+    int32_t nRet = CStreamSvsMessage::create(unLength, unTransNo);
     if (RET_OK != nRet)
     {
         return nRet;
@@ -98,7 +98,7 @@ int32_t CFileEndNotifyReq::handleMessage()
 {
     if(false == m_bSCCNotify)
     {
-        return CMduServiceTask::instance()->sendMsgToSCC(this);
+        return CStreamServiceTask::instance()->sendMsgToSCC(this);
     }
 
     uint64_svs streamId = m_pNotifyReq->BusinessID;
@@ -114,8 +114,8 @@ int32_t CFileEndNotifyReq::handleMessage()
         }
     }
 
-    CMduSvsMessage *pResp = NULL;
-    int32_t nRet = CMduMsgFactory::instance()->createSvsMsg(SVS_MSG_TYPE_COMMON_RESP,
+    CStreamSvsMessage *pResp = NULL;
+    int32_t nRet = CStreamMsgFactory::instance()->createSvsMsg(SVS_MSG_TYPE_COMMON_RESP,
                                                 sizeof(SVS_MSG_COMMON_RESP),
                                                 m_pNotifyReq->MsgHeader.TransactionNo,
                                                 pResp);
@@ -123,7 +123,7 @@ int32_t CFileEndNotifyReq::handleMessage()
     {
         SVS_LOG((SVS_LM_ERROR,"Create file end notify resp msg fail. stream id[%Q].",
                 streamId));
-        CMduMsgFactory::instance()->destroySvsMsg(pResp);
+        CStreamMsgFactory::instance()->destroySvsMsg(pResp);
         return RET_FAIL;
     }
 
@@ -133,36 +133,36 @@ int32_t CFileEndNotifyReq::handleMessage()
     {
         SVS_LOG((SVS_LM_ERROR,"Handle  file end notify resp msg fail. stream id[%Q].",
                 streamId));
-        CMduMsgFactory::instance()->destroySvsMsg(pResp);
+        CStreamMsgFactory::instance()->destroySvsMsg(pResp);
         return RET_FAIL;
     }
 
-    CMduMsgFactory::instance()->destroySvsMsg(pResp);
+    CStreamMsgFactory::instance()->destroySvsMsg(pResp);
     SVS_LOG((SVS_LM_INFO,"Handle file end notify request message success. stream id[%Q].",streamId));
     return RET_OK;
 
 }
  int32_t CFileEndNotifyReq::SendEOSToSession(uint64_svs   StreamID)
  {
-    CMduSession *pSession = CMduSessionFactory::instance()->findSession(StreamID);
+    CStreamSession *pSession = CStreamSessionFactory::instance()->findSession(StreamID);
     if (NULL == pSession)
     {
         SVS_LOG((SVS_LM_WARNING,"can't send file end notify request message, stream[%Q] is invalid.", StreamID));
-        return SVS_MSG_MDU_STREAMID_NOT_MATCH;
+        return SVS_MSG_STREAM_STREAMID_NOT_MATCH;
     }
 
-    CMduRtpSession* pRTPSession = dynamic_cast<CMduRtpSession*>(pSession);
+    CStreamRtpSession* pRTPSession = dynamic_cast<CStreamRtpSession*>(pSession);
     if (NULL == pRTPSession)
     {
-        CMduSessionFactory::instance()->releaseSession(pSession);
+        CStreamSessionFactory::instance()->releaseSession(pSession);
         SVS_LOG((SVS_LM_WARNING,"send file end notify request message fail, session[%Q] isn't svs session.", StreamID));
         return SVS_MSG_MU_INTERNAL_ERR;
     }
 
-    int32_t iRet = pRTPSession->sendSessionStopMessage(MDU_PACKET_TYPE_SESSION_EOS);
+    int32_t iRet = pRTPSession->sendSessionStopMessage(STREAM_PACKET_TYPE_SESSION_EOS);
 
 
-    CMduSessionFactory::instance()->releaseSession(pSession);
+    CStreamSessionFactory::instance()->releaseSession(pSession);
 
     SVS_LOG((SVS_LM_INFO,"deal scc file end notify message success, session[%Q] ret[%d].", StreamID, iRet));
 
@@ -176,7 +176,7 @@ void CFileEndNotifyReq::dump() const
         return;
     }
 
-    CMduSvsMessage::dump();
+    CStreamSvsMessage::dump();
 
     // ����Ϣ�ṹ��ӡ��Ϣ��
     SVS_LOG((SVS_LM_DEBUG,"MessageBody:"));

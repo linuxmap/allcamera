@@ -1,5 +1,5 @@
-#ifndef __CMDUMEDIAPORT_H__
-#define __CMDUMEDIAPORT_H__
+#ifndef __CSTREAMMEDIAPORT_H__
+#define __CSTREAMMEDIAPORT_H__
 
 #include <map>
 #include "svs_ace_header.h"
@@ -42,14 +42,14 @@ typedef std::map<uint16_t, RTP_UDP_PORT_INFO>::iterator  UDP_PORT_MAP_ITER;
 typedef std::map<uint16_t, CHandle*>                     EHOME_PORT_MAP;
 typedef std::map<uint16_t, CHandle*>::iterator           EHOME_PORT_MAP_ITER;
 
-class CMduMediaPort
+class CStreamMediaPort
 {
 public:
     /** Default constructor */
-    CMduMediaPort();
+    CStreamMediaPort();
 
     /** Default destructor */
-    virtual ~CMduMediaPort();
+    virtual ~CStreamMediaPort();
 
     /// ≥ı ºªØ
     int32_t init(uint32_t unIp,

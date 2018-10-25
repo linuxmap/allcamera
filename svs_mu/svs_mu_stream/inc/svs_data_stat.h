@@ -1,5 +1,5 @@
-#ifndef __CMDUDATASTAT_H__
-#define __CMDUDATASTAT_H__
+#ifndef __CSTREAMDATASTAT_H__
+#define __CSTREAMDATASTAT_H__
 
 
 #include  <map>
@@ -10,14 +10,14 @@ class  CDataStat
 public:
     CDataStat();
     ~CDataStat();
-    
+
     void stat(uint32_t ulRecvBytes);
     void addRecvPacket(uint32_t ulRecvNum);
     void addRecvFrame(uint32_t ulRecvNum);
     void addLostPacket(uint32_t ulLostNum);
     void addLostFrame(uint32_t ulLostNum);
     void addFlux(uint32_t ulSendBytes);
-    
+
     uint32_t getRate()const;
     uint32_t getFlux(uint32_t& ulStartTime, uint32_t& ulEndTime);
     uint32_t getLostPacketPercent()const;
@@ -25,7 +25,7 @@ public:
 private:
     void reset();
     void resetLostStat();
-private:   
+private:
     uint32_t m_ulStartTime;   // 起始时间
     uint32_t m_ulEndTime;     // 结束时间
     uint32_t m_ulBytes;       // 码率统计周期为30秒

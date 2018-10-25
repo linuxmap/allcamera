@@ -1,21 +1,21 @@
 /*
- * CMduStopDistributeResp.h
+ * CStreamStopDistributeResp.h
  *
  *  Created on: 2010-12-31
  *      Author:
  */
 
-#ifndef CMDUSTOPDISTRIBUTERESP_H_
-#define CMDUSTOPDISTRIBUTERESP_H_
+#ifndef CSTREAMSTOPDISTRIBUTERESP_H_
+#define CSTREAMSTOPDISTRIBUTERESP_H_
 
 #include "svs_vms_message.h"
 
-class CMduMediaTearDownResp : public CMduSvsMessage
+class CStreamMediaTearDownResp : public CStreamSvsMessage
 {
 public:
-    CMduMediaTearDownResp();
+    CStreamMediaTearDownResp();
 
-    virtual ~CMduMediaTearDownResp();
+    virtual ~CStreamMediaTearDownResp();
 
     // 根据传入的消息块初始化消息， 只初始化消息头，子类需要重载
     // 该消息由SCC发起，只需要实现些创建方法
@@ -32,7 +32,7 @@ public:
 
     UTAPI void dump() const;
 private:
-    SVS_MSG_MDU_SESSION_TEARDOWN_RESP *m_pResp;
+    SVS_MSG_STREAM_SESSION_TEARDOWN_RESP *m_pResp;
 };
 
-#endif /* CMDUSTOPDISTRIBUTERESP_H_ */
+#endif /* CSTREAMSTOPDISTRIBUTERESP_H_ */

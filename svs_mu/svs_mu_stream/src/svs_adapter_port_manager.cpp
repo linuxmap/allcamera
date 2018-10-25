@@ -2,12 +2,12 @@
 #include "svs_log_msg.h"
 #include "svs_adapter_port_manager.h"
 #include "svs_adapter_config.h"
-CMduPortManager::CMduPortManager()
+CStreamPortManager::CStreamPortManager()
 {
     m_pSvsFrameHandle = NULL;
 }
 
-CMduPortManager::~CMduPortManager()
+CStreamPortManager::~CStreamPortManager()
 {
     try
     {
@@ -18,7 +18,7 @@ CMduPortManager::~CMduPortManager()
 
         while (!m_MediaInterfaceMap.empty())
         {
-            CMduMediaPort *pMediaPort = m_MediaInterfaceMap.begin()->second;
+            CStreamMediaPort *pMediaPort = m_MediaInterfaceMap.begin()->second;
             if (pMediaPort)
             {
                 delete pMediaPort;
@@ -32,29 +32,29 @@ CMduPortManager::~CMduPortManager()
     m_pSvsFrameHandle           = NULL;
 }
 
-int32_t CMduPortManager::initManager()
+int32_t CStreamPortManager::initManager()
 {
-    uint32_t unInternalIp = CMduConfig::instance()->getInternalMediaIp();
+    uint32_t unInternalIp = CStreamConfig::instance()->getInternalMediaIp();
 
-    MDU_IP_LIST ipList;
-    CMduConfig::instance()->getExternalMediaIpList(ipList);
+    STREAM_IP_LIST ipList;
+    CStreamConfig::instance()->getExternalMediaIpList(ipList);
 
     ipList.push_front(unInternalIp);
 
     MediaPortConfig *pUdpConfig = NULL;
     uint16_t usEnableEhome = 0;
     MediaPortConfig *pEhomeConfig = NULL;
-    CMduConfig::instance()->getUdpMediaPortConfig(pUdpConfig);
-    usEnableEhome = CMduConfig::instance()->getEnableEhome();
-    CMduConfig::instance()->getEhomeMediaPortConfig(pEhomeConfig);
+    CStreamConfig::instance()->getUdpMediaPortConfig(pUdpConfig);
+    usEnableEhome = CStreamConfig::instance()->getEnableEhome();
+    CStreamConfig::instance()->getEhomeMediaPortConfig(pEhomeConfig);
 
-    for (MDU_IP_LIST::iterator iter = ipList.begin(); iter != ipList.end(); iter++)
+    for (STREAM_IP_LIST::iterator iter = ipList.begin(); iter != ipList.end(); iter++)
     {
         SVS_LOG((SVS_LM_INFO,"start create media port, ip=[0x%x].", *iter));
-        CMduMediaPort *pMediaPort = NULL;
+        CStreamMediaPort *pMediaPort = NULL;
         try
         {
-            pMediaPort = new CMduMediaPort;
+            pMediaPort = new CStreamMediaPort;
         }
         catch(...)
         {
@@ -62,7 +62,7 @@ int32_t CMduPortManager::initManager()
             return RET_FAIL;
         }
 
-        int32_t nRet = pMediaPort->init(*iter, CMduConfig::instance()->getTcpMediaPort(),
+        int32_t nRet = pMediaPort->init(*iter, CStreamConfig::instance()->getTcpMediaPort(),
                                         pUdpConfig,usEnableEhome,pEhomeConfig);
         if (RET_OK != nRet)
         {
@@ -74,13 +74,13 @@ int32_t CMduPortManager::initManager()
     }
 
 
-    SVS_LOG((SVS_LM_INFO,"CMduPortManager::initManager success."));
+    SVS_LOG((SVS_LM_INFO,"CStreamPortManager::initManager success."));
     return RET_OK;
 }
 
-void CMduPortManager::closeManager()
+void CStreamPortManager::closeManager()
 {
-    SVS_LOG((SVS_LM_CRITICAL,"CMduPortManager::closeManager begin."));
+    SVS_LOG((SVS_LM_CRITICAL,"CStreamPortManager::closeManager begin."));
 
     if (NULL != m_pSvsFrameHandle)
     {
@@ -90,23 +90,23 @@ void CMduPortManager::closeManager()
 
     while (!m_MediaInterfaceMap.empty())
     {
-        CMduMediaPort *pMediaPort = m_MediaInterfaceMap.begin()->second;
+        CStreamMediaPort *pMediaPort = m_MediaInterfaceMap.begin()->second;
         if (pMediaPort)
         {
             delete pMediaPort;
         }
         m_MediaInterfaceMap.erase(m_MediaInterfaceMap.begin());
     }
-    SVS_LOG((SVS_LM_CRITICAL,"CMduPortManager::closeManager end."));
+    SVS_LOG((SVS_LM_CRITICAL,"CStreamPortManager::closeManager end."));
     return;
 }
 
-int32_t CMduPortManager::allocRtpTcpPort(uint32_t unSpecifyIp,
+int32_t CStreamPortManager::allocRtpTcpPort(uint32_t unSpecifyIp,
                                   CNetworkHandle *&pHandle)
 {
     ACE_INET_Addr addr((uint16_t)0, unSpecifyIp);
     SVS_LOG((SVS_LM_INFO,"port manager alloc tcp port at [%s].", addr.get_host_addr()));
-    CMduMediaPort *pMediaPort = getMediaPort(unSpecifyIp);
+    CStreamMediaPort *pMediaPort = getMediaPort(unSpecifyIp);
     if (NULL == pMediaPort)
     {
         return RET_FAIL;
@@ -117,14 +117,14 @@ int32_t CMduPortManager::allocRtpTcpPort(uint32_t unSpecifyIp,
     return RET_OK;
 }
 
-int32_t CMduPortManager::allocRtpUdpPort(uint32_t unSpecifyIp,
+int32_t CStreamPortManager::allocRtpUdpPort(uint32_t unSpecifyIp,
                                       CNetworkHandle *&pRtpHandle,
                                       CNetworkHandle *&pRtcpHandle)
 {
     ACE_INET_Addr addr((uint16_t)0, unSpecifyIp);
     SVS_LOG((SVS_LM_INFO,"port manager alloc udp port at [%s].", addr.get_host_addr()));
 
-    CMduMediaPort *pMediaPort = getMediaPort(unSpecifyIp);
+    CStreamMediaPort *pMediaPort = getMediaPort(unSpecifyIp);
     if (NULL == pMediaPort)
     {
         return RET_FAIL;
@@ -133,12 +133,12 @@ int32_t CMduPortManager::allocRtpUdpPort(uint32_t unSpecifyIp,
     return pMediaPort->allocRtpUdpPort(pRtpHandle, pRtcpHandle);
 }
 
-int32_t CMduPortManager::allocEhomePort(uint32_t unSpecifyIp, CHandle *&pHandle)
+int32_t CStreamPortManager::allocEhomePort(uint32_t unSpecifyIp, CHandle *&pHandle)
 {
     ACE_INET_Addr addr((uint16_t)0, unSpecifyIp);
     SVS_LOG((SVS_LM_INFO,"port manager alloc ehome port at [%s].", addr.get_host_addr()));
 
-    CMduMediaPort *pMediaPort = getMediaPort(unSpecifyIp);
+    CStreamMediaPort *pMediaPort = getMediaPort(unSpecifyIp);
     if (NULL == pMediaPort)
     {
         return RET_FAIL;
@@ -148,13 +148,13 @@ int32_t CMduPortManager::allocEhomePort(uint32_t unSpecifyIp, CHandle *&pHandle)
 }
 
 
-int32_t CMduPortManager::releaseRtpTcpPort(uint32_t unSpecifyIp,
+int32_t CStreamPortManager::releaseRtpTcpPort(uint32_t unSpecifyIp,
                                     CNetworkHandle *&pHandle)
 {
     ACE_INET_Addr addr((uint16_t)0, unSpecifyIp);
     SVS_LOG((SVS_LM_INFO,"port manager release tcp port at [%s].", addr.get_host_addr()));
 
-    CMduMediaPort *pMediaPort = getMediaPort(unSpecifyIp);
+    CStreamMediaPort *pMediaPort = getMediaPort(unSpecifyIp);
     if (NULL == pMediaPort)
     {
         SVS_LOG((SVS_LM_ERROR,
@@ -166,14 +166,14 @@ int32_t CMduPortManager::releaseRtpTcpPort(uint32_t unSpecifyIp,
     return pMediaPort->releaseRtpTcpPort(pHandle);
 }
 
-int32_t CMduPortManager::releaseRtpUdpPort(uint32_t unSpecifyIp,
+int32_t CStreamPortManager::releaseRtpUdpPort(uint32_t unSpecifyIp,
                                         CNetworkHandle *&pRtpHandle,
                                         CNetworkHandle *&pRtcpHandle)
 {
     ACE_INET_Addr addr((uint16_t)0, unSpecifyIp);
     SVS_LOG((SVS_LM_INFO,"port manager release udp port at [%s].", addr.get_host_addr()));
 
-    CMduMediaPort *pMediaPort = getMediaPort(unSpecifyIp);
+    CStreamMediaPort *pMediaPort = getMediaPort(unSpecifyIp);
     if (NULL == pMediaPort)
     {
         return RET_FAIL;
@@ -182,7 +182,7 @@ int32_t CMduPortManager::releaseRtpUdpPort(uint32_t unSpecifyIp,
     return pMediaPort->releaseRtpUdpPort(pRtpHandle, pRtcpHandle);
 }
 
-int32_t CMduPortManager::allocMruSvsPort(uint32_t unSpecifyIp, CNetworkHandle *&pHandle)
+int32_t CStreamPortManager::allocMruSvsPort(uint32_t unSpecifyIp, CNetworkHandle *&pHandle)
 {
     ACE_INET_Addr addr((uint16_t)0, unSpecifyIp);
     SVS_LOG((SVS_LM_INFO,"port manager alloc svs port at [%s].", addr.get_host_addr()));
@@ -191,7 +191,7 @@ int32_t CMduPortManager::allocMruSvsPort(uint32_t unSpecifyIp, CNetworkHandle *&
     return RET_OK;
 }
 
-int32_t CMduPortManager::releaseMruSvsPort(uint32_t unSpecifyIp,
+int32_t CStreamPortManager::releaseMruSvsPort(uint32_t unSpecifyIp,
                                        CNetworkHandle *&pHandle) const
 {
     ACE_INET_Addr addr((uint16_t)0, unSpecifyIp);
@@ -204,12 +204,12 @@ int32_t CMduPortManager::releaseMruSvsPort(uint32_t unSpecifyIp,
 
 
 
-int32_t CMduPortManager::releaseEhomePort(uint32_t unSpecifyIp, CHandle *&pHandle)
+int32_t CStreamPortManager::releaseEhomePort(uint32_t unSpecifyIp, CHandle *&pHandle)
 {
     ACE_INET_Addr addr((uint16_t)0, unSpecifyIp);
     SVS_LOG((SVS_LM_INFO,"port manager release ehome port at [%s].", addr.get_host_addr()));
 
-    CMduMediaPort *pMediaPort = getMediaPort(unSpecifyIp);
+    CStreamMediaPort *pMediaPort = getMediaPort(unSpecifyIp);
     if (NULL == pMediaPort)
     {
         return RET_FAIL;
@@ -219,7 +219,7 @@ int32_t CMduPortManager::releaseEhomePort(uint32_t unSpecifyIp, CHandle *&pHandl
 }
 
 
-CMduMediaPort* CMduPortManager::getMediaPort(uint32_t unSpecifyIp)
+CStreamMediaPort* CStreamPortManager::getMediaPort(uint32_t unSpecifyIp)
 {
     MEDIA_INTERFACE_MAP_ITER iter = m_MediaInterfaceMap.find(unSpecifyIp);
     if (m_MediaInterfaceMap.end() == iter)
@@ -227,6 +227,6 @@ CMduMediaPort* CMduPortManager::getMediaPort(uint32_t unSpecifyIp)
         return NULL;
     }
 
-    return (CMduMediaPort*)iter->second;
+    return (CStreamMediaPort*)iter->second;
 }
 

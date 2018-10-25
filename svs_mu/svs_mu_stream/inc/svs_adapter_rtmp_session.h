@@ -1,12 +1,12 @@
 /*
- * MduStdRtpSession.h
+ * StreamStdRtpSession.h
  *
  *  Created on: 2016-5-20
  *      Author:
  */
 
-#ifndef MDURTMPSESSION_H_
-#define MDURTMPSESSION_H_
+#ifndef STREAMRTMPSESSION_H_
+#define STREAMRTMPSESSION_H_
 
 #include <list>
 #include "svs_adapter_session.h"
@@ -18,11 +18,11 @@
 
 
 
-class CMduRtmpSession: public CMduSession
+class CStreamRtmpSession: public CStreamSession
 {
 public:
-    CMduRtmpSession();
-    virtual ~CMduRtmpSession();
+    CStreamRtmpSession();
+    virtual ~CStreamRtmpSession();
 public:
 
     int32_t initRtmpSession(uint64_t ullPeerStreamID,
@@ -32,7 +32,7 @@ public:
 
     int32_t startRtmpSession();
 
-    void setRtmpHandle(CMduRtmpSendHandle* pHandle);
+    void setRtmpHandle(CStreamRtmpSendHandle* pHandle);
 
     void setSessionId(uint64_t ullSessionId);
 
@@ -47,9 +47,9 @@ public:
 
     int32_t sendVcrMessage(CRtspPacket &rtspPack);
 
-    int32_t handleInnerMessage(const MDU_INNER_MSG &innerMsg,
+    int32_t handleInnerMessage(const STREAM_INNER_MSG &innerMsg,
                             uint32_t unMsgSize,
-                            CMduSession&  peerSession);
+                            CStreamSession&  peerSession);
 
     ACE_INET_Addr getPeerAddr()const;
 
@@ -69,14 +69,14 @@ protected:
 
     int32_t stopMediaPort();
 
-    int32_t sendNatResponse(CMduNatMessage &natMsg){return RET_OK;};
+    int32_t sendNatResponse(CStreamNatMessage &natMsg){return RET_OK;};
 
     bool checkMediaChannelStatus();
 
     int32_t setRemoteAddress(){return RET_OK;};
 
 private:
-    CMduRtmpSendHandle* m_pHandle;
+    CStreamRtmpSendHandle* m_pHandle;
     ACE_INET_Addr       m_rtmpAddr;
     std::string         m_strRtmpSessionId;
 
@@ -89,6 +89,6 @@ private:
     CMediaSdp           m_rtspSdp;
 };
 
-#endif /* MDUSTDRTPSESSION_H_ */
+#endif /* STREAMSTDRTPSESSION_H_ */
 
 

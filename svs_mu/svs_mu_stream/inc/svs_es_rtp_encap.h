@@ -61,7 +61,7 @@ private:
     CEsRtpEncapHandle*          m_pEsRtpHandle;
     void*                       m_pUserData;
     // RTP·â×°ÊµÏÖ
-    char                        m_RtpBuffer[MDU_MSG_BLOCK_SIZE];
+    char                        m_RtpBuffer[STREAM_MSG_BLOCK_SIZE];
     uint16_t                    m_usVideoRtpSeq;
     uint16_t                    m_usAudioRtpSeq;
 

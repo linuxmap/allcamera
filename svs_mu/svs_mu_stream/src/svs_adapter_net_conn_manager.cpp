@@ -107,7 +107,7 @@ int32_t CNetConnManager::svc()
     CThread_Stat_Reporter report("NetConnectManagerThread");
     while (m_bRunFlag)
     {
-        delaytime.set(0, MDU_MAX_TIME_PER_THREAD);
+        delaytime.set(0, STREAM_MAX_TIME_PER_THREAD);
         if (m_pReactorArray[unThreadIndex]->handle_events(&delaytime) < 0)
         {
             report.ReportStat();
@@ -197,7 +197,7 @@ int32_t CNetConnManager::createResources()
         ACE_Reactor_Impl *pImpl = NULL;
         try
         {
-            pImpl = new ACE_Dev_Poll_Reactor(MDU_MAX_EPOLL_SIZE);
+            pImpl = new ACE_Dev_Poll_Reactor(STREAM_MAX_EPOLL_SIZE);
         }
         catch(...)
         {

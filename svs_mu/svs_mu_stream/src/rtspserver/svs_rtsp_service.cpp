@@ -1,5 +1,5 @@
 /*
- * MduRtspService.cpp
+ * StreamRtspService.cpp
  *
  *  Created on: 2016-5-12
  *      Author:
@@ -17,25 +17,25 @@
 
 int32_t CRtspSessionCheckTimer::handle_timeout(const ACE_Time_Value& tv, const void* arg)
 {
-    CMduRtspService::instance().checkSession();
+    CStreamRtspService::instance().checkSession();
     return 0;
 }
 
-CMduRtspService::CMduRtspService()
+CStreamRtspService::CStreamRtspService()
 {
     m_unLocalSessionIndex = 0;
     m_ulCheckTimerId      = 0;
 }
 
-CMduRtspService::~CMduRtspService()
+CStreamRtspService::~CStreamRtspService()
 {
 }
 
-int32_t CMduRtspService::open()
+int32_t CStreamRtspService::open()
 {
     int32_t nRet = RET_OK;
 
-    m_RtspAddr.set(CMduConfig::instance()->getRtspServerPort());
+    m_RtspAddr.set(CStreamConfig::instance()->getRtspServerPort());
     nRet = m_RtspAcceptor.open(m_RtspAddr, 1);
     if (RET_OK != nRet)
     {
@@ -74,7 +74,7 @@ int32_t CMduRtspService::open()
         return RET_FAIL;
     }
 
-    ACE_Time_Value tv(MDU_STATUS_CHECK_INTERVAL, 0);
+    ACE_Time_Value tv(STREAM_STATUS_CHECK_INTERVAL, 0);
     m_ulCheckTimerId = pReactor->schedule_timer(&m_SessionCheckTimer, this, tv, tv);
     if (-1 == m_ulCheckTimerId)
     {
@@ -89,7 +89,7 @@ int32_t CMduRtspService::open()
     return RET_OK;
 }
 
-void CMduRtspService::close() const
+void CStreamRtspService::close() const
 {
      ACE_Reactor *pReactor = ACE_Reactor::instance();
     if (!pReactor)
@@ -104,17 +104,17 @@ void CMduRtspService::close() const
     return;
 }
 
-int32_t CMduRtspService::handleSvsMessage(CMduSvsMessage &message)
+int32_t CStreamRtspService::handleSvsMessage(CStreamSvsMessage &message)
 {
     uint32_t ulLocalIndex = 0;
-    if (SVS_MSG_TYPE_MDU_SESSION_SETUP_RESP == message.getMsgType())
+    if (SVS_MSG_TYPE_STREAM_SESSION_SETUP_RESP == message.getMsgType())
     {
-        CMduMediaSetupResp* pSetupResp = (CMduMediaSetupResp*)&message;
+        CStreamMediaSetupResp* pSetupResp = (CStreamMediaSetupResp*)&message;
         ulLocalIndex = pSetupResp->getLocalIndex();
     }
-    else if(SVS_MSG_TYPE_MDU_SESSION_PLAY_RESP == message.getMsgType())
+    else if(SVS_MSG_TYPE_STREAM_SESSION_PLAY_RESP == message.getMsgType())
     {
-        CMduMediaPlayResp* pPlayResp = (CMduMediaPlayResp*)&message;
+        CStreamMediaPlayResp* pPlayResp = (CStreamMediaPlayResp*)&message;
         ulLocalIndex = pPlayResp->getLocalIndex();
     }
     else
@@ -134,7 +134,7 @@ int32_t CMduRtspService::handleSvsMessage(CMduSvsMessage &message)
         return RET_FAIL;
     }
 
-    CMduRtspPushSession *pSession = iter->second;
+    CStreamRtspPushSession *pSession = iter->second;
     if (!pSession)
     {
         SVS_LOG((SVS_LM_WARNING,"rtsp service handle svs message fail, rtsp push session[%u] is null.",
@@ -146,7 +146,7 @@ int32_t CMduRtspService::handleSvsMessage(CMduSvsMessage &message)
 }
 
 
-int32_t CMduRtspService::handle_input(ACE_HANDLE handle)
+int32_t CStreamRtspService::handle_input(ACE_HANDLE handle)
 {
 
     ACE_INET_Addr addr;
@@ -177,10 +177,10 @@ int32_t CMduRtspService::handle_input(ACE_HANDLE handle)
                     addr.get_port_number()));
 
 
-    CMduRtspPushSession *pSession = NULL;
+    CStreamRtspPushSession *pSession = NULL;
     try
     {
-        pSession = new CMduRtspPushSession();
+        pSession = new CStreamRtspPushSession();
     }
     catch(...)
     {
@@ -210,7 +210,7 @@ int32_t CMduRtspService::handle_input(ACE_HANDLE handle)
 }
 
 
-int32_t CMduRtspService::handle_close(ACE_HANDLE /*handle*/, ACE_Reactor_Mask /*close_mask*/)
+int32_t CStreamRtspService::handle_close(ACE_HANDLE /*handle*/, ACE_Reactor_Mask /*close_mask*/)
 {
     ACE_Reactor *pReactor = ACE_Reactor::instance();
     if (!pReactor)
@@ -233,7 +233,7 @@ int32_t CMduRtspService::handle_close(ACE_HANDLE /*handle*/, ACE_Reactor_Mask /*
     return 0;
 }
 
-void CMduRtspService::removeSession(CMduRtspPushSession* pSession)
+void CStreamRtspService::removeSession(CStreamRtspPushSession* pSession)
 {
     if (NULL == pSession)
     {
@@ -254,11 +254,11 @@ void CMduRtspService::removeSession(CMduRtspPushSession* pSession)
     return;
 }
 
-void CMduRtspService::checkSession()
+void CStreamRtspService::checkSession()
 {
     ACE_Guard<ACE_Thread_Mutex> locker(m_MapMutex);
     RTSP_SESSION_MAP_ITER iter;
-    CMduRtspPushSession* pSession = NULL;
+    CStreamRtspPushSession* pSession = NULL;
     for (iter = m_RtspSessionMap.begin(); iter != m_RtspSessionMap.end();)
     {
         pSession = iter->second;
@@ -279,7 +279,7 @@ void CMduRtspService::checkSession()
         m_RtspSessionMap.size()));
 }
 
-uint32_t CMduRtspService::getLocalSessionIndex()
+uint32_t CStreamRtspService::getLocalSessionIndex()
 {
     return ++m_unLocalSessionIndex;
 }

@@ -1,23 +1,23 @@
 /*
- * MduBusiness.h
+ * StreamBusiness.h
  *
  *  Created on: 2016-1-21
  *      Author:
  */
 
-#ifndef MDUBUSINESS_H_
-#define MDUBUSINESS_H_
+#ifndef STREAMBUSINESS_H_
+#define STREAMBUSINESS_H_
 
 #include "svs_adapter_session.h"
 #include "svs_adapter_inner_msg.h"
 #include "vms/vms.h"
 
-class CMduBusiness
+class CStreamBusiness
 {
-    friend class CMduBusinessManager;
+    friend class CStreamBusinessManager;
 public:
-    CMduBusiness();
-    virtual ~CMduBusiness();
+    CStreamBusiness();
+    virtual ~CStreamBusiness();
 
     int32_t init(uint64_svs recvSessionId, uint64_svs sendSessionId, PLAY_TYPE enPlayType);
 
@@ -25,13 +25,13 @@ public:
 
     int32_t stop();
 
-    void handleInnerMsg(const MDU_INNER_MSG &innerMsg, uint32_t unMsgSize);
+    void handleInnerMsg(const STREAM_INNER_MSG &innerMsg, uint32_t unMsgSize);
 
     uint64_svs getRecvStreamID() const;
 
     uint64_svs getSendStreamID() const;
 
-    CMduSession* getSession(uint64_svs ullStreamID) const;
+    CStreamSession* getSession(uint64_svs ullStreamID) const;
 
     void Dump(ACE_HANDLE handle);
 
@@ -69,12 +69,12 @@ private:
 private:
     int32_t             m_nRefCount;
     char                m_szContentID[CONTENT_ID_LEN + 1];
-    CMduSession*        m_pRecvSession;
-    CMduSession*        m_pSendSession;
+    CStreamSession*        m_pRecvSession;
+    CStreamSession*        m_pSendSession;
     PLAY_TYPE           m_enPlayType;
 
-    CMduMediaProcessor* m_pRecvProcessor;
-    CMduMediaProcessor* m_pSendProcessor;
+    CStreamMediaProcessor* m_pRecvProcessor;
+    CStreamMediaProcessor* m_pSendProcessor;
     uint32_t            m_OutputRate;// kbps
     uint64_t            m_ullFluxSize;//KB
     uint32_t            m_unStartTime;
@@ -83,4 +83,4 @@ private:
     ACE_Recursive_Thread_Mutex    m_Mutex;
 };
 
-#endif /* MDUBUSINESS_H_ */
+#endif /* STREAMBUSINESS_H_ */

@@ -1,21 +1,21 @@
 /*
- * CMduCommonResp.h
+ * CStreamCommonResp.h
  *
  *  Created on: 2010-12-31
  *      Author:
  */
 
-#ifndef CMDUCOMMONRESP_H_
-#define CMDUCOMMONRESP_H_
+#ifndef CSTREAMCOMMONRESP_H_
+#define CSTREAMCOMMONRESP_H_
 
 #include "svs_vms_message.h"
 
-class CMduCommonResp : public CMduSvsMessage
+class CStreamCommonResp : public CStreamSvsMessage
 {
 public:
-    CMduCommonResp();
+    CStreamCommonResp();
 
-    virtual ~CMduCommonResp();
+    virtual ~CStreamCommonResp();
 
     // 根据传入的消息块初始化消息， 只初始化消息头，子类需要重载
     UTAPI int32_t create(char* pMsgData, uint32_t unLength);
@@ -31,4 +31,4 @@ private:
     SVS_MSG_COMMON_RESP*    m_pResp;
 };
 
-#endif /* CMDUSTOPDISTRIBUTERESP_H_ */
+#endif /* CSTREAMSTOPDISTRIBUTERESP_H_ */

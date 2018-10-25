@@ -1,14 +1,14 @@
 /**
-* @file    MduService.h
-* @brief   Mdu服务的总入口，负责服务整体拉起
+* @file    StreamService.h
+* @brief   Stream服务的总入口，负责服务整体拉起
 *
 * Copyright (c) 2010 AllCam Tech.Co.,Ltd
 *
 * @date      2010-12-11
 */
 
-#ifndef __MDUSERVICE_H__
-#define __MDUSERVICE_H__
+#ifndef __STREAMSERVICE_H__
+#define __STREAMSERVICE_H__
 #ifdef __cplusplus
 extern "C"
 {
@@ -29,29 +29,29 @@ extern "C"
 #include "svs_adapter_scc_connector.h"
 #include "svs_adapter_service_task.h"
 
-class CMduService
+class CStreamService
 {
 public:
-    virtual ~CMduService();
+    virtual ~CStreamService();
 
-    static CMduService *instance()
+    static CStreamService *instance()
     {
-        static CMduService mduService;
-        return &mduService;
+        static CStreamService streamService;
+        return &streamService;
     }
 
-    /// 打开MDU服务
+    /// 打开STREAM服务
     int32_t openService();
 
-    /// 停止MDU服务
+    /// 停止STREAM服务
     int32_t closeService();
 
 private:
-    CMduService();
+    CStreamService();
 
 private:
     bool                m_bRunFlag;        /// 服务运行标志
 };
 
-#endif /* __MDUSERVICE_H__ */
+#endif /* __STREAMSERVICE_H__ */
 

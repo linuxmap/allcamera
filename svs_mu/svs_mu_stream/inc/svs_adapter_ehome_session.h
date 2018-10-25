@@ -1,5 +1,5 @@
-#ifndef __MDU_EHOME_SESSION_H_
-#define __MDU_EHOME_SESSION_H_
+#ifndef __STREAM_EHOME_SESSION_H_
+#define __STREAM_EHOME_SESSION_H_
 
 #include "svs_adapter_session.h"
 #include "svs_adapter_network_handle.h"
@@ -12,11 +12,11 @@
 #include "svs_rtsp_setup_message.h"
 
 
-class CMduEhomeSession : public CMduSession
+class CStreamEhomeSession : public CStreamSession
 {
 public:
-    CMduEhomeSession();
-    virtual ~CMduEhomeSession();
+    CStreamEhomeSession();
+    virtual ~CStreamEhomeSession();
 
     int32_t initSesssion(PEER_TYPE unPeerType);
     /// 对外接口：发送媒体流
@@ -24,9 +24,9 @@ public:
 
     int32_t sendVcrMessage(CRtspPacket &rtspPack);
 
-    int32_t handleInnerMessage(const MDU_INNER_MSG &innerMsg,
+    int32_t handleInnerMessage(const STREAM_INNER_MSG &innerMsg,
                            uint32_t unMsgSize,
-                           CMduSession &peerSession);
+                           CStreamSession &peerSession);
     // 发送EOS消息
     int32_t sendSessionStopMessage(uint32_t unStopType);
 
@@ -39,7 +39,7 @@ public:
 
 protected:
     /// 发送NAT穿越响应实现
-    int32_t sendNatResponse(CMduNatMessage &natMsg);
+    int32_t sendNatResponse(CStreamNatMessage &natMsg);
 
     /// 分配端口资源
     int32_t allocMediaPort();
@@ -60,9 +60,9 @@ protected:
     int32_t                 m_lEhomeSessionID;
 
     // Payload Type变更
-    CMduSession*            m_pPeerSession;
+    CStreamSession*            m_pPeerSession;
 
 
 };
 
-#endif /* MDURTPSESSION_H_ */
+#endif /* STREAMRTPSESSION_H_ */

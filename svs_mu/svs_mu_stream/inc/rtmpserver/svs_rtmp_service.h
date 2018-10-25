@@ -1,12 +1,12 @@
 /*
- * MduRtspService.h
+ * StreamRtspService.h
  *
  *  Created on: 2016-5-12
  *      Author:
  */
 
-#ifndef MDURTMPSERVICE_H_
-#define MDURTMPSERVICE_H_
+#ifndef STREAMRTMPSERVICE_H_
+#define STREAMRTMPSERVICE_H_
 
 #include <map>
 #include "svs_ace_header.h"
@@ -22,25 +22,25 @@ public:
 };
 
 
-typedef std::map<uint32_t, CMduRtmpPushSession*>      RTMP_SESSION_MAP;
+typedef std::map<uint32_t, CStreamRtmpPushSession*>      RTMP_SESSION_MAP;
 typedef RTMP_SESSION_MAP::iterator                    RTMP_SESSION_MAP_ITER;
 
-class CMduRtmpService : public ACE_Event_Handler
+class CStreamRtmpService : public ACE_Event_Handler
 {
 public:
-    virtual ~CMduRtmpService();
+    virtual ~CStreamRtmpService();
 
-    static CMduRtmpService& instance()
+    static CStreamRtmpService& instance()
     {
-        static CMduRtmpService mduRtmpService;
-        return mduRtmpService;
+        static CStreamRtmpService streamRtmpService;
+        return streamRtmpService;
     }
 
     int32_t open();
 
     void close() const;
 
-    int32_t handleSvsMessage(CMduSvsMessage &message);
+    int32_t handleSvsMessage(CStreamSvsMessage &message);
 
     int32_t handle_input(ACE_HANDLE handle);
 
@@ -48,10 +48,10 @@ public:
 
     void checkSession();
 
-    void removeSession(CMduRtmpPushSession* pSession);
+    void removeSession(CStreamRtmpPushSession* pSession);
 
 private:
-    CMduRtmpService();
+    CStreamRtmpService();
 
     uint32_t getLocalSessionIndex();
 
@@ -67,4 +67,4 @@ private:
     int32_t                m_ulCheckTimerId;
 };
 
-#endif /* MDURTMPSERVICE_H_ */
+#endif /* STREAMRTMPSERVICE_H_ */

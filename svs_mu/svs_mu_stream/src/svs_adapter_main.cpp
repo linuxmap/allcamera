@@ -65,12 +65,12 @@ int32_t main(int32_t argc, char* argv[])
     int32_t runType;
     int32_t logEnable;
     int32_t logLM;
-    if (0 != getDebugConfig(SVS_MDU_CONFIG_FILE, runType, logEnable, logLM))
+    if (0 != getDebugConfig(SVS_STREAM_CONFIG_FILE, runType, logEnable, logLM))
     {
         SVS_LOG((SVS_LM_CRITICAL,
             "Readed debug config info in the configuration file failed,"
             "quit the service. configfile[%s].",
-            SVS_MDU_CONFIG_FILE));
+            SVS_STREAM_CONFIG_FILE));
 
         return -1;
     }
@@ -94,7 +94,7 @@ int32_t main(int32_t argc, char* argv[])
     svs_run_service(startService,
                     runType,
                     stopService,
-                    SVS_MDU_CONFIG_FILE,
+                    SVS_STREAM_CONFIG_FILE,
                     SERVER_TYPE_MU_STREAM);
     return 0;
 }

@@ -31,7 +31,7 @@ int32_t CPlaybackControlResp::create(char* pMsgData, uint32_t unLength)
     }
 
     // �ȵ��ø���ĳ�ʼ���ӿ�
-    int32_t nRet = CMduSvsMessage::create(pMsgData, unLength);
+    int32_t nRet = CStreamSvsMessage::create(pMsgData, unLength);
     if (RET_OK != nRet)
     {
         SVS_LOG((SVS_LM_WARNING,"create playback control respones message fail, create svs message fail."));
@@ -48,7 +48,7 @@ int32_t CPlaybackControlResp::create(uint32_t unLength,
                                uint32_t unTransNo)
 {
     // �ȵ��ø���ĳ�ʼ���ӿ�
-    int32_t nRet = CMduSvsMessage::create(unLength, unTransNo);
+    int32_t nRet = CStreamSvsMessage::create(unLength, unTransNo);
     if (RET_OK != nRet)
     {
         return nRet;
@@ -94,10 +94,10 @@ int32_t CPlaybackControlResp::handleMessage()
 
     if(!m_bSCCResp)
     {
-        return CMduServiceTask::instance()->sendMsgToSCC(this);
+        return CStreamServiceTask::instance()->sendMsgToSCC(this);
     }
 
-    int32_t iRet = CMduSvsMessage::checkMessage();
+    int32_t iRet = CStreamSvsMessage::checkMessage();
     if (RET_OK != iRet)
     {
         SVS_LOG((SVS_LM_WARNING,"Check PlaybackControl Respones message fail, message header is incorrect. iRet[0x%x].",
@@ -105,17 +105,17 @@ int32_t CPlaybackControlResp::handleMessage()
         return iRet;
     }
 
-    CMduSession *pSession = CMduSessionFactory::instance()->findSession(m_pControlResp->BusinessID);
+    CStreamSession *pSession = CStreamSessionFactory::instance()->findSession(m_pControlResp->BusinessID);
     if (NULL == pSession)
     {
         SVS_LOG((SVS_LM_WARNING,"can't send playback control Respones message, stream[%Q] is invalid.", m_pControlResp->BusinessID));
-        return SVS_MSG_MDU_STREAMID_NOT_MATCH;
+        return SVS_MSG_STREAM_STREAMID_NOT_MATCH;
     }
 
-   CMduRtpSession* pRtpSession = dynamic_cast<CMduRtpSession*>(pSession);
+   CStreamRtpSession* pRtpSession = dynamic_cast<CStreamRtpSession*>(pSession);
     if (NULL == pRtpSession)
     {
-        CMduSessionFactory::instance()->releaseSession(pSession);
+        CStreamSessionFactory::instance()->releaseSession(pSession);
         SVS_LOG((SVS_LM_WARNING,"send playback control Respones message fail, session[%Q] isn't svs session.", m_pControlResp->BusinessID));
         return SVS_MSG_MU_INTERNAL_ERR;
     }
@@ -123,7 +123,7 @@ int32_t CPlaybackControlResp::handleMessage()
     iRet = pRtpSession->dealSccVcrResp(m_pControlResp);
 
     // �ͷŻỰ�����ü���
-    CMduSessionFactory::instance()->releaseSession(pSession);
+    CStreamSessionFactory::instance()->releaseSession(pSession);
 
     SVS_LOG((SVS_LM_INFO,"deal scc playback control message success, session[%Q] ret[%d].", m_pControlResp->BusinessID, iRet));
 
@@ -138,7 +138,7 @@ void CPlaybackControlResp::dump() const
     }
 
     // �ȴ�ӡ��Ϣͷ
-    CMduSvsMessage::dump();
+    CStreamSvsMessage::dump();
 
     // ����Ϣ�ṹ��ӡ��Ϣ��
     SVS_LOG((SVS_LM_DEBUG,"MessageBody:"));

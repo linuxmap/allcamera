@@ -1,6 +1,6 @@
 /**
-* @file    MduService.cpp
-* @brief   Mdu���������ڣ����������������
+* @file    StreamService.cpp
+* @brief   Stream���������ڣ����������������
 *
 * Copyright (c) 2010 AllCam Tech.Co.,Ltd
 *
@@ -42,20 +42,20 @@ CSVS_Logging_Strategy g_svrLogStrategy;
 
 const char *getServiceName()
 {
-    return (char*)SVS_MDU_SERVICE_NAME;
+    return (char*)SVS_STREAM_SERVICE_NAME;
 }
 
 void startService(void)
 {
-    (void)SVS_SS_UTILITIES::backup_log(SVS_MDU_LOG_PATH);
+    (void)SVS_SS_UTILITIES::backup_log(SVS_STREAM_LOG_PATH);
     int32_t initLogStrategyResult =
-        g_svrLogStrategy.initLogStrategy( SVS_MDU_CONFIG_FILE, SVS_MDU_LOG_PATH, true );
+        g_svrLogStrategy.initLogStrategy( SVS_STREAM_CONFIG_FILE, SVS_STREAM_LOG_PATH, true );
     if ( RET_OK != initLogStrategyResult )
     {
         SVS_LOG((SVS_LM_CRITICAL, "Initialize log strategy failed."));
         return ;
     }
-    int32_t nRet = CMduService::instance()->openService();
+    int32_t nRet = CStreamService::instance()->openService();
     if ( RET_OK != nRet )
     {
         SVS_LOG((SVS_LM_CRITICAL, "open service failed."));
@@ -67,7 +67,7 @@ void startService(void)
 
 void stopService()
 {
-     int32_t nRet = CMduService::instance()->closeService();
+     int32_t nRet = CStreamService::instance()->closeService();
      if ( RET_OK != nRet )
     {
         SVS_LOG((SVS_LM_CRITICAL, "stop service failed."));
@@ -78,18 +78,18 @@ void stopService()
 
 
 
-CMduService::CMduService()
+CStreamService::CStreamService()
 {
     m_bRunFlag      = true;
 }
 
-CMduService::~CMduService()
+CStreamService::~CStreamService()
 {
 }
 
-int32_t CMduService::openService()
+int32_t CStreamService::openService()
 {
-    SVS_LOG((SVS_LM_INFO,"start svs_mdu service."));
+    SVS_LOG((SVS_LM_INFO,"start svs_stream service."));
 
     m_bRunFlag = true;
 
@@ -97,7 +97,7 @@ int32_t CMduService::openService()
     int32_t logEnable = 0;
     int32_t logLM = 0;
 
-    if (0 != getDebugConfig((char*)SVS_MDU_CONFIG_FILE, runType, logEnable, logLM))
+    if (0 != getDebugConfig((char*)SVS_STREAM_CONFIG_FILE, runType, logEnable, logLM))
     {
         SVS_LOG(( SVS_LM_CRITICAL,
                     "Get debug info from config file failed."));
@@ -117,61 +117,61 @@ int32_t CMduService::openService()
         SVS_LOG_DISABLE();
     }
 
-    int32_t nRet = CMduConfig::instance()->init(SVS_MDU_CONFIG_FILE);
+    int32_t nRet = CStreamConfig::instance()->init(SVS_STREAM_CONFIG_FILE);
     if (RET_OK != nRet)
     {
-        SVS_LOG((SVS_LM_CRITICAL,"init mdu config fail."));
+        SVS_LOG((SVS_LM_CRITICAL,"init stream config fail."));
         return RET_FAIL;
     }
 
-    nRet = CSVS_Daemon_Thread::instance()->Init(CMduConfig::instance()->getDebugCheckThreadInterval(),
-                            CMduConfig::instance()->getDebugRestartServerFlag(),
-                            CMduConfig::instance()->getDebugDumpServerFlag());
+    nRet = CSVS_Daemon_Thread::instance()->Init(CStreamConfig::instance()->getDebugCheckThreadInterval(),
+                            CStreamConfig::instance()->getDebugRestartServerFlag(),
+                            CStreamConfig::instance()->getDebugDumpServerFlag());
     if (RET_OK != nRet)
     {
         SVS_LOG((SVS_LM_CRITICAL,"init daemon thread fail."));
         return RET_FAIL;
     }
 
-    uint32_t unBlockCnt = CMduConfig::instance()->getServiceCapacity() * MDU_BLOCK_NUM_PER_CHANNEL;
-    nRet = CMediaBlockBuffer::instance().init(MDU_MSG_BLOCK_SIZE, unBlockCnt);
+    uint32_t unBlockCnt = CStreamConfig::instance()->getServiceCapacity() * STREAM_BLOCK_NUM_PER_CHANNEL;
+    nRet = CMediaBlockBuffer::instance().init(STREAM_MSG_BLOCK_SIZE, unBlockCnt);
     if (RET_OK != nRet)
     {
         SVS_LOG((SVS_LM_CRITICAL,"init media block buffer fail."));
         return RET_FAIL;
     }
 
-    nRet = CNetConnManager::instance()->openManager(MDU_MEDIA_RECV_THREAD_NUM);
+    nRet = CNetConnManager::instance()->openManager(STREAM_MEDIA_RECV_THREAD_NUM);
     if (RET_OK != nRet)
     {
-        SVS_LOG((SVS_LM_CRITICAL,"init mdu connect manager fail."));
+        SVS_LOG((SVS_LM_CRITICAL,"init stream connect manager fail."));
         return RET_FAIL;
     }
 
-    nRet = CMduPortManager::instance()->initManager();
+    nRet = CStreamPortManager::instance()->initManager();
     if (RET_OK != nRet)
     {
-        SVS_LOG((SVS_LM_CRITICAL,"init mdu port manager fail."));
+        SVS_LOG((SVS_LM_CRITICAL,"init stream port manager fail."));
         return RET_FAIL;
     }
 
-    nRet = CMduSessionFactory::instance()->init();
+    nRet = CStreamSessionFactory::instance()->init();
     if (RET_OK != nRet)
     {
-        SVS_LOG((SVS_LM_CRITICAL,"init mdu session factory fail."));
+        SVS_LOG((SVS_LM_CRITICAL,"init stream session factory fail."));
         return RET_FAIL;
     }
 
-    nRet = CMduMediaExchange::instance()->Init(MDU_EXCHANGE_THREAD_NUM);
+    nRet = CStreamMediaExchange::instance()->Init(STREAM_EXCHANGE_THREAD_NUM);
     if (RET_OK != nRet)
     {
-        SVS_LOG((SVS_LM_CRITICAL,"init mdu meida exchange fail."));
+        SVS_LOG((SVS_LM_CRITICAL,"init stream meida exchange fail."));
         return RET_FAIL;
     }
 
 
 
-    nRet = CMduServiceTask::instance()->openServiceTask();
+    nRet = CStreamServiceTask::instance()->openServiceTask();
     if (RET_OK != nRet)
     {
         SVS_LOG((SVS_LM_CRITICAL,"open adapter service task fail."));
@@ -179,22 +179,22 @@ int32_t CMduService::openService()
     }
 
     //start the nat info configure task
-    ACE_Reactor *pReactor = CMduServiceTask::instance()->getTimerReactor();
+    ACE_Reactor *pReactor = CStreamServiceTask::instance()->getTimerReactor();
     if (NULL == pReactor)
     {
         return RET_FAIL;
     }
 
-    nRet = CMduNatMgr::GetInstance().Open(SVS_MDU_CONFIG_FILE,pReactor);
+    nRet = CStreamNatMgr::GetInstance().Open(SVS_STREAM_CONFIG_FILE,pReactor);
     if (RET_OK != nRet)
     {
         SVS_LOG((SVS_LM_CRITICAL,"open adapter nat configure manager fail."));
         return RET_FAIL;
     }
 
-    nRet = CMduConfig::instance()->startReloadTimer();
+    nRet = CStreamConfig::instance()->startReloadTimer();
 
-    SVS_LOG((SVS_LM_WARNING,"start mdu reload config timer ret[%d].", nRet));
+    SVS_LOG((SVS_LM_WARNING,"start stream reload config timer ret[%d].", nRet));
 
     while (m_bRunFlag)
     {
@@ -203,21 +203,21 @@ int32_t CMduService::openService()
     return RET_OK;
 }
 
-int32_t CMduService::closeService()
+int32_t CStreamService::closeService()
 {
-    SVS_LOG((SVS_LM_INFO,"stop svs_mdu service."));
+    SVS_LOG((SVS_LM_INFO,"stop svs_stream service."));
 
     m_bRunFlag = false;
 
     // ����open�෴��˳��������ģ���˳�
     // �ر������ļ�ˢ�¶�ʱ��
-    CMduConfig::instance()->stopReloadTimer();
+    CStreamConfig::instance()->stopReloadTimer();
 
     // �˳�ServiceTask
-    CMduServiceTask::instance()->closeServiceTask();
+    CStreamServiceTask::instance()->closeServiceTask();
 
     // �ر����ж˿�
-    CMduPortManager::instance()->closeManager();
+    CStreamPortManager::instance()->closeManager();
 
     // �ر����ӹ�����
     (void)CNetConnManager::instance()->closeManager();
@@ -238,14 +238,14 @@ int32_t utmain(int32_t argc, char* argv[])
     testing::GTEST_FLAG(catch_exceptions) = true;
 
     string strServerName =  "ut_" ;
-    strServerName += SVS_MDU_SERVICE_NAME;
+    strServerName += SVS_STREAM_SERVICE_NAME;
     string strLogFile = "ut_";
-    strLogFile += SVS_MDU_LOG_PATH;
+    strLogFile += SVS_STREAM_LOG_PATH;
 
     // ��ʼ����־ģ��
     (void)CSVS_Log_Manager::instance().initLog(strServerName.c_str(),
                                                strLogFile.c_str(),
-                                               SVS_MDU_CONFIG_FILE);
+                                               SVS_STREAM_CONFIG_FILE);
 
     testing::InitGoogleTest(&argc, argv);
     int32_t iRet = RUN_ALL_TESTS();

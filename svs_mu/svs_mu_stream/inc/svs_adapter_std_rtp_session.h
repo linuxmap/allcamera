@@ -1,12 +1,12 @@
 /*
- * MduStdRtpSession.h
+ * StreamStdRtpSession.h
  *
  *  Created on: 2016-5-20
  *      Author:
  */
 
-#ifndef MDUSTDRTPSESSION_H_
-#define MDUSTDRTPSESSION_H_
+#ifndef STREAMSTDRTPSESSION_H_
+#define STREAMSTDRTPSESSION_H_
 
 #include <list>
 #include "svs_adapter_session.h"
@@ -18,11 +18,11 @@
 typedef std::list<ACE_Message_Block*>  RTP_SEND_LIST;
 typedef RTP_SEND_LIST::iterator        RTP_SEND_LIST_ITER;
 
-class CMduStdRtpSession: public CMduSession
+class CStreamStdRtpSession: public CStreamSession
 {
 public:
-    CMduStdRtpSession();
-    virtual ~CMduStdRtpSession();
+    CStreamStdRtpSession();
+    virtual ~CStreamStdRtpSession();
 public:
 
     int32_t initStdRtpSession(uint64_t ullPeerStreamID,
@@ -49,9 +49,9 @@ public:
 
     int32_t sendVcrMessage(CRtspPacket &rtspPack);
 
-    int32_t handleInnerMessage(const MDU_INNER_MSG &innerMsg,
+    int32_t handleInnerMessage(const STREAM_INNER_MSG &innerMsg,
                             uint32_t unMsgSize,
-                            CMduSession&  peerSession);
+                            CStreamSession&  peerSession);
 
     ACE_INET_Addr getPeerAddr()const;
 
@@ -71,7 +71,7 @@ protected:
 
     int32_t stopMediaPort();
 
-    int32_t sendNatResponse(CMduNatMessage &natMsg){return RET_OK;};
+    int32_t sendNatResponse(CStreamNatMessage &natMsg){return RET_OK;};
 
     bool checkMediaChannelStatus();
 
@@ -110,6 +110,6 @@ private:
     CMediaSdp         m_rtspSdp;
 };
 
-#endif /* MDUSTDRTPSESSION_H_ */
+#endif /* STREAMSTDRTPSESSION_H_ */
 
 

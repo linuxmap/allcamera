@@ -1,5 +1,5 @@
-#ifndef __CMDUMEDIAPROCESSOR_H__
-#define __CMDUMEDIAPROCESSOR_H__
+#ifndef __CSTREAMMEDIAPROCESSOR_H__
+#define __CSTREAMMEDIAPROCESSOR_H__
 
 
 
@@ -97,21 +97,21 @@ typedef struct
 typedef std::list<ACE_Message_Block*> MEDIA_PACK_LIST;
 typedef MEDIA_PACK_LIST::iterator MEDIA_PACK_LIST_ITER;
 
-class CMduMediaProcessor
+class CStreamMediaProcessor
 {
 private:
-    CMduMediaProcessor(const CMduMediaProcessor&);
-    CMduMediaProcessor& operator=(const CMduMediaProcessor&);
+    CStreamMediaProcessor(const CStreamMediaProcessor&);
+    CStreamMediaProcessor& operator=(const CStreamMediaProcessor&);
 public:
-    CMduMediaProcessor();
-    virtual ~CMduMediaProcessor();
+    CStreamMediaProcessor();
+    virtual ~CStreamMediaProcessor();
 
     virtual int32_t Init(uint64_t ullSendSessionID);
 
     virtual void Send (ACE_Message_Block* pMb)=0;
     virtual void Dump(ACE_HANDLE handle) = 0;
 
-    CMduSession* getSession();
+    CStreamSession* getSession();
 
     uint32_t getInputRate()const;
 
@@ -120,7 +120,7 @@ public:
     uint32_t getFlux(uint32_t& ulStartTime, uint32_t& ulEndTime);
 protected:
     uint64_t            m_SendSessionId;
-    CMduSession*        m_pSendSession;
+    CStreamSession*        m_pSendSession;
     CDataStat           m_dataStat;
 };
 
@@ -131,7 +131,7 @@ public:
     CPacketList();
     virtual ~CPacketList();
 
-    int32_t  Send(CMduMediaProcessor* pProcessor);
+    int32_t  Send(CStreamMediaProcessor* pProcessor);
     int32_t  Save(const ACE_Message_Block *pMb);
 private:
     void Clear();
@@ -147,7 +147,7 @@ private:
 };
 
 
-class CDirectProcessor : public CMduMediaProcessor
+class CDirectProcessor : public CStreamMediaProcessor
 {
 public:
     CDirectProcessor();
@@ -163,25 +163,25 @@ private:
     uint32_t        m_DropPacketNum;
 };
 
-typedef std::list<CMduMediaProcessor*>  ProcessorList;
+typedef std::list<CStreamMediaProcessor*>  ProcessorList;
 typedef ProcessorList::iterator         ProcessorIter;
 
-class CMduMediaProcessorSet
+class CStreamMediaProcessorSet
 {
 public:
-    CMduMediaProcessorSet();
+    CStreamMediaProcessorSet();
 
-    virtual ~CMduMediaProcessorSet();
+    virtual ~CStreamMediaProcessorSet();
 
-    virtual int32_t AddMediaProcessor(CMduMediaProcessor* pProcessor);
+    virtual int32_t AddMediaProcessor(CStreamMediaProcessor* pProcessor);
 
-    virtual int32_t DelMediaProcessor(CMduMediaProcessor*& pProcessor);
+    virtual int32_t DelMediaProcessor(CStreamMediaProcessor*& pProcessor);
 
     virtual int32_t Send(ACE_Message_Block* pMb);
 
     virtual int32_t SetEncodeFormat(uint32_t unEncodeFormat);
 protected:
-    int32_t GetSendSessionType( CMduMediaProcessor* pProcessor,
+    int32_t GetSendSessionType( CStreamMediaProcessor* pProcessor,
                                    uint32_t& unSessionType) const;
 private:
     int32_t SendEsRtpPacket(ACE_Message_Block* pMb);
@@ -193,11 +193,11 @@ protected:
 
 
 
-class CMduPsMediaProcessorSet: public CMduMediaProcessorSet,IRtpFrameHandler
+class CStreamPsMediaProcessorSet: public CStreamMediaProcessorSet,IRtpFrameHandler
 {
 public:
-    CMduPsMediaProcessorSet();
-    virtual ~CMduPsMediaProcessorSet();
+    CStreamPsMediaProcessorSet();
+    virtual ~CStreamPsMediaProcessorSet();
 
     virtual int32_t Send(ACE_Message_Block* pMb);
 

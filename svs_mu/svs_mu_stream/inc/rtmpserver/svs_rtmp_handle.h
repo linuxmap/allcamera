@@ -1,21 +1,21 @@
 /*
- * MduRtspPushSession.h
+ * StreamRtspPushSession.h
  *
  *  Created on: 2016-5-16
  *      Author:
  */
 
-#ifndef MDURTMPHANDLE_H_
-#define MDURTMPHANDLE_H_
+#ifndef STREAMRTMPHANDLE_H_
+#define STREAMRTMPHANDLE_H_
 
 #include "svs_ace_header.h"
 
 
-class CMduRtmpSendHandle
+class CStreamRtmpSendHandle
 {
 public:
-    CMduRtmpSendHandle(){};
-    virtual ~CMduRtmpSendHandle(){};
+    CStreamRtmpSendHandle(){};
+    virtual ~CStreamRtmpSendHandle(){};
 
 public:
     virtual ACE_INET_Addr getPeerAddr()const = 0;
@@ -27,4 +27,4 @@ public:
 
 };
 
-#endif /* MDURTMPHANDLE_H_ */
+#endif /* STREAMRTMPHANDLE_H_ */

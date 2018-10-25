@@ -80,7 +80,7 @@ const char* CSessionInfo::getTransProtocol(uint32_t Type)const
     return szTransProtocol[Type];
 }
 
-CMduSession::CMduSession()
+CStreamSession::CStreamSession()
 {
     m_lReferenceCnt     = 1;
     memset(m_szContentId, 0x0, sizeof(m_szContentId));
@@ -100,13 +100,13 @@ CMduSession::CMduSession()
     m_NatMsgList.clear();
     m_bStartPlayFlag    = false;
 
-    m_enSessionStatus   = MDU_SESSION_STATUS_INIT;
+    m_enSessionStatus   = STREAM_SESSION_STATUS_INIT;
     m_ulStatusBeginTime = SVS_GetSecondTime();
     m_SdpInfo           = "";
 
 }
 
-CMduSession::~CMduSession()
+CStreamSession::~CStreamSession()
 {
     SVS_LOG((SVS_LM_DEBUG,"destroy session [%Q] begin.",
                     getStreamId()));
@@ -114,7 +114,7 @@ CMduSession::~CMduSession()
     {
         while (!m_NatMsgList.empty())
         {
-            CMduNatMessage *pNatMsg = m_NatMsgList.front();
+            CStreamNatMessage *pNatMsg = m_NatMsgList.front();
             delete pNatMsg;
             m_NatMsgList.pop_front();
         }
@@ -127,12 +127,12 @@ CMduSession::~CMduSession()
                     getStreamId()));
 }
 
-int32_t CMduSession::init(const char* pszContent,PLAY_TYPE enPlayType)
+int32_t CStreamSession::init(const char* pszContent,PLAY_TYPE enPlayType)
 {
 
-    if (MDU_SESSION_STATUS_INIT != getStatus())
+    if (STREAM_SESSION_STATUS_INIT != getStatus())
     {
-        SVS_LOG((SVS_LM_WARNING,"CMduSession::init fail, session status [%d] is incorrect.",
+        SVS_LOG((SVS_LM_WARNING,"CStreamSession::init fail, session status [%d] is incorrect.",
             getStatus()));
         return RET_ERR_STATUS_ABNORMAL;
     }
@@ -148,7 +148,7 @@ int32_t CMduSession::init(const char* pszContent,PLAY_TYPE enPlayType)
         return RET_FAIL;
     }
 
-    setStatus(MDU_SESSION_STATUS_WAIT_START);
+    setStatus(STREAM_SESSION_STATUS_WAIT_START);
     SVS_LOG((SVS_LM_INFO, "init session[%Q] success: contentid[%s] substream[%u] "
                     "service type[%s] peer type[%s].",
                     getStreamId(),
@@ -160,14 +160,14 @@ int32_t CMduSession::init(const char* pszContent,PLAY_TYPE enPlayType)
     return RET_OK;
 }
 
-void CMduSession::close()
+void CStreamSession::close()
 {
-    if (MDU_SESSION_STATUS_RELEASED == getStatus())
+    if (STREAM_SESSION_STATUS_RELEASED == getStatus())
     {
         return;
     }
 
-    setStatus(MDU_SESSION_STATUS_RELEASED);
+    setStatus(STREAM_SESSION_STATUS_RELEASED);
 
     (void) stopMediaPort();
 
@@ -177,9 +177,9 @@ void CMduSession::close()
 }
 
 
-int32_t CMduSession::start(CMduMediaSetupResp *pResp)
+int32_t CStreamSession::start(CStreamMediaSetupResp *pResp)
 {
-    if (MDU_SESSION_STATUS_WAIT_CHANNEL_REDAY <= getStatus())
+    if (STREAM_SESSION_STATUS_WAIT_CHANNEL_REDAY <= getStatus())
     {
         SVS_LOG((SVS_LM_INFO, "session[%Q] has already started, status [%d].",
                          m_stSessionInfo.StreamID,
@@ -188,7 +188,7 @@ int32_t CMduSession::start(CMduMediaSetupResp *pResp)
         return RET_OK;
     }
 
-    if (MDU_SESSION_STATUS_WAIT_START != getStatus())
+    if (STREAM_SESSION_STATUS_WAIT_START != getStatus())
     {
         SVS_LOG((SVS_LM_WARNING,
             "start session[%Q] fail, status [%d] is incorrect. stream id.",
@@ -220,7 +220,7 @@ int32_t CMduSession::start(CMduMediaSetupResp *pResp)
         return RET_FAIL;
     }
 
-    setStatus(MDU_SESSION_STATUS_RECVED_NAT_REQ);
+    setStatus(STREAM_SESSION_STATUS_RECVED_NAT_REQ);
 
     SVS_LOG((SVS_LM_INFO,"start session [%Q] success, video pt[%d] audio pt[%d], service type[%d] peer type[%d] session type[%d] .",
                     getStreamId(),
@@ -232,29 +232,29 @@ int32_t CMduSession::start(CMduMediaSetupResp *pResp)
     return RET_OK;
 }
 
-ACE_INET_Addr CMduSession::getVideoAddr() const
+ACE_INET_Addr CStreamSession::getVideoAddr() const
 {
     return m_VideoAddr;
 }
 
-ACE_INET_Addr CMduSession::getAudioAddr() const
+ACE_INET_Addr CStreamSession::getAudioAddr() const
 {
     return m_AudioAddr;
 }
 
 
-void CMduSession::setStatus(MDU_SESSION_STATUS enStatus)
+void CStreamSession::setStatus(STREAM_SESSION_STATUS enStatus)
 {
     ACE_Guard<ACE_Thread_Mutex>  locker(m_StatusMutex);
-    if ((MDU_SESSION_STATUS_ABNORMAL == m_enSessionStatus)
-        && (MDU_SESSION_STATUS_RELEASED != enStatus))
+    if ((STREAM_SESSION_STATUS_ABNORMAL == m_enSessionStatus)
+        && (STREAM_SESSION_STATUS_RELEASED != enStatus))
     {
         SVS_LOG((SVS_LM_DEBUG,"session[%Q] change stauts[%d] fail, status abnormal.",
                     getStreamId(), enStatus));
         return;
     }
 
-    if (MDU_SESSION_STATUS_RELEASED == m_enSessionStatus)
+    if (STREAM_SESSION_STATUS_RELEASED == m_enSessionStatus)
     {
         SVS_LOG((SVS_LM_DEBUG,"session[%Q] change stauts[%d] fail, session released.",
                 getStreamId(), enStatus));
@@ -269,127 +269,127 @@ void CMduSession::setStatus(MDU_SESSION_STATUS enStatus)
     return;
 }
 
-MDU_SESSION_STATUS CMduSession::getStatus()
+STREAM_SESSION_STATUS CStreamSession::getStatus()
 {
     ACE_Guard<ACE_Thread_Mutex>  locker(m_StatusMutex);
     return m_enSessionStatus;
 }
 
-void CMduSession::setSessionId(uint64_t ullSessionId)
+void CStreamSession::setSessionId(uint64_t ullSessionId)
 {
     m_stSessionInfo.StreamID = ullSessionId;
     return;
 }
 
-uint64_svs CMduSession::getStreamId() const
+uint64_svs CStreamSession::getStreamId() const
 {
     return m_stSessionInfo.StreamID;
 }
 
-const char* CMduSession::getContentID() const
+const char* CStreamSession::getContentID() const
 {
     return (char*)m_szContentId;
 }
 
-void CMduSession::setContentID(const char* strContentID)
+void CStreamSession::setContentID(const char* strContentID)
 {
     (void)strncpy(m_szContentId, strContentID, CONTENT_ID_LEN );
 }
 
-uint32_t CMduSession::getVideoCodecType() const
+uint32_t CStreamSession::getVideoCodecType() const
 {
     return m_ulVideoCodeType;
 }
 
-uint32_t CMduSession::getVideoCodeType() const
+uint32_t CStreamSession::getVideoCodeType() const
 {
     return m_ulVideoCodeType;
 }
 
-uint8_t CMduSession::getVideoPayload()const
+uint8_t CStreamSession::getVideoPayload()const
 {
     return (uint8_t)m_unVedioPT;
 }
 
-uint8_t CMduSession::getAudioPayload()const
+uint8_t CStreamSession::getAudioPayload()const
 {
     return (uint8_t)m_unAudioPT;
 }
 
-PEER_TYPE CMduSession::getPeerType() const
+PEER_TYPE CStreamSession::getPeerType() const
 {
     return m_stSessionInfo.PeerType;
 }
 
-PLAY_TYPE CMduSession::getPlayType() const
+PLAY_TYPE CStreamSession::getPlayType() const
 {
     return m_enPlayType;
 }
 
-char CMduSession::getVideoInterleaveNum() const
+char CStreamSession::getVideoInterleaveNum() const
 {
     return (char)m_unVideoInterleaveNum;
 }
 
-char CMduSession::getAudioInterleaveNum() const
+char CStreamSession::getAudioInterleaveNum() const
 {
     return (char)m_unAudioInterleaveNum;
 }
 
-uint32_t CMduSession::getTransProtocol() const
+uint32_t CStreamSession::getTransProtocol() const
 {
     return m_stSessionInfo.TransProtocol;
 }
 
 
-uint32_t CMduSession::getSessionType() const
+uint32_t CStreamSession::getSessionType() const
 {
     return m_stSessionInfo.SessionType;
 }
 
-uint32_t CMduSession::getSpecifyIp() const
+uint32_t CStreamSession::getSpecifyIp() const
 {
     return m_stSessionInfo.SpecifyIp;
 }
-uint32_t CMduSession::getTransDirection() const
+uint32_t CStreamSession::getTransDirection() const
 {
     return m_stSessionInfo.TransDirection;
 }
 
-void CMduSession::getSdpInfo(std::string& SdpInfo) const
+void CStreamSession::getSdpInfo(std::string& SdpInfo) const
 {
     SdpInfo = m_SdpInfo;
-    SVS_LOG((SVS_LM_DEBUG,"CMduSession SDPInfon:"
+    SVS_LOG((SVS_LM_DEBUG,"CStreamSession SDPInfon:"
                           "\t\t%s",
                           m_SdpInfo.c_str()));
     return;
 }
 
-int32_t CMduSession::dealSccVcrResp(const SVS_MSG_PLAYBACK_CONTROL_RESP* pMsg)
+int32_t CStreamSession::dealSccVcrResp(const SVS_MSG_PLAYBACK_CONTROL_RESP* pMsg)
 {
     return RET_OK;
 }
 
-void CMduSession::checkSessionStatus()
+void CStreamSession::checkSessionStatus()
 {
     uint32_t unCostTime = SVS_GetSecondTime() - m_ulStatusBeginTime;
-    if (MDU_SESSION_STATUS_DISPATCHING > getStatus())
+    if (STREAM_SESSION_STATUS_DISPATCHING > getStatus())
     {
-        if (MDU_STATUS_TIMEOUT_INTERVAL <= unCostTime)
+        if (STREAM_STATUS_TIMEOUT_INTERVAL <= unCostTime)
         {
             SVS_LOG((SVS_LM_WARNING,"session[%Q] at status[%d] timeout, const time[%u].",
                         getStreamId(),  getStatus(), unCostTime));
 
-            setStatus(MDU_SESSION_STATUS_ABNORMAL);
+            setStatus(STREAM_SESSION_STATUS_ABNORMAL);
             return;
         }
 
         return;
     }
 
-    if (MDU_SESSION_STATUS_ABNORMAL == getStatus())
+    if (STREAM_SESSION_STATUS_ABNORMAL == getStatus())
     {
-        if (MDU_STATUS_ABNORMAL_INTERVAL <= unCostTime)
+        if (STREAM_STATUS_ABNORMAL_INTERVAL <= unCostTime)
         {
             SVS_LOG((SVS_LM_WARNING,"session[%Q] at abnormal status [%u]s, release session.",
                     getStreamId(), unCostTime));
@@ -406,62 +406,62 @@ void CMduSession::checkSessionStatus()
         SVS_LOG((SVS_LM_INFO,"session[%Q] check media channel status fail",
                 getStreamId()));
 
-        setStatus(MDU_SESSION_STATUS_ABNORMAL);
+        setStatus(STREAM_SESSION_STATUS_ABNORMAL);
         return;
     }
 
     SVS_LOG((SVS_LM_DEBUG,"session[%Q] check status success", getStreamId()));
     return;
 }
-uint64_t CMduSession::getConnStreamID()
+uint64_t CStreamSession::getConnStreamID()
 {
     return m_ullConnStreamID;
 }
 
 
-int32_t CMduSession::addReference()
+int32_t CStreamSession::addReference()
 {
     m_lReferenceCnt++;
     SVS_LOG((SVS_LM_DEBUG,"addReference session[%Q] ref[%d].", getStreamId(), m_lReferenceCnt));
     return m_lReferenceCnt;
 }
 
-int32_t CMduSession::decReference()
+int32_t CStreamSession::decReference()
 {
     m_lReferenceCnt--;
     SVS_LOG((SVS_LM_DEBUG,"decReference session[%Q] ref[%d].", getStreamId(), m_lReferenceCnt));
     return m_lReferenceCnt;
 }
 
-uint32_t CMduSession::getMediaTransType()const
+uint32_t CStreamSession::getMediaTransType()const
 {
     return m_stSessionInfo.MediaTransType;
 }
 
 
-int32_t CMduSession::handleNatMessage(CMduNatMessage &natMsg)
+int32_t CStreamSession::handleNatMessage(CStreamNatMessage &natMsg)
 {
-    if (MDU_SESSION_STATUS_WAIT_CHANNEL_REDAY > getStatus())
+    if (STREAM_SESSION_STATUS_WAIT_CHANNEL_REDAY > getStatus())
     {
         SVS_LOG((SVS_LM_WARNING,"session[%Q] handle nat message fail, status[%d] abnormal.",
                 getStreamId(),  getStatus()));
         return RET_FAIL;
     }
 
-    CMduSession* pPeerSession = (CMduSession*)natMsg.m_pPeerSession;
+    CStreamSession* pPeerSession = (CStreamSession*)natMsg.m_pPeerSession;
     if (NULL == pPeerSession)
     {
         return RET_FAIL;
     }
 
-    if (MDU_SESSION_STATUS_DISPATCHING != getStatus())
+    if (STREAM_SESSION_STATUS_DISPATCHING != getStatus())
     {
-        if (MDU_SESSION_STATUS_RECVED_NAT_REQ > pPeerSession->getStatus())
+        if (STREAM_SESSION_STATUS_RECVED_NAT_REQ > pPeerSession->getStatus())
         {
-            CMduNatMessage *pNatMsg = NULL;
+            CStreamNatMessage *pNatMsg = NULL;
             try
             {
-                pNatMsg = new CMduNatMessage(natMsg);
+                pNatMsg = new CStreamNatMessage(natMsg);
             }
             catch(...)
             {
@@ -472,7 +472,7 @@ int32_t CMduSession::handleNatMessage(CMduNatMessage &natMsg)
             m_NatMsgList.push_back(pNatMsg);
             SVS_LOG((SVS_LM_DEBUG,"session[%Q] create waiting nat message[%p].",
                          getStreamId(), pNatMsg));
-            setStatus(MDU_SESSION_STATUS_RECVED_NAT_REQ);
+            setStatus(STREAM_SESSION_STATUS_RECVED_NAT_REQ);
             SVS_LOG((SVS_LM_INFO,"session[%Q] attached session[%Q] has not NAT success.",
                     getStreamId(),
                     pPeerSession->getStreamId()));
@@ -491,7 +491,7 @@ int32_t CMduSession::handleNatMessage(CMduNatMessage &natMsg)
 
     while (!m_NatMsgList.empty())
     {
-        CMduNatMessage *pNatMsg = m_NatMsgList.front();
+        CStreamNatMessage *pNatMsg = m_NatMsgList.front();
         (void)sendNatResponse(*pNatMsg);
         SVS_LOG((SVS_LM_DEBUG,"session[%Q] delete waiting nat message[%p] when nat success.",
                 getStreamId(), pNatMsg));
@@ -499,9 +499,9 @@ int32_t CMduSession::handleNatMessage(CMduNatMessage &natMsg)
         m_NatMsgList.pop_front();
     }
 
-    if (MDU_SESSION_STATUS_DISPATCHING != getStatus())
+    if (STREAM_SESSION_STATUS_DISPATCHING != getStatus())
     {
-        setStatus(MDU_SESSION_STATUS_DISPATCHING);
+        setStatus(STREAM_SESSION_STATUS_DISPATCHING);
 
         sendStartStreamRequest(*pPeerSession);
     }
@@ -512,7 +512,7 @@ int32_t CMduSession::handleNatMessage(CMduNatMessage &natMsg)
 }//lint !e429
 
 
-void CMduSession::sendStartStreamRequest(CMduSession &peerSession)
+void CStreamSession::sendStartStreamRequest(CStreamSession &peerSession)
 {
     CRtspPacket rtspPack;
     rtspPack.setCseq(0);
@@ -537,14 +537,14 @@ void CMduSession::sendStartStreamRequest(CMduSession &peerSession)
 
     if (PLAY_TYPE_FRONT_RECORD  == getPlayType())
     {
-        CMduRtpSession *RtpSession = NULL;
+        CStreamRtpSession *RtpSession = NULL;
         if (PEER_TYPE_PU == getPeerType())
         {
-            RtpSession = dynamic_cast<CMduRtpSession*>(this);
+            RtpSession = dynamic_cast<CStreamRtpSession*>(this);
         }
         else
         {
-            RtpSession = dynamic_cast<CMduRtpSession*>(&peerSession);
+            RtpSession = dynamic_cast<CStreamRtpSession*>(&peerSession);
         }
 
         if (NULL == RtpSession)
@@ -562,7 +562,7 @@ void CMduSession::sendStartStreamRequest(CMduSession &peerSession)
     return;
 }
 
-int32_t CMduSession::handleAudioBroadcastNatMsg(CMduSession &peerSession, CMduNatMessage &natMsg)
+int32_t CStreamSession::handleAudioBroadcastNatMsg(CStreamSession &peerSession, CStreamNatMessage &natMsg)
 {
     if (RET_OK != sendNatResponse(natMsg))
     {
@@ -571,7 +571,7 @@ int32_t CMduSession::handleAudioBroadcastNatMsg(CMduSession &peerSession, CMduNa
         return RET_FAIL;
     }
 
-    setStatus(MDU_SESSION_STATUS_DISPATCHING);
+    setStatus(STREAM_SESSION_STATUS_DISPATCHING);
 
     if (PEER_TYPE_PU == m_stSessionInfo.PeerType)
     {
@@ -581,7 +581,7 @@ int32_t CMduSession::handleAudioBroadcastNatMsg(CMduSession &peerSession, CMduNa
     SVS_LOG((SVS_LM_INFO,"session[%Q] handle audio broadcast nat message success.", getStreamId()));
     return RET_OK;
 }
-int32_t CMduSession::initSessionBySdp()
+int32_t CStreamSession::initSessionBySdp()
 {
     if(0 == m_SdpInfo.length())
     {
@@ -636,16 +636,16 @@ int32_t CMduSession::initSessionBySdp()
 }
 
 
-int32_t CMduSession::handleRecvedNatRequest()
+int32_t CStreamSession::handleRecvedNatRequest()
 {
-    if (MDU_SESSION_STATUS_DISPATCHING <= getStatus())
+    if (STREAM_SESSION_STATUS_DISPATCHING <= getStatus())
     {
         return RET_OK;
     }
 
     (void)sendStartRequest();
 
-    if (MDU_SESSION_STATUS_RECVED_NAT_REQ != getStatus())
+    if (STREAM_SESSION_STATUS_RECVED_NAT_REQ != getStatus())
     {
         SVS_LOG((SVS_LM_WARNING,"session[%Q] handle recved nat message fail, status[%d] invalid.",
                         getStreamId(), getStatus()));
@@ -654,7 +654,7 @@ int32_t CMduSession::handleRecvedNatRequest()
 
     while (!m_NatMsgList.empty())
     {
-        CMduNatMessage *pNatMsg = m_NatMsgList.front();
+        CStreamNatMessage *pNatMsg = m_NatMsgList.front();
 
         if (RET_OK != sendNatResponse(*pNatMsg))
         {
@@ -669,25 +669,25 @@ int32_t CMduSession::handleRecvedNatRequest()
         m_NatMsgList.pop_front();
     }
 
-    setStatus(MDU_SESSION_STATUS_DISPATCHING);
+    setStatus(STREAM_SESSION_STATUS_DISPATCHING);
 
     SVS_LOG((SVS_LM_INFO,"session[%Q] handle recved nat message success.",
                      getStreamId()));
     return RET_OK;
 }
 
-void CMduSession::simulateNatReq()
+void CStreamSession::simulateNatReq()
 {
-    if (MDU_SESSION_STATUS_RECVED_NAT_REQ == getStatus())
+    if (STREAM_SESSION_STATUS_RECVED_NAT_REQ == getStatus())
     {
-        setStatus(MDU_SESSION_STATUS_DISPATCHING);
-        SVS_LOG((SVS_LM_DEBUG,"CMduSession:: status :MDU_SESSION_STATUS_DISPATCHING"));
+        setStatus(STREAM_SESSION_STATUS_DISPATCHING);
+        SVS_LOG((SVS_LM_DEBUG,"CStreamSession:: status :STREAM_SESSION_STATUS_DISPATCHING"));
     }
 
     return;
 }
 
-void CMduSession::Dump(ACE_HANDLE handle)const
+void CStreamSession::Dump(ACE_HANDLE handle)const
 {
     char buf[KILO + 1] = {0};
 

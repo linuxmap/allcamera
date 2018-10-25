@@ -1,5 +1,5 @@
 /*
- * MduNetMessage.cpp
+ * StreamNetMessage.cpp
  *
  *  Created on: 2016-1-16
  *      Author:
@@ -10,7 +10,7 @@
 #include <sys/types.h>
 
 
-CMduNatMessage::CMduNatMessage()
+CStreamNatMessage::CStreamNatMessage()
 {
     m_pPeerSession  = 0;
     m_pRecvHandle   = 0;
@@ -22,7 +22,7 @@ CMduNatMessage::CMduNatMessage()
     m_usNatPort     = 0;
 }
 
-CMduNatMessage::CMduNatMessage(const CMduNatMessage &natMsg)
+CStreamNatMessage::CStreamNatMessage(const CStreamNatMessage &natMsg)
 {
     m_pPeerSession  = natMsg.m_pPeerSession;        //lint !e1554
     m_pRecvHandle   = natMsg.m_pRecvHandle;         //lint !e1554
@@ -35,7 +35,7 @@ CMduNatMessage::CMduNatMessage(const CMduNatMessage &natMsg)
     memcpy(m_szSaftyInfo, natMsg.m_szSaftyInfo, SAFETY_INFO_LEN);
 }
 
-CMduNatMessage::~CMduNatMessage()
+CStreamNatMessage::~CStreamNatMessage()
 {
     m_pPeerSession  = 0;
     m_pRecvHandle   = 0;
@@ -48,7 +48,7 @@ CMduNatMessage::~CMduNatMessage()
     memset(m_szSaftyInfo, 0x0, SAFETY_INFO_LEN);
 }
 
-void CMduNatMessage::init(void* pRecvHandle,
+void CStreamNatMessage::init(void* pRecvHandle,
                         uint32_t  unMsgSeq,
                         const char*   pSaftyInfo,
                         uint32_t  unLocalIp,

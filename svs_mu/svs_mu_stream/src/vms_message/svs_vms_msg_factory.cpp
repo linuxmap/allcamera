@@ -1,5 +1,5 @@
 /*
- * MduMsgFactory.cpp
+ * StreamMsgFactory.cpp
  *
  *  Created on: 2010-12-30
  *      Author:
@@ -22,43 +22,43 @@
 
 
 
-CMduMsgFactory* CMduMsgFactory::g_mduMsgFactoy = NULL;
+CStreamMsgFactory* CStreamMsgFactory::g_streamMsgFactoy = NULL;
 
-CMduMsgFactory::CMduMsgFactory()
+CStreamMsgFactory::CStreamMsgFactory()
 {
     m_unTransNo = 0;
 }
 
-CMduMsgFactory::~CMduMsgFactory()
+CStreamMsgFactory::~CStreamMsgFactory()
 {
 }
 
 
-uint32_t CMduMsgFactory::getReqTransactionNo()
+uint32_t CStreamMsgFactory::getReqTransactionNo()
 {
     ACE_Guard<ACE_Thread_Mutex> locker(m_TransNoMutex);
     m_unTransNo++;
-    if (m_unTransNo & MDU_RESP_TRANS_NO_MASK)
+    if (m_unTransNo & STREAM_RESP_TRANS_NO_MASK)
     {
-        m_unTransNo |= ~MDU_RESP_TRANS_NO_MASK;
+        m_unTransNo |= ~STREAM_RESP_TRANS_NO_MASK;
     }
 
     return m_unTransNo;
 }
 
 
-uint32_t CMduMsgFactory::getRespTransactionNo(uint32_t unReqTransNo)const
+uint32_t CStreamMsgFactory::getRespTransactionNo(uint32_t unReqTransNo)const
 {
-    return (unReqTransNo | MDU_RESP_TRANS_NO_MASK);
+    return (unReqTransNo | STREAM_RESP_TRANS_NO_MASK);
 }
 
-int32_t CMduMsgFactory::createSvsMsg(const char* pMsg,
+int32_t CStreamMsgFactory::createSvsMsg(const char* pMsg,
                               uint32_t unMsgLength,
-                              CMduSvsMessage* &pMessage)const
+                              CStreamSvsMessage* &pMessage)const
 {
     if ((NULL == pMsg)
         || (0 == unMsgLength)
-        || (unMsgLength <= MDU_SVS_MSAG_HEADER_SIZE))
+        || (unMsgLength <= STREAM_SVS_MSAG_HEADER_SIZE))
     {
         SVS_LOG((SVS_LM_WARNING,"create svs message fail, msg len[%d]",
             unMsgLength));
@@ -79,15 +79,15 @@ int32_t CMduMsgFactory::createSvsMsg(const char* pMsg,
 }
 
 
-int32_t CMduMsgFactory::createSvsMsg(uint32_t unMsgType,
+int32_t CStreamMsgFactory::createSvsMsg(uint32_t unMsgType,
                               uint32_t unMsgLength,
                               uint32_t unTransNo,
-                              CMduSvsMessage* &pMessage)const
+                              CStreamSvsMessage* &pMessage)const
 {
     if ((0 == unMsgLength)
-        || (unMsgLength <= MDU_SVS_MSAG_HEADER_SIZE))
+        || (unMsgLength <= STREAM_SVS_MSAG_HEADER_SIZE))
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMsgFactory::createSvsMsg fail, msg len [%d] is invalid, msg type[0x%x].",
+        SVS_LOG((SVS_LM_ERROR,"CStreamMsgFactory::createSvsMsg fail, msg len [%d] is invalid, msg type[0x%x].",
             unMsgLength,
             unMsgType));
         return RET_ERR_PARAM;
@@ -96,7 +96,7 @@ int32_t CMduMsgFactory::createSvsMsg(uint32_t unMsgType,
     pMessage = createSvsMsgByType(unMsgType);
     if (NULL == pMessage)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduMsgFactory::createSvsMsg fail, msg type[0x%x].",
+        SVS_LOG((SVS_LM_ERROR,"CStreamMsgFactory::createSvsMsg fail, msg type[0x%x].",
             unMsgType));
         return RET_FAIL;
     }
@@ -105,7 +105,7 @@ int32_t CMduMsgFactory::createSvsMsg(uint32_t unMsgType,
 }
 
 
-void CMduMsgFactory::destroySvsMsg(CMduSvsMessage* &pMessage)const
+void CStreamMsgFactory::destroySvsMsg(CStreamSvsMessage* &pMessage)const
 {
     if (NULL != pMessage)
     {
@@ -117,9 +117,9 @@ void CMduMsgFactory::destroySvsMsg(CMduSvsMessage* &pMessage)const
 }
 
 
-CMduSvsMessage* CMduMsgFactory::createSvsMsgByType(uint32_t unMsgType)const
+CStreamSvsMessage* CStreamMsgFactory::createSvsMsgByType(uint32_t unMsgType)const
 {
-    CMduSvsMessage *pMessage = NULL;
+    CStreamSvsMessage *pMessage = NULL;
 
     pMessage = createReqMsg(unMsgType);
     if (NULL == pMessage)
@@ -130,28 +130,28 @@ CMduSvsMessage* CMduMsgFactory::createSvsMsgByType(uint32_t unMsgType)const
     return pMessage;
 }
 
-CMduSvsMessage* CMduMsgFactory::createReqMsg(uint32_t unMsgType)const
+CStreamSvsMessage* CStreamMsgFactory::createReqMsg(uint32_t unMsgType)const
 {
-    CMduSvsMessage *pMessage = NULL;
+    CStreamSvsMessage *pMessage = NULL;
 
     try
     {
         switch(unMsgType)
         {
-        case SVS_MSG_TYPE_MDU_SESSION_TEARDOWN_REQ:
-            pMessage = new CMduMediaTearDownReq();
+        case SVS_MSG_TYPE_STREAM_SESSION_TEARDOWN_REQ:
+            pMessage = new CStreamMediaTearDownReq();
             break;
 
-        case SVS_MSG_TYPE_MDU_LOAD_INFO_REQ:
-            pMessage = new CMduLoadInfoReq();
+        case SVS_MSG_TYPE_STREAM_LOAD_INFO_REQ:
+            pMessage = new CStreamLoadInfoReq();
             break;
 
-        case SVS_MSG_TYPE_MDU_SESSION_SETUP_REQ:
-            pMessage = new CMduMediaSetupReq();
+        case SVS_MSG_TYPE_STREAM_SESSION_SETUP_REQ:
+            pMessage = new CStreamMediaSetupReq();
             break;
 
-        case SVS_MSG_TYPE_MDU_SESSION_PLAY_REQ:
-            pMessage = new CMduMediaPlayReq();
+        case SVS_MSG_TYPE_STREAM_SESSION_PLAY_REQ:
+            pMessage = new CStreamMediaPlayReq();
             break;
 
         case SVS_MSG_TYPE_PLAYBACK_CONTROL_REQ:
@@ -162,7 +162,7 @@ CMduSvsMessage* CMduMsgFactory::createReqMsg(uint32_t unMsgType)const
             pMessage = new CFileEndNotifyReq();
             break;
         case SVS_MSG_TYPE_MEDIA_KEYFRAME_REQ:
-            pMessage = new CMduMediaKeyFrameReq();
+            pMessage = new CStreamMediaKeyFrameReq();
             break;
         default:
             break;
@@ -174,30 +174,30 @@ CMduSvsMessage* CMduMsgFactory::createReqMsg(uint32_t unMsgType)const
 
     return pMessage;
 }
-CMduSvsMessage* CMduMsgFactory::createRespMsg(uint32_t unMsgType)const
+CStreamSvsMessage* CStreamMsgFactory::createRespMsg(uint32_t unMsgType)const
 {
-    CMduSvsMessage *pMessage = NULL;
+    CStreamSvsMessage *pMessage = NULL;
 
     try
     {
         switch(unMsgType)
         {
         case SVS_MSG_TYPE_COMMON_RESP:
-        case SVS_MSG_TYPE_MDU_LOAD_INFO_RESP:
+        case SVS_MSG_TYPE_STREAM_LOAD_INFO_RESP:
         case SVS_MSG_TYPE_MU_SESSION_REPORT_RESP:
-            pMessage = new CMduCommonResp();
+            pMessage = new CStreamCommonResp();
             break;
 
-        case SVS_MSG_TYPE_MDU_SESSION_TEARDOWN_RESP:
-            pMessage = new CMduMediaTearDownResp();
+        case SVS_MSG_TYPE_STREAM_SESSION_TEARDOWN_RESP:
+            pMessage = new CStreamMediaTearDownResp();
             break;
 
-        case SVS_MSG_TYPE_MDU_SESSION_SETUP_RESP:
-            pMessage = new CMduMediaSetupResp();
+        case SVS_MSG_TYPE_STREAM_SESSION_SETUP_RESP:
+            pMessage = new CStreamMediaSetupResp();
             break;
 
-        case SVS_MSG_TYPE_MDU_SESSION_PLAY_RESP:
-            pMessage = new CMduMediaPlayResp();
+        case SVS_MSG_TYPE_STREAM_SESSION_PLAY_RESP:
+            pMessage = new CStreamMediaPlayResp();
             break;
         case SVS_MSG_TYPE_PLAYBACK_CONTROL_RESP:
             pMessage = new CPlaybackControlResp();

@@ -1,5 +1,5 @@
-#ifndef __CMDUSESSION_H__
-#define __CMDUSESSION_H__
+#ifndef __CSTREAMSESSION_H__
+#define __CSTREAMSESSION_H__
 #include <list>
 #include "svs_ace_header.h"
 #include <vms/vms.h>
@@ -10,17 +10,17 @@
 #include "svs_vms_media_setup_resp.h"
 
 
-typedef enum _enMduSessionStatus
+typedef enum _enStreamSessionStatus
 {
-    MDU_SESSION_STATUS_INIT,
-    MDU_SESSION_STATUS_WAIT_START,
-    MDU_SESSION_STATUS_WAIT_CHANNEL_REDAY,
-    MDU_SESSION_STATUS_RECVED_NAT_REQ,
-    MDU_SESSION_STATUS_DISPATCHING,
-    MDU_SESSION_STATUS_RELEASED,
+    STREAM_SESSION_STATUS_INIT,
+    STREAM_SESSION_STATUS_WAIT_START,
+    STREAM_SESSION_STATUS_WAIT_CHANNEL_REDAY,
+    STREAM_SESSION_STATUS_RECVED_NAT_REQ,
+    STREAM_SESSION_STATUS_DISPATCHING,
+    STREAM_SESSION_STATUS_RELEASED,
 
-    MDU_SESSION_STATUS_ABNORMAL
-} MDU_SESSION_STATUS;
+    STREAM_SESSION_STATUS_ABNORMAL
+} STREAM_SESSION_STATUS;
 
 typedef struct _SESSION_INFO
 {
@@ -54,24 +54,24 @@ public:
     UTAPI const char* getTransProtocol(uint32_t Type)const;
 };
 
-class CMduMediaProcessor;
-class CMduSession
+class CStreamMediaProcessor;
+class CStreamSession
 {
-    friend class CMduSessionFactory;
+    friend class CStreamSessionFactory;
 public:
-    CMduSession();
+    CStreamSession();
 
-    virtual ~CMduSession();
+    virtual ~CStreamSession();
 
     int32_t init(const char* pszContent,PLAY_TYPE enPlayType);
 
     void close();
 
-    int32_t start(CMduMediaSetupResp *pResp);
+    int32_t start(CStreamMediaSetupResp *pResp);
 
-    void setStatus(MDU_SESSION_STATUS enStatus);
+    void setStatus(STREAM_SESSION_STATUS enStatus);
 
-    MDU_SESSION_STATUS getStatus();
+    STREAM_SESSION_STATUS getStatus();
 
     void setSessionId(uint64_t ullSessionId);
 
@@ -119,9 +119,9 @@ public:
 
     virtual int32_t sendMediaData(ACE_Message_Block **pMbArray, uint32_t MsgCount) = 0;
 
-    virtual int32_t handleInnerMessage(const MDU_INNER_MSG &innerMsg,
+    virtual int32_t handleInnerMessage(const STREAM_INNER_MSG &innerMsg,
                                    uint32_t unMsgSize,
-                                   CMduSession &peerSession) = 0;
+                                   CStreamSession &peerSession) = 0;
 
     virtual int32_t sendVcrMessage(CRtspPacket &rtspPack) = 0;
 
@@ -148,7 +148,7 @@ protected:
 
     UTAPI int32_t decReference();
 
-    UTAPI int32_t handleNatMessage(CMduNatMessage &natMsg);
+    UTAPI int32_t handleNatMessage(CStreamNatMessage &natMsg);
 
     virtual int32_t allocMediaPort() = 0;
 
@@ -156,25 +156,25 @@ protected:
 
     virtual int32_t stopMediaPort() = 0;
 
-    virtual int32_t sendNatResponse(CMduNatMessage &natMsg) = 0;
+    virtual int32_t sendNatResponse(CStreamNatMessage &natMsg) = 0;
 
     virtual bool checkMediaChannelStatus() = 0;
 
     virtual int32_t setRemoteAddress() = 0;
 
-    void sendStartStreamRequest(CMduSession &peerSession);
+    void sendStartStreamRequest(CStreamSession &peerSession);
 
 private:
-    typedef std::list<CMduNatMessage*>   MDU_NAT_LIST;
-    typedef MDU_NAT_LIST::iterator       MDU_NAT_LIST_ITER;
+    typedef std::list<CStreamNatMessage*>   STREAM_NAT_LIST;
+    typedef STREAM_NAT_LIST::iterator       STREAM_NAT_LIST_ITER;
 
 private:
-    int32_t handleAudioBroadcastNatMsg(CMduSession &peerSession, CMduNatMessage &natMsg);
+    int32_t handleAudioBroadcastNatMsg(CStreamSession &peerSession, CStreamNatMessage &natMsg);
     int32_t initSessionBySdp();
 protected:
     int32_t                    m_lReferenceCnt;
     ACE_Thread_Mutex           m_StatusMutex;
-    MDU_SESSION_STATUS         m_enSessionStatus;
+    STREAM_SESSION_STATUS         m_enSessionStatus;
     uint32_t                   m_ulStatusBeginTime;
 
     char                       m_szPeerContent[ID_LEN];
@@ -198,11 +198,11 @@ protected:
     uint32_t                   m_unVideoInterleaveNum;
     uint32_t                   m_unAudioInterleaveNum;
 
-    MDU_NAT_LIST               m_NatMsgList;
+    STREAM_NAT_LIST               m_NatMsgList;
     bool                       m_bStartPlayFlag;
 
 };
 
-#endif // __CMDUSESSION_H__
+#endif // __CSTREAMSESSION_H__
 
 

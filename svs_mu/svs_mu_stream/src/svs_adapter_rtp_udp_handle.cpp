@@ -41,13 +41,13 @@ int32_t CRtpUdpHandle::handleRecvedData(ACE_Message_Block *pMsg, ACE_INET_Addr &
         return RET_OK;
     }
 
-    MDU_TRANSMIT_PACKET *pPacket = (MDU_TRANSMIT_PACKET *)(void*) pMsg->base();
-    pPacket->enPacketType        = MDU_PACKET_TYPE_MEDIA_DATA;
+    STREAM_TRANSMIT_PACKET *pPacket = (STREAM_TRANSMIT_PACKET *)(void*) pMsg->base();
+    pPacket->enPacketType        = STREAM_PACKET_TYPE_MEDIA_DATA;
     pPacket->PuStreamId          = m_ullStreamID;
 
     int32_t nRet = RET_OK;
 
-    nRet = CMduMediaExchange::instance()->addData(pMsg);
+    nRet = CStreamMediaExchange::instance()->addData(pMsg);
 
     return nRet;
 }
@@ -59,24 +59,24 @@ int32_t CRtpUdpHandle::handleRtspMessage(ACE_Message_Block *pMsg, const ACE_INET
         return RET_FAIL;
     }
 
-    MDU_TRANSMIT_PACKET *pPacket = (MDU_TRANSMIT_PACKET *)(void*) pMsg->base();
+    STREAM_TRANSMIT_PACKET *pPacket = (STREAM_TRANSMIT_PACKET *)(void*) pMsg->base();
     uint32_t unRtspLen       = 0;
     if (RET_OK != CRtspPacket::checkRtsp(pPacket->cData,
-                (pMsg->length() - sizeof(MDU_TRANSMIT_PACKET)) + 1,
+                (pMsg->length() - sizeof(STREAM_TRANSMIT_PACKET)) + 1,
                 unRtspLen))
     {
         return RET_FAIL;
     }
 
-    fillMduInnerMsg(pMsg->base(),
+    fillStreamInnerMsg(pMsg->base(),
             m_ullStreamID,
             (void*) this,
             remoteAddr.get_ip_address(),
             remoteAddr.get_port_number(),
             INNER_MSG_RTSP,
-            sizeof(MDU_TRANSMIT_PACKET) - 1);
+            sizeof(STREAM_TRANSMIT_PACKET) - 1);
 
-    return CMduServiceTask::instance()->enqueueInnerMessage(pMsg);
+    return CStreamServiceTask::instance()->enqueueInnerMessage(pMsg);
 
 }
 
@@ -87,9 +87,9 @@ int32_t CRtpUdpHandle::handleDummyMessage(ACE_Message_Block *pMsg, const ACE_INE
         return RET_FAIL;
     }
 
-    uint32_t ulSize = (pMsg->length() - sizeof(MDU_TRANSMIT_PACKET)) + 1;
+    uint32_t ulSize = (pMsg->length() - sizeof(STREAM_TRANSMIT_PACKET)) + 1;
 
-    MDU_TRANSMIT_PACKET *pPacket = (MDU_TRANSMIT_PACKET *)(void*) pMsg->base();
+    STREAM_TRANSMIT_PACKET *pPacket = (STREAM_TRANSMIT_PACKET *)(void*) pMsg->base();
 
     uint32_t ulDummy = *(uint32_t*)(void*)&pPacket->cData;
 
@@ -99,14 +99,14 @@ int32_t CRtpUdpHandle::handleDummyMessage(ACE_Message_Block *pMsg, const ACE_INE
         return RET_FAIL;
     }
 
-    fillMduInnerMsg(pMsg->base(),
+    fillStreamInnerMsg(pMsg->base(),
             m_ullStreamID,
             (void*) this,
             remoteAddr.get_ip_address(),
             remoteAddr.get_port_number(),
             INNER_MSG_RTPDUMMY,
-            sizeof(MDU_TRANSMIT_PACKET) - 1);
+            sizeof(STREAM_TRANSMIT_PACKET) - 1);
 
-    return CMduServiceTask::instance()->enqueueInnerMessage(pMsg);
+    return CStreamServiceTask::instance()->enqueueInnerMessage(pMsg);
 }
 

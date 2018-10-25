@@ -220,7 +220,7 @@ void CMediaSdp::setSsrc(std::string& strSsrc)
 }
 void CMediaSdp::setSsrcByGB28181Dev(PLAY_TYPE enPlayType,uint32_t ulIndex)
 {
-    CMduSccConnector* pConnect = CMduServiceTask::instance()->getSccConnector();
+    CStreamSccConnector* pConnect = CStreamServiceTask::instance()->getSccConnector();
     if (NULL == pConnect)
     {
         return ;

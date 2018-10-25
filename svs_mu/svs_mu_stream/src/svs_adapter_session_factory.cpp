@@ -9,47 +9,47 @@
 #include "svs_adapter_ehome_session.h"
 int32_t CSessionStatusTimer::handle_timeout(const ACE_Time_Value &tv, const void *arg)
 {
-    CMduSessionFactory::instance()->checkSessionStatus();
+    CStreamSessionFactory::instance()->checkSessionStatus();
 
     return 0;
 }
 
 
-CMduSessionFactory* CMduSessionFactory::g_sessionFactory = NULL;
+CStreamSessionFactory* CStreamSessionFactory::g_sessionFactory = NULL;
 
-CMduSessionFactory::CMduSessionFactory()
+CStreamSessionFactory::CStreamSessionFactory()
 {
     m_pStatusTimer = NULL;
     m_SessionIndex = 1; // the session id from 1
 }
 
-CMduSessionFactory::~CMduSessionFactory()
+CStreamSessionFactory::~CStreamSessionFactory()
 {
     m_pStatusTimer = NULL;
 }
 
-int32_t CMduSessionFactory::init()
+int32_t CStreamSessionFactory::init()
 {
     m_SessionMap.clear();
 
-    SVS_LOG((SVS_LM_INFO,"CMduSessionFactory::init success."));
+    SVS_LOG((SVS_LM_INFO,"CStreamSessionFactory::init success."));
     return RET_OK;
 }
 
-void CMduSessionFactory::close()
+void CStreamSessionFactory::close()
 {
     if (m_SessionMap.size() > 0)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduSessionFactory::close fail, still has session in factory."));
+        SVS_LOG((SVS_LM_ERROR,"CStreamSessionFactory::close fail, still has session in factory."));
         return;
     }
 
     stopStatusCheckTimer();
-    SVS_LOG((SVS_LM_INFO,"CMduSessionFactory::close success."));
+    SVS_LOG((SVS_LM_INFO,"CStreamSessionFactory::close success."));
     return;
 }
 
-CMduSession* CMduSessionFactory::createSourceSession(std::string& strContent,
+CStreamSession* CStreamSessionFactory::createSourceSession(std::string& strContent,
                                                 PEER_TYPE unPeerType,
                                                 SESSION_TYPE unSessionType,
                                                 bool bLocalFlag)
@@ -61,7 +61,7 @@ CMduSession* CMduSessionFactory::createSourceSession(std::string& strContent,
     }
 
     uint64_svs sessionIndx = 0;
-    CMduSession* pMduSession = NULL;
+    CStreamSession* pStreamSession = NULL;
     STREAM_SESSION_ITER iter;
     CONTENT_SESSION_ITER coniter;
 
@@ -71,24 +71,24 @@ CMduSession* CMduSessionFactory::createSourceSession(std::string& strContent,
     iter = m_SessionMap.find(sessionIndx);
     if (m_SessionMap.end() != iter)
     {
-        pMduSession = iter->second;
-        (void)pMduSession->addReference();
+        pStreamSession = iter->second;
+        (void)pStreamSession->addReference();
     }
     else
     {
-        pMduSession = createConcreteSession(unPeerType,unSessionType, bLocalFlag);
-        if (NULL != pMduSession)
+        pStreamSession = createConcreteSession(unPeerType,unSessionType, bLocalFlag);
+        if (NULL != pStreamSession)
         {
-            pMduSession->setSessionId(sessionIndx);
-            m_SessionMap.insert(std::make_pair(sessionIndx, pMduSession));
+            pStreamSession->setSessionId(sessionIndx);
+            m_SessionMap.insert(std::make_pair(sessionIndx, pStreamSession));
             m_ContentMap.insert(std::make_pair(strContent, sessionIndx));
         }
     }
 
-    return pMduSession;
+    return pStreamSession;
 }
 
-CMduSession* CMduSessionFactory::createSession(PEER_TYPE unPeerType,
+CStreamSession* CStreamSessionFactory::createSession(PEER_TYPE unPeerType,
                                                 SESSION_TYPE unSessionType,
                                                 bool bLocalFlag)
 {
@@ -99,52 +99,52 @@ CMduSession* CMduSessionFactory::createSession(PEER_TYPE unPeerType,
     }
 
     uint64_svs sessionIndx = m_SessionIndex++;
-    CMduSession* pMduSession = NULL;
+    CStreamSession* pStreamSession = NULL;
     STREAM_SESSION_ITER iter;
 
 
     iter = m_SessionMap.find(sessionIndx);
     if (m_SessionMap.end() != iter)
     {
-        pMduSession = iter->second;
-        (void)pMduSession->addReference();
+        pStreamSession = iter->second;
+        (void)pStreamSession->addReference();
     }
     else
     {
 
-        pMduSession = createConcreteSession(unPeerType,unSessionType, bLocalFlag);
-        if (NULL != pMduSession)
+        pStreamSession = createConcreteSession(unPeerType,unSessionType, bLocalFlag);
+        if (NULL != pStreamSession)
         {
-            pMduSession->setSessionId(sessionIndx);
-            m_SessionMap.insert(std::make_pair(sessionIndx, pMduSession));
+            pStreamSession->setSessionId(sessionIndx);
+            m_SessionMap.insert(std::make_pair(sessionIndx, pStreamSession));
         }
     }
 
-    return pMduSession;
+    return pStreamSession;
 }
 
 
-void CMduSessionFactory::releaseSession(CMduSession* &pMduSession)
+void CStreamSessionFactory::releaseSession(CStreamSession* &pStreamSession)
 {
-    if (NULL == pMduSession)
+    if (NULL == pStreamSession)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduSessionFactory::releaseSession fail, session is null."));
+        SVS_LOG((SVS_LM_ERROR,"CStreamSessionFactory::releaseSession fail, session is null."));
         return;
     }
 
     ACE_Guard<ACE_Recursive_Thread_Mutex> locker(m_SessionMapMutex);
 
-    if (pMduSession->decReference() > 0)
+    if (pStreamSession->decReference() > 0)
     {
         return;
     }
 
     STREAM_SESSION_ITER iter;
-    iter = m_SessionMap.find(pMduSession->getStreamId());
+    iter = m_SessionMap.find(pStreamSession->getStreamId());
     if (iter == m_SessionMap.end())
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduSessionFactory::releaseSession can't find session. stream id[%Q].",
-            pMduSession->getStreamId()));
+        SVS_LOG((SVS_LM_ERROR,"CStreamSessionFactory::releaseSession can't find session. stream id[%Q].",
+            pStreamSession->getStreamId()));
         return;
     }
     else
@@ -152,13 +152,13 @@ void CMduSessionFactory::releaseSession(CMduSession* &pMduSession)
         m_SessionMap.erase(iter);
     }
 
-    std::string strContentID = pMduSession->getContentID();
+    std::string strContentID = pStreamSession->getContentID();
     CONTENT_SESSION_MAP::iterator Contentiter = m_ContentMap.find(strContentID);
 
     while(Contentiter != m_ContentMap.end())
     {
         uint64_svs ulStreamID = Contentiter->second;
-        if(ulStreamID == pMduSession->getStreamId())
+        if(ulStreamID == pStreamSession->getStreamId())
         {
             m_ContentMap.erase(Contentiter);
             break;
@@ -166,44 +166,44 @@ void CMduSessionFactory::releaseSession(CMduSession* &pMduSession)
         ++Contentiter;
     }
 
-    pMduSession->close();
+    pStreamSession->close();
 
     SVS_LOG((SVS_LM_INFO,"session factory release session[%Q] success.",
-            pMduSession->getStreamId()));
+            pStreamSession->getStreamId()));
 
-    delete pMduSession;
-    pMduSession = NULL;
+    delete pStreamSession;
+    pStreamSession = NULL;
 
     return;
 }
 
-void CMduSessionFactory::releaseSession(uint64_svs streamID)
+void CStreamSessionFactory::releaseSession(uint64_svs streamID)
 {
     ACE_Guard<ACE_Recursive_Thread_Mutex> locker(m_SessionMapMutex);
 
     STREAM_SESSION_ITER iter = m_SessionMap.find(streamID);
     if (m_SessionMap.end() == iter)
     {
-        SVS_LOG((SVS_LM_ERROR,"CMduSessionFactory::releaseSession can't find session. stream id[%Q].",
+        SVS_LOG((SVS_LM_ERROR,"CStreamSessionFactory::releaseSession can't find session. stream id[%Q].",
                         streamID));
         return;
     }
 
-    CMduSession *pMduSession = iter->second;
-    if (pMduSession->decReference() > 0)
+    CStreamSession *pStreamSession = iter->second;
+    if (pStreamSession->decReference() > 0)
     {
         return;
     }
 
     m_SessionMap.erase(iter);
 
-    std::string strContentID = pMduSession->getContentID();
+    std::string strContentID = pStreamSession->getContentID();
     CONTENT_SESSION_MAP::iterator Contentiter = m_ContentMap.find(strContentID);
 
     while(Contentiter != m_ContentMap.end())
     {
         uint64_svs ulStreamID = Contentiter->second;
-        if(ulStreamID == pMduSession->getStreamId())
+        if(ulStreamID == pStreamSession->getStreamId())
         {
             m_ContentMap.erase(Contentiter);
             break;
@@ -211,17 +211,17 @@ void CMduSessionFactory::releaseSession(uint64_svs streamID)
         ++Contentiter;
     }
 
-    pMduSession->close();
-    delete pMduSession;
+    pStreamSession->close();
+    delete pStreamSession;
 
     SVS_LOG((SVS_LM_INFO,"session factory release session[%Q] success.",
                     streamID));
     return;
 }
 
-CMduSession* CMduSessionFactory::findSession(uint64_svs streamID)
+CStreamSession* CStreamSessionFactory::findSession(uint64_svs streamID)
 {
-    CMduSession* pMduSession = NULL;
+    CStreamSession* pStreamSession = NULL;
     ACE_Guard<ACE_Recursive_Thread_Mutex> locker(m_SessionMapMutex);
     STREAM_SESSION_ITER iter;
     iter = m_SessionMap.find(streamID);
@@ -231,19 +231,19 @@ CMduSession* CMduSessionFactory::findSession(uint64_svs streamID)
     }
     else
     {
-        pMduSession = iter->second;
+        pStreamSession = iter->second;
     }
 
-    (void)pMduSession->addReference();
+    (void)pStreamSession->addReference();
 
-    return pMduSession;
+    return pStreamSession;
 }
 
-CMduSession* CMduSessionFactory::findSession(std::string& strContent)
+CStreamSession* CStreamSessionFactory::findSession(std::string& strContent)
 {
     ACE_Guard<ACE_Recursive_Thread_Mutex> locker(m_SessionMapMutex);
     uint64_svs sessionIndx = 0;
-    CMduSession* pMduSession = NULL;
+    CStreamSession* pStreamSession = NULL;
     STREAM_SESSION_ITER iter;
     CONTENT_SESSION_ITER coniter;
 
@@ -264,18 +264,18 @@ CMduSession* CMduSessionFactory::findSession(std::string& strContent)
     }
     else
     {
-        pMduSession = iter->second;
+        pStreamSession = iter->second;
     }
 
-    (void)pMduSession->addReference();
+    (void)pStreamSession->addReference();
 
-    return pMduSession;
+    return pStreamSession;
 }
 
 
-CMduSession* CMduSessionFactory::findSessionNotAddRef(uint64_svs streamID)
+CStreamSession* CStreamSessionFactory::findSessionNotAddRef(uint64_svs streamID)
 {
-    CMduSession* pMduSession = NULL;
+    CStreamSession* pStreamSession = NULL;
     ACE_Guard<ACE_Recursive_Thread_Mutex> locker(m_SessionMapMutex);
     STREAM_SESSION_ITER iter;
     iter = m_SessionMap.find(streamID);
@@ -285,28 +285,28 @@ CMduSession* CMduSessionFactory::findSessionNotAddRef(uint64_svs streamID)
     }
     else
     {
-        pMduSession = iter->second;
+        pStreamSession = iter->second;
     }
 
-    return pMduSession;
+    return pStreamSession;
 }
 
-void CMduSessionFactory::getAllSession(CMduSessionList& sessionList)
+void CStreamSessionFactory::getAllSession(CStreamSessionList& sessionList)
 {
-    CMduSession* pMduSession = NULL;
+    CStreamSession* pStreamSession = NULL;
     ACE_Guard<ACE_Recursive_Thread_Mutex> locker(m_SessionMapMutex);
     STREAM_SESSION_ITER iter;
     for (iter = m_SessionMap.begin(); iter != m_SessionMap.end(); ++iter)
     {
-        pMduSession = iter->second;
-        sessionList.push_back(pMduSession);
-        (void)pMduSession->addReference();
+        pStreamSession = iter->second;
+        sessionList.push_back(pStreamSession);
+        (void)pStreamSession->addReference();
     }
 
     return;
 }
 
-void CMduSessionFactory::getSessionCount
+void CStreamSessionFactory::getSessionCount
 (
     uint32_t& inputNum,
     uint32_t& outputNum,
@@ -318,14 +318,14 @@ void CMduSessionFactory::getSessionCount
     outputNum = 0;
     bidirectionNum = 0;
 
-    CMduSession* pMduSession = NULL;
+    CStreamSession* pStreamSession = NULL;
     ACE_Guard<ACE_Recursive_Thread_Mutex> locker(m_SessionMapMutex);
     STREAM_SESSION_ITER iter;
     for (iter = m_SessionMap.begin(); iter != m_SessionMap.end(); ++iter)
     {
-        pMduSession = iter->second;
+        pStreamSession = iter->second;
 
-        switch (pMduSession->getTransDirection())
+        switch (pStreamSession->getTransDirection())
         {
             case TRANS_DIRECTION_RECVONLY:
             {
@@ -354,45 +354,45 @@ void CMduSessionFactory::getSessionCount
     return;
 }
 
-void CMduSessionFactory::checkSessionStatus()
+void CStreamSessionFactory::checkSessionStatus()
 {
-    CMduSession* pMduSession = NULL;
+    CStreamSession* pStreamSession = NULL;
     ACE_Guard<ACE_Recursive_Thread_Mutex> locker(m_SessionMapMutex);
     STREAM_SESSION_ITER iter;
     for (iter = m_SessionMap.begin(); iter != m_SessionMap.end(); ++iter)
     {
-        pMduSession = iter->second;
-        pMduSession->checkSessionStatus();
+        pStreamSession = iter->second;
+        pStreamSession->checkSessionStatus();
     }
 
     return;
 }
 
 
-CMduSession* CMduSessionFactory::createConcreteSession(PEER_TYPE unPeerType,SESSION_TYPE unSessionType, bool bLocalFlag) const
+CStreamSession* CStreamSessionFactory::createConcreteSession(PEER_TYPE unPeerType,SESSION_TYPE unSessionType, bool bLocalFlag) const
 {
-    CMduSession *pSession = NULL;
+    CStreamSession *pSession = NULL;
     if (bLocalFlag)
     {
         if(RTSP_SESSION == unSessionType)
         {
-            pSession = new CMduStdRtpSession();
+            pSession = new CStreamStdRtpSession();
         }
         else if(RTMP_SESSION == unSessionType)
         {
-            pSession = new CMduRtmpSession();
+            pSession = new CStreamRtmpSession();
         }
     }
     else
     {
         if(EHOME_SESSION == unSessionType)
         {
-            pSession = new CMduEhomeSession();
+            pSession = new CStreamEhomeSession();
         }
         else {
-            pSession = new CMduRtpSession();
+            pSession = new CStreamRtpSession();
         }
-        SVS_LOG((SVS_LM_INFO,"CMduSessionFactory ::create CMduRtpSession."));
+        SVS_LOG((SVS_LM_INFO,"CStreamSessionFactory ::create CStreamRtpSession."));
     }
 
     if(pSession)
@@ -402,9 +402,9 @@ CMduSession* CMduSessionFactory::createConcreteSession(PEER_TYPE unPeerType,SESS
     return pSession;
 }
 
-void CMduSessionFactory::startStatusCheckTimer()
+void CStreamSessionFactory::startStatusCheckTimer()
 {
-    ACE_Reactor* pReactor = CMduServiceTask::instance()->getTimerReactor();
+    ACE_Reactor* pReactor = CStreamServiceTask::instance()->getTimerReactor();
     if (NULL == pReactor)
     {
         return;
@@ -420,7 +420,7 @@ void CMduSessionFactory::startStatusCheckTimer()
     }
 
 
-    ACE_Time_Value tv(MDU_STATUS_CHECK_INTERVAL, 0);
+    ACE_Time_Value tv(STREAM_STATUS_CHECK_INTERVAL, 0);
     int32_t TimerId = pReactor->schedule_timer(m_pStatusTimer, this, tv, tv);
     if (-1 == TimerId)
     {
@@ -432,14 +432,14 @@ void CMduSessionFactory::startStatusCheckTimer()
     return;
 }
 
-void CMduSessionFactory::stopStatusCheckTimer()
+void CStreamSessionFactory::stopStatusCheckTimer()
 {
     if (NULL == m_pStatusTimer)
     {
         return;
     }
 
-    ACE_Reactor* pReactor = CMduServiceTask::instance()->getTimerReactor();
+    ACE_Reactor* pReactor = CStreamServiceTask::instance()->getTimerReactor();
     if (NULL == pReactor)
     {
         return;

@@ -4,51 +4,51 @@
 #include "svs_adapter_service_task.h"
 
 
-CMduMediaKeyFrameReq::CMduMediaKeyFrameReq()
+CStreamMediaKeyFrameReq::CStreamMediaKeyFrameReq()
 {
     m_pReq = NULL;
 }
-CMduMediaKeyFrameReq::~CMduMediaKeyFrameReq()
+CStreamMediaKeyFrameReq::~CStreamMediaKeyFrameReq()
 {
 }
 
-int32_t CMduMediaKeyFrameReq::create(uint32_t unLength,
+int32_t CStreamMediaKeyFrameReq::create(uint32_t unLength,
             uint32_t unTransNo)
 {
-    int32_t nRet = CMduSvsMessage::create(unLength, unTransNo);
+    int32_t nRet = CStreamSvsMessage::create(unLength, unTransNo);
     if (RET_OK != nRet)
     {
         return nRet;
     }
 
-    m_pReq = (SVS_MSG_MDU_KEY_FRAME_REQ*)(void*)getBinaryData();
+    m_pReq = (SVS_MSG_STREAM_KEY_FRAME_REQ*)(void*)getBinaryData();
     return RET_OK;
 }
 
-int32_t CMduMediaKeyFrameReq::initMsgBody(uint8_t* pszDevID)
+int32_t CStreamMediaKeyFrameReq::initMsgBody(uint8_t* pszDevID)
 {
     memcpy(m_pReq->DeviceID,pszDevID,DEVICE_ID_LEN);
     return RET_OK;
 }
 
-uint32_t CMduMediaKeyFrameReq::getMsgType()
+uint32_t CStreamMediaKeyFrameReq::getMsgType()
 {
     return SVS_MSG_TYPE_MEDIA_KEYFRAME_REQ;
 }
 
-int32_t CMduMediaKeyFrameReq::handleMessage()
+int32_t CStreamMediaKeyFrameReq::handleMessage()
 {
-   return CMduServiceTask::instance()->sendMsgToSCC(this);
+   return CStreamServiceTask::instance()->sendMsgToSCC(this);
 }
 
-void CMduMediaKeyFrameReq::dump() const
+void CStreamMediaKeyFrameReq::dump() const
 {
     if (NULL == m_pReq)
     {
         return;
     }
 
-    CMduSvsMessage::dump();
+    CStreamSvsMessage::dump();
     char szDevID[DEVICE_ID_LEN+1] = { 0 };
     memcpy(szDevID,m_pReq->DeviceID,DEVICE_ID_LEN);
 
