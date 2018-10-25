@@ -21,9 +21,18 @@ private:
     static void preview_data_cb(LONG  iPreviewHandle,NET_EHOME_PREVIEW_CB_MSG *pPreviewCBMsg,void *pUserData);
     void    send_ehome_stream(char* pdata,uint32_t ulDataLen);
 private:
+    void ProgramStreamPackHeader(es_frame_info& FrameInfo,char*& pData,uint32_t& ulLens);
+    void ProgramSystemPackHeader(es_frame_info& FrameInfo,char*& pData,uint32_t& ulLens);
+    void ProgramStreamMap(es_frame_info& FrameInfo,char*& pData,uint32_t& ulLens);
+    void ProgramPrivateHeader(es_frame_info& FrameInfo,char*& pData,uint32_t& ulLens);
+    void ProgramEStramHead(es_frame_info& FrameInfo,char*& pData,uint32_t& ulLens);
+    void ProgramKnowFrame(es_frame_info& FrameInfo,char*& pData,uint32_t& ulLens);
+private:
     uint64_t    m_ullStreamId;
     int32_t     m_lSessionId;
     int32_t     m_lLinkHandle;
+    uint32_t    m_VideoPayload;
+    uint32_t    m_AudioPayload;
 };
 
 class CEhomeHandle : public CHandle

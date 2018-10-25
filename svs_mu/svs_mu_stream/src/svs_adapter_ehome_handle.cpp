@@ -3,7 +3,6 @@
 #include "svs_adapter_time.h"
 #include <vms/vms.h>
 #include "svs_adapter_ehome_handle.h"
-
 #include "svs_adapter_net_conn_manager.h"
 #include "svs_adapter_media_data_queue.h"
 #include "svs_adapter_media_block_buffer.h"
@@ -12,6 +11,8 @@
 #include "svs_adapter_media_exchange.h"
 #include "svs_adapter_session_factory.h"
 #include "svs_utility.h"
+
+#define __PRINT_MEDIA__
 
 struct ehome_ps_start_code
 {
@@ -22,9 +23,11 @@ struct ehome_ps_start_code
 
 CEhomeStreamHandle::CEhomeStreamHandle()
 {
-    m_ullStreamId = 0;
-    m_lSessionId = -1;
-    m_lLinkHandle = -1;
+    m_ullStreamId  = 0;
+    m_lSessionId   = -1;
+    m_lLinkHandle  = -1;
+    m_VideoPayload = PT_TYPE_MAX;
+    m_AudioPayload = PT_TYPE_MAX;
 }
 CEhomeStreamHandle::~CEhomeStreamHandle()
 {
@@ -87,6 +90,7 @@ void CEhomeStreamHandle::handle_preview_data(LONG  iPreviewHandle,
 }
 void CEhomeStreamHandle::send_ehome_stream(char* pdata,uint32_t ulDataLen)
 {
+    /* skip the ps head */
 }
 
 
@@ -96,6 +100,309 @@ void CEhomeStreamHandle::preview_data_cb(LONG  iPreviewHandle,
     CEhomeStreamHandle* pHandle = (CEhomeStreamHandle*)pUserData;
     pHandle->handle_preview_data(iPreviewHandle, pPreviewCBMsg);
 }
+
+void CEhomeStreamHandle::ProgramStreamPackHeader(es_frame_info& FrameInfo,char*& pData,uint32_t& ulLens)
+{
+    //00 00 01 ba
+    program_stream_pack_header *PsHead = (program_stream_pack_header *)pData;
+    if ((PsHead->PackStart.start_code[0] != 0x00)
+        ||(PsHead->PackStart.start_code[1] != 0x00)
+        ||(PsHead->PackStart.start_code[2] != 0x01)
+        || (PsHead->PackStart.stream_id[0] != 0xBA))
+    {
+        return;
+    }
+
+    uint32_t ulPsHeadLen = sizeof(program_stream_pack_header) + PsHead->pack_stuffing_length;
+
+    if(ulPsHeadLen >= ulLens)
+    {
+        /* error */
+        return;
+    }
+    if(0 < ulPsHeadLen)
+    {
+        ulLens -= ulPsHeadLen;
+        pData += ulPsHeadLen;
+    }
+    return;
+}
+void CEhomeStreamHandle::ProgramSystemPackHeader(es_frame_info& FrameInfo,char*& pData,uint32_t& ulLens)
+{
+    //00 00 01 bb
+    program_system_pack_header *SysHead = (program_system_pack_header *)pData;
+    if ((SysHead->PackStart.start_code[0] != 0x00)
+        || (SysHead->PackStart.start_code[1] != 0x00)
+        || (SysHead->PackStart.start_code[2] != 0x01)
+        || (SysHead->PackStart.stream_id[0] != 0xBB))
+    {
+        return;
+    }
+    littel_endian_size psm_length;// from PackLength;
+    psm_length.byte[0] = SysHead->PackLength.byte[1];
+    psm_length.byte[1] = SysHead->PackLength.byte[0];
+
+    uint32_t ulSysHeadLen = sizeof(pack_start_code) + sizeof(littel_endian_size) + psm_length.length;
+
+    if(ulSysHeadLen >= ulLens)
+    {
+        /* error */
+        return;
+    }
+
+    if(0 < ulSysHeadLen)
+    {
+        pData  += ulSysHeadLen;
+        ulLens -= ulSysHeadLen;
+    }
+
+    return;
+}
+void CEhomeStreamHandle::ProgramStreamMap(es_frame_info& FrameInfo,char*& pData,uint32_t& ulLens)
+{
+
+    program_stream_map* PSMPack = (program_stream_map*)pData;
+
+    if (ulLens < sizeof(program_stream_map))
+    {
+        return;
+    }
+    if ((PSMPack->PackStart.start_code[0] != 0x00)
+        || (PSMPack->PackStart.start_code[1] != 0x00)
+        || (PSMPack->PackStart.start_code[2] != 0x01)
+        || (PSMPack->PackStart.stream_id[0] != 0xBC))
+    {
+        return;
+    }
+
+    littel_endian_size psm_length;
+    psm_length.byte[0] = PSMPack->PackLength.byte[1];
+    psm_length.byte[1] = PSMPack->PackLength.byte[0];
+
+    uint32_t ulPsMapLen = sizeof(pack_start_code) + sizeof(littel_endian_size) + psm_length.length;
+
+    if(ulPsMapLen >= ulLens)
+    {
+        /* error */
+        return;
+    }
+
+
+
+    if(PT_TYPE_MAX != m_VideoPayload)
+    {
+        /* have parser the pa map head */
+        if(0 < ulPsMapLen)
+        {
+            ulLens -= ulPsMapLen;
+            pData  += ulPsMapLen;
+        }
+        return;
+    }
+
+    littel_endian_size psm_info_Length;
+    psm_info_Length.byte[0] = PSMPack->program_stream_info_length[1];
+    psm_info_Length.byte[1] = PSMPack->program_stream_info_length[0];
+
+    uint32_t ulPsInfolength = psm_info_Length.length;
+
+    pData += sizeof(program_stream_map) + ulPsInfolength + sizeof(program_elementary_stream_map_info);
+
+    int32_t ulPsMapInfoLength
+        = ulPsMapLen - sizeof(program_stream_map)
+          - ulPsInfolength - sizeof(program_elementary_stream_map_info)
+          - sizeof(uint32_t); /*unsigned char CRC_32[4];*/
+
+    while (ulPsMapInfoLength >= 4) {
+
+        program_elementary_stream_info* eInfo
+                  = (program_elementary_stream_info*)(void*)pData;
+
+        /*video*/
+        if(VIDEO_STREAM_TYPE_MPEG4 == eInfo->stream_type)
+        {
+            m_VideoPayload = PT_TYPE_MPEG4;
+        }
+        else if(VIDEO_STREAM_TYPE_H264 == eInfo->stream_type)
+        {
+            m_VideoPayload = PT_TYPE_H264;
+        }
+        else if(VIDEO_STREAM_TYPE_H265 == eInfo->stream_type)
+        {
+            m_VideoPayload = PT_TYPE_H265;
+        }
+        /*audio*/
+        else if(AUDIO_STREAM_TYPE_G711 == eInfo->stream_type)
+        {
+            m_AudioPayload = PT_TYPE_PCMA;
+        }
+
+        littel_endian_size es_info_Length;
+        es_info_Length.byte[0] = eInfo->elementary_stream_info_length[1];
+        es_info_Length.byte[1] = eInfo->elementary_stream_info_length[0];
+        uint32_t esInfoLen = es_info_Length.length;
+#ifdef __PRINT_MEDIA__
+        SVS_LOG((SVS_LM_DEBUG,"*******system head stream type[0x%02x],esInfoLen:[%d]**************",eInfo->stream_type,esInfoLen));
+#endif
+
+        pData  += sizeof(program_elementary_stream_info) + esInfoLen;
+        ulLens -= sizeof(program_elementary_stream_info) + esInfoLen;;
+
+        ulPsMapInfoLength -= sizeof(program_elementary_stream_info) + esInfoLen;
+    }
+
+    if(0 < ulPsMapLen)
+    {
+        ulLens -= ulPsMapLen;
+        pData  += ulPsMapLen;
+    }
+
+    return;
+}
+void CEhomeStreamHandle::ProgramPrivateHeader(es_frame_info& FrameInfo,char*& pData,uint32_t& ulLens)
+{
+
+    program_private_head* PriData = (program_private_head*)pData;
+
+
+    if (ulLens < sizeof(program_private_head))
+    {
+        return;
+    }
+    if ((PriData->PackStart.start_code[0] != 0x00)
+        || (PriData->PackStart.start_code[1] != 0x00)
+        || (PriData->PackStart.start_code[2] != 0x01)
+        || ((PriData->PackStart.stream_id[0] != 0xBD)
+        && (PriData->PackStart.stream_id[0] != 0xBE)
+        && (PriData->PackStart.stream_id[0] != 0xBF)))
+    {
+        return;
+    }
+
+    littel_endian_size psm_length;
+    psm_length.byte[0] = PriData->PackLength.byte[1];
+    psm_length.byte[1] = PriData->PackLength.byte[0];
+
+
+    uint32_t ulpsPrivateLen = sizeof(program_private_head) + psm_length.length;
+
+    if(ulpsPrivateLen >= ulLens)
+    {
+        /* error */
+        return;
+    }
+    if(0 < ulpsPrivateLen)
+    {
+        ulLens -= ulpsPrivateLen;
+        pData  += ulpsPrivateLen;
+    }
+
+}
+void CEhomeStreamHandle::ProgramEStramHead(es_frame_info& FrameInfo,char*& pData,uint32_t& ulLens)
+{
+    program_stream_e* PSEPack = (program_stream_e*)pData;
+    if ((PSEPack->PackStart.start_code[0] != 0x00)
+        || (PSEPack->PackStart.start_code[1] != 0x00)
+        || (PSEPack->PackStart.start_code[2] != 0x01))
+    {
+        return ;
+    }
+
+
+    if (ulLens < sizeof(program_stream_e))
+    {
+        return ;
+    }
+
+
+    littel_endian_size pse_length;
+    pse_length.byte[0] = PSEPack->PackLength.byte[1];
+    pse_length.byte[1] = PSEPack->PackLength.byte[0];
+
+    FrameInfo.length    = pse_length.length - 3 - PSEPack->stuffing_length;//PTS DTS stuffing_length
+#ifdef __PRINT_MEDIA__
+    SVS_LOG((SVS_LM_ERROR, "CMduPsMediaProcessorSet::ProgramEStramHead, EsLen:[%d],pseLen:[%d] stuffLen:[%d]",
+                                         FrameInfo.length,pse_length.length,PSEPack->stuffing_length ));
+#endif
+    FrameInfo.streamId  = PSEPack->PackStart.stream_id[0];
+    uint32_t ulPesHeadLen = sizeof(program_stream_e) + PSEPack->stuffing_length;
+
+    if(ulPesHeadLen >= ulLens)
+    {
+#ifdef __PRINT_MEDIA__
+    SVS_LOG((SVS_LM_ERROR, "CMduPsMediaProcessorSet::ProgramEStramHead, discard pes head len:[%d],packet len:[%d],payload:[%d].",
+                                         ulPesHeadLen,length,FrameInfo.payload));
+#endif
+        /* error */
+        return;
+    }
+
+    if(0 < ulPesHeadLen) {
+        ulLens -= ulPesHeadLen;
+        pData += ulPesHeadLen;
+    }
+
+
+    if (PSEPack->PackStart.stream_id[0] == 0xC0)
+    {
+        FrameInfo.payload = m_AudioPayload;
+        sendEsAudioFrame(FrameInfo,rtpFrameList);
+
+    }
+    else if (PSEPack->PackStart.stream_id[0] == 0xE0)
+    {
+        FrameInfo.payload = m_VideoPayload;
+        sendEsVideoFrame(FrameInfo,rtpFrameList);
+
+    }
+    else
+    {
+        skipunKnowFrame(FrameInfo,rtpFrameList);
+    }
+
+    return;
+}
+void CEhomeStreamHandle::ProgramKnowFrame(es_frame_info& FrameInfo,char*& pData,uint32_t& ulLens)
+{
+    ACE_Message_Block* pMb = rtpFrameList.front();
+
+    char* buffer  = (char*)(void*)pMb->rd_ptr();
+
+    if((0x00 == buffer[0])&&(0x00 == buffer[1])&&(0x00 == buffer[2])&&(0x01 == buffer[3]))
+    {
+        /* H264 or H265 start code */
+        /* try H264 */
+        H264_NALU_HEADER* pNalu = (H264_NALU_HEADER*)(void*)&buffer[4];
+
+        SVS_LOG((SVS_LM_ERROR, "CMduPsMediaProcessorSet::ProgramKnowFrame,H264,F:[%d],Type:[%d]",
+                                                     pNalu->F,pNalu->TYPE));
+
+        if((!pNalu->F)&&(H264_NAL_UNDEFINED < pNalu->TYPE || H264_NAL_END > pNalu->TYPE)) {
+            FrameInfo.payload = PT_TYPE_H264;
+
+
+            sendEsVideoFrame(FrameInfo,rtpFrameList);
+            return;
+        }
+
+        /* try H265 */
+        H265_NALU_HEADER* pH265Nalu = (H265_NALU_HEADER*)(void*)&buffer[4];
+        if((!pH265Nalu->F)&&(HEVC_NAL_END > pH265Nalu->TYPE)) {
+            FrameInfo.payload = PT_TYPE_H265;
+            sendEsVideoFrame(FrameInfo,rtpFrameList);
+            return;
+        }
+    }
+    else
+    {
+        /* audio */
+        FrameInfo.payload = PT_TYPE_PCMU;
+        sendEsAudioFrame(FrameInfo,rtpFrameList);
+    }
+
+    return;
+}
+
 
 CEhomeHandle::CEhomeHandle()
 {
