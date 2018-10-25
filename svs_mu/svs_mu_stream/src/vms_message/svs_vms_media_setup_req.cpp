@@ -1,0 +1,98 @@
+/*
+ * MduMediaSetupReq.cpp
+ *
+ *  Created on: 2016-5-18
+ *      Author:
+ */
+#include "svs_adapter_svs_retcode.h"
+#include "svs_log_msg.h"
+#include "svs_vms_media_setup_req.h"
+#include "svs_adapter_service_task.h"
+
+CMduMediaSetupReq::CMduMediaSetupReq()
+{
+    m_pReq       = NULL;
+    m_strRtspUrl = "";
+}
+
+CMduMediaSetupReq::~CMduMediaSetupReq()
+{
+    m_pReq       = NULL;
+}
+
+int32_t CMduMediaSetupReq::create(uint32_t unLength,
+            uint32_t unTransNo)
+{
+    int32_t nRet = CMduSvsMessage::create(unLength, unTransNo);
+    if (RET_OK != nRet)
+    {
+        return nRet;
+    }
+
+    m_pReq = (SVS_MSG_MDU_SESSION_SETUP_REQ*)(void*)getBinaryData();
+
+    return RET_OK;
+}
+
+int32_t CMduMediaSetupReq::initMsgBody(uint32_t unLocalIndex,const char* pszDevID,
+                                       PLAY_URL_TYPE UrlType,PLAY_TYPE PlayType,
+                                       const char* pRtspUrl,const char* pSdpInfo,
+                                       uint32_t MediaLinkMode,const char* pszMediaIP,uint16_t usMediaPort)
+{
+    if (NULL == m_pReq)
+    {
+        return RET_FAIL;
+    }
+
+    m_strRtspUrl = pRtspUrl;
+    m_strSdp     = pSdpInfo;
+    if (getLength() < sizeof(SVS_MSG_MDU_SESSION_SETUP_REQ))
+    {
+        return RET_FAIL;
+    }
+
+    m_pReq->LocalIndex = unLocalIndex;
+    m_pReq->UrlType    = UrlType;
+    m_pReq->PlayType   = PlayType;
+    memcpy(m_pReq->DeviceID,pszDevID,DEVICE_ID_LEN);
+    size_t lens = strlen(pRtspUrl);
+    (void)strncpy((char*)&m_pReq->szUrl[0],pRtspUrl,lens);
+    m_pReq->UrlLen =  lens;
+
+    lens = strlen(pSdpInfo);
+    (void)strncpy((char*)&m_pReq->szSdp[0], pSdpInfo,lens);
+    m_pReq->SdpLen =  lens;
+
+    m_pReq->MediaLinkMode = MediaLinkMode;
+    (void)strncpy((char*)&m_pReq->szMediaIP, pszMediaIP,SVS_IP_LEN);
+    m_pReq->usMediaPort = usMediaPort;
+
+    return RET_OK;
+}
+
+uint32_t CMduMediaSetupReq::getMsgType()
+{
+    return SVS_MSG_TYPE_MDU_SESSION_SETUP_REQ;
+}
+
+int32_t CMduMediaSetupReq::handleMessage()
+{
+    return CMduServiceTask::instance()->sendMsgToSCC(this);
+}
+
+void CMduMediaSetupReq::dump() const
+{
+    if (NULL == m_pReq)
+    {
+        return;
+    }
+
+    CMduSvsMessage::dump();
+
+    SVS_LOG((SVS_LM_DEBUG,"MessageBody:"));
+    SVS_LOG((SVS_LM_DEBUG,"\tLocalIndex: %u", m_pReq->LocalIndex));
+    SVS_LOG((SVS_LM_DEBUG,"\tRtspUrl: %s", m_strRtspUrl.c_str()));
+    SVS_LOG((SVS_LM_DEBUG,"\tsdp:\n\t %s", m_strSdp.c_str()));
+
+    return;
+}

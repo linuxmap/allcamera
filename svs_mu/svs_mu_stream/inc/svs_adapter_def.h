@@ -1,0 +1,68 @@
+#ifndef __MDUDEF_H__
+#define __MDUDEF_H__
+
+
+#define SVS_MDU_SERVICE_NAME  "svs_mu_adapter"
+
+
+#define SVS_MDU_CONFIG_PATH  "../conf/"
+
+
+#define SVS_MDU_CONFIG_FILE   "../conf/svs_mu_stream.conf"
+
+
+#define SVS_MDU_LOG_PATH      "../log/svs_mu_stream.log"
+
+
+#define MDU_MAX_QUEUE_DELAY       (100 * 1000)
+
+
+#define MDU_MAX_EPOLL_SIZE        (10000)
+
+
+#define MDU_MAX_TIME_PER_THREAD   (500 * 1000)
+
+
+#define MDU_BUSINESS_REPORT_INTERVAL  10
+
+#define KILO    (1024)
+
+
+#define BYTE_NUM  (8)
+
+#define MDU_MAX_COPY_STREAM_NUM    100
+
+enum _enMDU_MSG_BLOCK_DEF
+{
+    MDU_MSG_BLOCK_SIZE          = 2 * 1024,
+    MDU_SVS_BLOCK_SIZE          = 1800,
+    MDU_BLOCK_NUM_PER_CHANNEL   = 400,
+    MDU_MAX_QUEUE_MSG_NUM       = 1 * 1024,
+    MDU_MAX_QUEUE_BYTE_SIZE     = (MDU_MSG_BLOCK_SIZE * MDU_MAX_QUEUE_MSG_NUM),
+    MAX_PACKET_NUM_PER_FRAME    = 1024,
+    MAX_TRACKINFO_PACKET_NUM    = 50,
+    MAX_TRACKINFO_PACKET_SIZE   = 1024
+};
+
+
+enum _enMDU_THREAD_NUM
+{
+    MDU_EXCHANGE_THREAD_NUM     = 8,
+    MDU_MEDIA_RECV_THREAD_NUM   = 4
+};
+
+enum _enMDU_TIME_DEFINE
+{
+    MDU_CONFIG_RELOAD_INTERVAL          = 60,
+    MDU_STATUS_CHECK_INTERVAL           = 5,
+    MDU_STATUS_TIMEOUT_INTERVAL         = 30,
+    MDU_STATUS_ABNORMAL_INTERVAL        = 10,
+    MDU_CONNECT_ABNORMAL_INTERVAL       = 30,
+
+    MDU_MEDIA_CHANNEL_HEARTBEAT_INTERVAL = 15,
+    MDU_MEDIA_CHANNEL_INVAILD_INTERVAL  = 4 * 15
+
+};
+
+
+#endif
