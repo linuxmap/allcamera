@@ -109,7 +109,6 @@ uint32_t CStreamLoadInfoReq::getMsgType()
 
 int32_t CStreamLoadInfoReq::handleMessage()
 {
-    // ����ϢΨһ�Ĵ�����ǰ��Լ����͸�SCC
     return CStreamServiceTask::instance()->sendMsgToSCC(this);
 }
 
@@ -122,7 +121,6 @@ void CStreamLoadInfoReq::dump() const
 
     CStreamSvsMessage::dump();
 
-    // ����Ϣ�ṹ��ӡ��Ϣ��
     SVS_LOG((SVS_LM_DEBUG,"MessageBody:"));
     SVS_LOG((SVS_LM_DEBUG,"\tTransmitNumber: %u", m_pLoadInfo->TransmitNumber));
     SVS_LOG((SVS_LM_DEBUG,"\tTotalMemorySize: %u", m_pLoadInfo->TotalMemorySize));

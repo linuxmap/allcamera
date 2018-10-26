@@ -28,6 +28,8 @@ CEhomeStreamHandle::CEhomeStreamHandle()
     m_lLinkHandle  = -1;
     m_VideoPayload = PT_TYPE_MAX;
     m_AudioPayload = PT_TYPE_MAX;
+    m_usVideoRtpSeq= 0;
+    m_usAudioRtpSeq= 0;
 }
 CEhomeStreamHandle::~CEhomeStreamHandle()
 {
@@ -101,42 +103,70 @@ void CEhomeStreamHandle::send_ehome_stream(char* pdata,uint32_t ulDataLen)
     ProgramPrivateHeader(esFrameInfo,pPsData,ulPsDataLen);
     ProgramEStramHead(esFrameInfo,pPsData,ulPsDataLen);
 
+    if(PT_TYPE_H264 == esFrameInfo.payload)
+    {
+        send_h264_frame(esFrameInfo,pPsData,ulPsDataLen);
+    }
+    else if(PT_TYPE_H265 == esFrameInfo.payload)
+    {
+        send_h264_frame(esFrameInfo,pPsData,ulPsDataLen);
+    }
+    else if((PT_TYPE_PCMU == esFrameInfo.payload)
+        ||(PT_TYPE_PCMA == esFrameInfo.payload)
+        ||(PT_TYPE_AAC == esFrameInfo.payload))
+    {
+        send_h264_frame(esFrameInfo,pPsData,ulPsDataLen);
+    }
+
+
+}
+void CEhomeStreamHandle::send_h264_frame(es_frame_info& FrameInfo,char* pData,uint32_t ulLens)
+{
+    CRtpPacket rtpPacket;
+    size_t rtpHeadPos = sizeof(RTP_FIXED_HEADER);
     ACE_Message_Block *pMsg = NULL;
     uint32_t ulRtpPlayLoadLen = 0;
     int32_t nRet = RET_OK;
+    H264_NALU_HEADER    nalu_hdr;
+    FU_INDICATOR  *fu_ind   = NULL;
+    FU_HEADER     *fu_hdr   = NULL;
 
-    while(0 < ulPsDataLen)
+    bool bStart = true;
+
+    if((0x00 == pData[0])&&(0x00 == pData[1])&&(0x00 == pData[2])&&(0x01 == pData[3]))
     {
-        if(RTP_PLAYLOAD_LEN < ulPsDataLen)
-        {
-            ulRtpPlayLoadLen = RTP_PLAYLOAD_LEN;
-        }
-        else
-        {
-            ulRtpPlayLoadLen = ulPsDataLen;
-        }
+        /* skip the start code */
+        pData  += H264_START_CODE;
+        ulLens -= H264_START_CODE;
+    }
+
+    uint16_t usPacketCount = ulLens/RTP_PLAYLOAD_LEN;
+    if(0 != ulLens/RTP_PLAYLOAD_LEN)
+    {
+        usPacketCount++;
+    }
+    if(1 == usPacketCount)
+    {
         pMsg = CMediaBlockBuffer::instance().allocMediaBlock();
         if (NULL == pMsg)
         {
-            SVS_LOG((SVS_LM_WARNING,"rtp udp port[%d] alloc media block fail.",
-                    getLocalAddr().get_port_number()));
-            return RET_OK;
+            SVS_LOG((SVS_LM_WARNING,"ehome alloc media block fail."));
+            return;
         }
-
         STREAM_TRANSMIT_PACKET *pPacket = (STREAM_TRANSMIT_PACKET *)(void*)pMsg->base();
         pMsg->wr_ptr(sizeof(STREAM_TRANSMIT_PACKET) - 1);
         pPacket->enPacketType        = STREAM_PACKET_TYPE_MEDIA_DATA;
         pPacket->PuStreamId          = m_ullStreamId;
 
-
-
-        CRtpPacket rtpPacket;
-        (void)rtpPacket.GeneratePacket(pMsg->wr_ptr(),ulRtpPlayLoadLen);
-
-        pMsg->wr_ptr((size_t)rtpPacket.GetHeadLen());
-        pMsg->copy(pPsData,ulRtpPlayLoadLen);
-
-
+        (void)rtpPacket.GeneratePacket(pMsg->wr_ptr(),rtpHeadPos);
+        rtpPacket.SetTimeStamp(FrameInfo.timestamp);
+        rtpPacket.SetSSRC(FrameInfo.ssrc);
+        getNextRtpSeq(m_usVideoRtpSeq, usPacketCount);
+        rtpPacket.SetSeqNum(m_usVideoRtpSeq);
+        rtpPacket.SetPayloadType(m_VideoPayload);
+        rtpPacket.SetMarker(true);
+        pMsg->wr_ptr((size_t)rtpHeadPos);
+        pMsg->copy(pData,ulRtpPlayLoadLen);
 
         nRet =  CStreamMediaExchange::instance()->addData(pMsg);
         if(RET_OK != nRet)
@@ -144,12 +174,150 @@ void CEhomeStreamHandle::send_ehome_stream(char* pdata,uint32_t ulDataLen)
             CMediaBlockBuffer::instance().freeMediaBlock(pMsg);
             return;
         }
-
-        pPsData += ulRtpPlayLoadLen;
-        ulPsDataLen -= ulRtpPlayLoadLen;
+        return;
     }
-}
 
+    /* save the nalu head */
+    H264_NALU_HEADER* pNalu = (H264_NALU_HEADER*)(void*)pData;
+    nalu_hdr.TYPE = pNalu->TYPE;
+    nalu_hdr.NRI  = pNalu->NRI;
+    nalu_hdr.F    = pNalu->F;
+
+    pData++;
+    ulLens--;
+
+    do
+    {
+        pMsg = CMediaBlockBuffer::instance().allocMediaBlock();
+        if (NULL == pMsg)
+        {
+            SVS_LOG((SVS_LM_WARNING,"ehome alloc media block fail."));
+            return;
+        }
+
+        STREAM_TRANSMIT_PACKET *pPacket = (STREAM_TRANSMIT_PACKET *)(void*)pMsg->base();
+        pMsg->wr_ptr(sizeof(STREAM_TRANSMIT_PACKET) - 1);
+        pPacket->enPacketType        = STREAM_PACKET_TYPE_MEDIA_DATA;
+        pPacket->PuStreamId          = m_ullStreamId;
+
+        (void)rtpPacket.GeneratePacket(pMsg->wr_ptr(),rtpHeadPos);
+        rtpPacket.SetTimeStamp(FrameInfo.timestamp);
+        rtpPacket.SetSSRC(FrameInfo.ssrc);
+        getNextRtpSeq(m_usVideoRtpSeq, usPacketCount);
+        rtpPacket.SetSeqNum(m_usVideoRtpSeq);
+        rtpPacket.SetPayloadType(m_VideoPayload);
+        pMsg->wr_ptr((size_t)rtpHeadPos);
+
+        if(ulLens > RTP_PLAYLOAD_LEN) {
+            fu_ind = (FU_INDICATOR*)pMsg->wr_ptr();
+            fu_hdr = (FU_HEADER*)(pMsg->wr_ptr()+1);
+            pMsg->wr_ptr(2);
+
+            fu_ind->F=nalu_hdr.F;
+            fu_ind->NRI=nalu_hdr.NRI;
+            fu_ind->TYPE=RTP_FUA;
+            fu_hdr->S=0;
+            fu_hdr->E=0;
+            fu_hdr->R=0;
+
+            if(bStart)
+            {
+                fu_hdr->S=1;
+                bStart = false;
+            }
+
+            fu_hdr->TYPE=nalu_hdr.TYPE;
+
+            pMsg->copy(pData,RTP_PLAYLOAD_LEN);
+
+            nRet =  CStreamMediaExchange::instance()->addData(pMsg);
+            if(RET_OK != nRet)
+            {
+                CMediaBlockBuffer::instance().freeMediaBlock(pMsg);
+                return;
+            }
+            pData  += RTP_PLAYLOAD_LEN;
+            ulLens -= RTP_PLAYLOAD_LEN;
+        }
+        else {
+            fu_ind = (FU_INDICATOR*)pMsg->wr_ptr();
+            fu_hdr = (FU_HEADER*)(pMsg->wr_ptr()+1);
+            pMsg->wr_ptr(2);
+
+            fu_ind->F=nalu_hdr.F;
+            fu_ind->NRI=nalu_hdr.NRI;
+            fu_ind->TYPE=RTP_FUA;
+            fu_hdr->S=0;
+            fu_hdr->E=1;
+            fu_hdr->R=0;
+
+            fu_hdr->TYPE=nalu_hdr.TYPE;
+
+            pMsg->copy(pData,ulLens);
+
+            nRet =  CStreamMediaExchange::instance()->addData(pMsg);
+            if(RET_OK != nRet)
+            {
+                CMediaBlockBuffer::instance().freeMediaBlock(pMsg);
+                return;
+            }
+            pData  += ulLens;
+            ulLens = 0;
+        }
+    }while(0 < ulLens);
+
+}
+void CEhomeStreamHandle::send_h265_frame(es_frame_info& FrameInfo,char* pData,uint32_t ulLens)
+{
+}
+void CEhomeStreamHandle::send_audio_frame(es_frame_info& FrameInfo,char* pData,uint32_t ulLens)
+{
+    ACE_Message_Block *pMsg = NULL;
+    size_t rtpHeadPos = sizeof(RTP_FIXED_HEADER);
+    uint32_t ulRtpPlayLoadLen = 0;
+    int32_t nRet = RET_OK;
+    if(ulLens  > RTP_PLAYLOAD_LEN)
+    {
+        return;
+    }
+
+    pMsg = CMediaBlockBuffer::instance().allocMediaBlock();
+    if (NULL == pMsg)
+    {
+        SVS_LOG((SVS_LM_WARNING,"ehome alloc media block fail."));
+        return ;
+    }
+
+    STREAM_TRANSMIT_PACKET *pPacket = (STREAM_TRANSMIT_PACKET *)(void*)pMsg->base();
+    pMsg->wr_ptr(sizeof(STREAM_TRANSMIT_PACKET) - 1);
+    pPacket->enPacketType        = STREAM_PACKET_TYPE_MEDIA_DATA;
+    pPacket->PuStreamId          = m_ullStreamId;
+
+
+
+    CRtpPacket rtpPacket;
+    (void)rtpPacket.GeneratePacket(pMsg->wr_ptr(),ulLens);
+
+    rtpPacket.SetTimeStamp(FrameInfo.timestamp);
+    rtpPacket.SetSSRC(FrameInfo.ssrc);
+    rtpPacket.SetMarker(true);
+    getNextRtpSeq(m_usAudioRtpSeq, 1);
+    rtpPacket.SetSeqNum(m_usAudioRtpSeq);
+    rtpPacket.SetPayloadType(FrameInfo.payload);
+
+    pMsg->wr_ptr((size_t)rtpHeadPos);
+    pMsg->copy(pData,ulLens);
+
+
+
+    nRet =  CStreamMediaExchange::instance()->addData(pMsg);
+    if(RET_OK != nRet)
+    {
+        CMediaBlockBuffer::instance().freeMediaBlock(pMsg);
+        return;
+    }
+    return;
+}
 
 void CEhomeStreamHandle::preview_data_cb(LONG  iPreviewHandle,
                      NET_EHOME_PREVIEW_CB_MSG *pPreviewCBMsg,void *pUserData)
@@ -403,10 +571,12 @@ void CEhomeStreamHandle::ProgramEStramHead(es_frame_info& FrameInfo,char*& pData
     if (PSEPack->PackStart.stream_id[0] == 0xC0)
     {
         FrameInfo.payload = m_AudioPayload;
+        FrameInfo.bVideo  = 0;
     }
     else if (PSEPack->PackStart.stream_id[0] == 0xE0)
     {
         FrameInfo.payload = m_VideoPayload;
+        FrameInfo.bVideo  = 1;
     }
     else
     {
@@ -416,6 +586,18 @@ void CEhomeStreamHandle::ProgramEStramHead(es_frame_info& FrameInfo,char*& pData
 
     return;
 }
+void CEhomeHandle::getNextRtpSeq(uint16_t& usCurSeq,uint16_t count)
+{
+    if((0xFFFF - usCurSeq) < count)
+    {
+        usCurSeq = 0;
+    }
+    else
+    {
+        usCurSeq++;
+    }
+}
+
 
 
 

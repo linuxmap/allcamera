@@ -304,6 +304,7 @@ struct es_frame_info
     uint8_t            streamId;
     uint32_t           timestamp;
     uint32_t           ssrc;
+    uint32_t           bVideo;
 };
 
 #pragma pack(pop)

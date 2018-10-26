@@ -20,6 +20,9 @@ public:
 private:
     static void preview_data_cb(LONG  iPreviewHandle,NET_EHOME_PREVIEW_CB_MSG *pPreviewCBMsg,void *pUserData);
     void    send_ehome_stream(char* pdata,uint32_t ulDataLen);
+    void    send_h264_frame(es_frame_info& FrameInfo,char* pData,uint32_t ulLens);
+    void    send_h265_frame(es_frame_info& FrameInfo,char* pData,uint32_t ulLens);
+    void    send_audio_frame(es_frame_info& FrameInfo,char* pData,uint32_t ulLens);
 private:
     void ProgramStreamPackHeader(es_frame_info& FrameInfo,char*& pData,uint32_t& ulLens);
     void ProgramSystemPackHeader(es_frame_info& FrameInfo,char*& pData,uint32_t& ulLens);
@@ -27,11 +30,15 @@ private:
     void ProgramPrivateHeader(es_frame_info& FrameInfo,char*& pData,uint32_t& ulLens);
     void ProgramEStramHead(es_frame_info& FrameInfo,char*& pData,uint32_t& ulLens);
 private:
+    void getNextRtpSeq(uint16_t& usCurSeq,uint16_t count);
+private:
     uint64_t    m_ullStreamId;
     int32_t     m_lSessionId;
     int32_t     m_lLinkHandle;
-    uint32_t    m_VideoPayload;
-    uint32_t    m_AudioPayload;
+    uint8_t     m_VideoPayload;
+    uint8_t     m_AudioPayload;
+    uint16_t    m_usVideoRtpSeq;
+    uint16_t    m_usAudioRtpSeq;
 };
 
 class CEhomeHandle : public CHandle
