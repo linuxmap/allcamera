@@ -25,7 +25,7 @@ LIBS      += -L${EXTEND_ROOT}lib/ -lACE -lvmsStack64 -L$(EHOME_ROOT)lib/ -lHCEHo
 LIBS      += $(EXTEND_ROOT)lib/libeXosip2.a $(EXTEND_ROOT)lib/libosip2.a $(EXTEND_ROOT)lib/libosipparser2.a -lresolv
 LIBS      += $(EXTEND_ROOT)lib/libevent.a $(EXTEND_ROOT)lib/libevent_core.a $(EXTEND_ROOT)lib/libevent_extra.a $(EXTEND_ROOT)lib/libevent_pthreads.a
 
-C++FLAGS  += -std=c++11 -pipe -g -Wall -O0 -DENV_LINUX -D_DEBUG -D_DEBUG_LOG -DDTRACE -DTRACE -DFILELOG -DHAS_REMOTE_DEBUG
+C++FLAGS  += -pipe -g -Wall -O0 -DENV_LINUX -D_DEBUG -D_DEBUG_LOG -DDTRACE -DTRACE -DFILELOG -DHAS_REMOTE_DEBUG
 
 CPPFILES += $(wildcard $(COMMON_DIR)common/buffer/*.cpp)
 CFILES += $(wildcard $(COMMON_DIR)common/buffer/*.c)
