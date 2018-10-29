@@ -23,7 +23,7 @@ int32_t CControlLivePlay::DealMsg()
 
     m_enStatus = CONTROL_MGS_HTTP_STATUS_WAIT_RESP;
     m_ReqTime  = time(NULL);
-	
+
     int32_t nResult = IAccessControlManager::instance().getLensInfo( strLensID,stLensInfo);
     if(SVS_ERROR_OK != nResult)
     {
@@ -33,7 +33,7 @@ int32_t CControlLivePlay::DealMsg()
         oResponsePlayUrlInfo.nRequestID = m_rPlayUrl.nRequestID;//pPlayUrlInfoRequest->nRequestID;
         oResponsePlayUrlInfo.nResponseCode = SVS_RESPCODE_DEVICE_OFFLINE;
         CAccessControlStack::instance().asyncResponse(oResponsePlayUrlInfo, this);
-	
+
         return SVS_ERROR_FAIL;
     }
     m_rPlayUrl.eDevType = stLensInfo.eLensType;
@@ -66,13 +66,32 @@ int32_t CControlLivePlay::ParserMsgBody(cJSON* body)
     cJSON* streamType = cJSON_GetObjectItem(body,"streamType");
     if(NULL != streamType)
     {
-       m_rPlayUrl.ulStreamId  = streamType->valueint;
+       if( DEV_STREAM_TYPE_MAIN == streamType->valueint )
+       {
+           m_rPlayUrl.enStreamType  = DEV_STREAM_TYPE_MAIN;
+       }
+       else if( DEV_STREAM_TYPE_SUB == streamType->valueint )
+       {
+           m_rPlayUrl.enStreamType  = DEV_STREAM_TYPE_SUB;
+       }
     }
 
     cJSON* urlType = cJSON_GetObjectItem(body,"urlType");
     if(NULL != urlType)
     {
-       m_rPlayUrl.ulStreamId  = urlType->valueint;
+        if( PLAY_URL_TYPE_RTSP == urlType->valueint )
+       {
+           m_rPlayUrl.ePlayUrlType= PLAY_URL_TYPE_RTSP;
+       }
+       else if( PLAY_URL_TYPE_HLS == urlType->valueint )
+       {
+           m_rPlayUrl.ePlayUrlType  = PLAY_URL_TYPE_HLS;
+       }
+       else if( PLAY_URL_TYPE_RTMP == urlType->valueint )
+       {
+           m_rPlayUrl.ePlayUrlType  = PLAY_URL_TYPE_RTMP;
+       }
+
     }
 
     return SVS_ERROR_OK;

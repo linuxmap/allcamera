@@ -1138,7 +1138,7 @@ void CBusinessManager::on_timer(int32_t eventId, int32_t timerId)
 // read time video request
 int32_t CBusinessManager::get_url_req(
     const string& strParaDevID, PLAY_TYPE enParaPlayType, PLAY_URL_TYPE enParaPlayUrlType,
-    uint32_t ulParaStreamType, SVS_DEV_TYPE enParaDevType, string& strOutParaUrl)
+    DEV_STREAM_TYPE enParaStreamType, SVS_DEV_TYPE enParaDevType, string& strOutParaUrl)
 {
     // char szUrlBody[MEDIA_URL_LEN+1] = {0};
 
@@ -1149,7 +1149,7 @@ int32_t CBusinessManager::get_url_req(
 
     SVS_LOG((SVS_LM_INFO,
                     "deal get url requrest,DevID=%s, PlayType:%d, PlayUrlType:%d, StreamType:%d, DevType:%d, ",
-                     strParaDevID.c_str(), (uint32_t)enParaPlayType, (uint32_t)enParaPlayUrlType, ulParaStreamType,
+                     strParaDevID.c_str(), (uint32_t)enParaPlayType, (uint32_t)enParaPlayUrlType, enParaStreamType,
                      (uint32_t)enParaDevType));
 
     std::string strStreamSvrID;
@@ -1206,7 +1206,7 @@ int32_t CBusinessManager::get_url_req(
     oLinkInfo.PlayType(enParaPlayType);
     oLinkInfo.DevType(enParaDevType);
     oLinkInfo.ServerIP(strMedisServerIP);
-    oLinkInfo.StreamType(ulParaStreamType);
+    oLinkInfo.StreamType(enParaStreamType);
 
     int32_t iRet = 0;
     iRet = CSVSMediaLinkFactory::instance().makeMediaUrl( &oLinkInfo,strOutParaUrl);

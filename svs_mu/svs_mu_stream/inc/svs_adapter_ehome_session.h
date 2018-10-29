@@ -18,6 +18,9 @@ public:
     CStreamEhomeSession();
     virtual ~CStreamEhomeSession();
 
+    /*redefine the start */
+    int32_t start(CStreamMediaSetupResp *pResp);
+
     int32_t initSesssion(PEER_TYPE unPeerType);
     /// 对外接口：发送媒体流
     int32_t sendMediaData(ACE_Message_Block **pMbArray, uint32_t MsgCount);

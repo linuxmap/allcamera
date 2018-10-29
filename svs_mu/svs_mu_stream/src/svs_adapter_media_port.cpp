@@ -8,6 +8,15 @@
 #include "svs_adapter_rtcp_udp_handle.h"
 #include "svs_adapter_ehome_handle.h"
 #include "svs_utility.h"
+#include "svs_adapter_def.h"
+
+enum enEHOME_LOG_LEVEL
+{
+    EHOME_LOG_LEVEL_CLOSE    = 0,/*0-表示关闭日志 */
+    EHOME_LOG_LEVEL_ERROR    = 1,/*1-表示只输出ERROR错误日志*/
+    EHOME_LOG_LEVEL_ERRDEBUG = 2,/*2-输出ERROR错误信息和DEBUG调试信息*/
+    EHOME_LOG_LEVEL_ALL      = 3,/*3-输出ERROR错误信息、DEBUG调试信息和INFO普通信息等所有信息*/
+};
 
 
 CStreamMediaPort::CStreamMediaPort()
@@ -70,6 +79,24 @@ int32_t CStreamMediaPort::init(uint32_t unIp,
         SVS_LOG((SVS_LM_WARNING,"ehome init the stream libary fail."));
         return RET_FAIL;
     }
+
+    /* set ehome log info */
+    int32_t lLoglevel = SVS_Log_Msg::get_log_priority();
+    DWORD   iehomeLogLevel = EHOME_LOG_LEVEL_CLOSE;
+
+    if((SVS_LM_TRACE == lLoglevel)||(SVS_LM_DEBUG == lLoglevel))
+    {
+        iehomeLogLevel = EHOME_LOG_LEVEL_ALL;
+    }
+    else if((SVS_LM_DEBUG == lLoglevel)||(SVS_LM_INFO == lLoglevel))
+    {
+        iehomeLogLevel = EHOME_LOG_LEVEL_ERRDEBUG;
+    }
+    else if((SVS_LM_ERROR == lLoglevel)||(SVS_LM_WARNING == lLoglevel)||(SVS_LM_CRITICAL == lLoglevel))
+    {
+        iehomeLogLevel = EHOME_LOG_LEVEL_ERROR;
+    }
+    (void)NET_ESTREAM_SetLogToFile(iehomeLogLevel,(char*)SVS_STREAM_LOG_DIR,TRUE);
 
     list.clear();
     for (uint16_t i = 0; i < pEhomeConfig->usPortRangeNum; i++)
@@ -204,6 +231,10 @@ int32_t CStreamMediaPort::allocEhomeMediaPort(CHandle *&pHandle)
     }
 
     pHandle = pEhomeBestHandle;
+    if(NULL == pEhomeBestHandle)
+    {
+        return RET_FAIL;
+    }
 
     return RET_OK;
 }

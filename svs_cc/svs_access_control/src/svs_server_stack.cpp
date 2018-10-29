@@ -30,7 +30,7 @@ int32_t IServerStack::asyncRequest(SVS_ACM::REQUEST& rRequest, SVS_ACM::RESPONSE
             SVS_LOG((SVS_LM_INFO,
                              "deal get url asyncReuest, RequestID=%d, DeviceID=%s, PlayType=%d, StreamId=%d.",
                              pPlayUrlInfoRequest->nRequestID, pPlayUrlInfoRequest->szLensID,
-                             pPlayUrlInfoRequest->ePlayType, pPlayUrlInfoRequest->ulStreamId));
+                             pPlayUrlInfoRequest->ePlayType, pPlayUrlInfoRequest->enStreamType));
 
             SVS_ACM::RESPONSE_PLAY_URL_INFO  oResponsePlayUrlInfo;
             oResponsePlayUrlInfo.nRequestID = pPlayUrlInfoRequest->nRequestID;
@@ -41,9 +41,12 @@ int32_t IServerStack::asyncRequest(SVS_ACM::REQUEST& rRequest, SVS_ACM::RESPONSE
 
             std::string     strUrl;
             int32_t iRet = 0;
-            iRet = pCBusinessManager->get_url_req(pPlayUrlInfoRequest->szLensID, pPlayUrlInfoRequest->ePlayType,
-                                                                                pPlayUrlInfoRequest->ePlayUrlType, pPlayUrlInfoRequest->ulStreamId,
-                                                                                pPlayUrlInfoRequest->eDevType, strUrl);
+            iRet = pCBusinessManager->get_url_req(pPlayUrlInfoRequest->szLensID,
+                                                  pPlayUrlInfoRequest->ePlayType,
+                                                  pPlayUrlInfoRequest->ePlayUrlType,
+                                                  pPlayUrlInfoRequest->enStreamType,
+                                                  pPlayUrlInfoRequest->eDevType,
+                                                  strUrl);
             if (0 != iRet)
             {
                 SVS_LOG((SVS_LM_ERROR,
@@ -290,23 +293,6 @@ void IServerStack::asyncResponse(SVS_ACM::RESPONSE& rResponse, void* pUserData)
                              pCommonResp->nRequestID, pCommonResp->nResponseCode));
         }
     }
-}
-
-
-int32_t IServerStack::getRtspUrl(std::string& strLensID, std::string& strRtspUrl)
-{
-    SVS_TRACE();
-
-    CBusinessManager* pCBusinessManager = &CBusinessManager::instance();
-    int32_t iRet = 0;
-    iRet = pCBusinessManager->get_url_req(strLensID, PLAY_TYPE_LIVE, PLAY_URL_TYPE_RTSP,
-                                                                        0, SVS_DEV_TYPE_GB28181, strRtspUrl);
-    if (0 != iRet)
-    {
-        return SVS_ERROR_FAIL;
-    }
-
-    return SVS_ERROR_OK;
 }
 
 

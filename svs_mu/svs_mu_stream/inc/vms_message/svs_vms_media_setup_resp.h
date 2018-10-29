@@ -36,17 +36,9 @@ public:
 
     UTAPI void getSdpInfo(std::string& SdpInfo) const;
 
-    UTAPI uint32_t getConnSetupType() const;
-
     UTAPI uint8_t* getDeviceID() const;
 
-    UTAPI uint32_t getConnVideoIp() const;
-
-    UTAPI uint16_t getConnVideoPort() const;
-
-    UTAPI uint32_t getConnAudioIp() const;
-
-    UTAPI uint16_t getConnAudioPort() const;
+    UTAPI int32_t getSessionID() const;
 
 private:
     SVS_MSG_STREAM_SESSION_SETUP_RESP  *m_pSetupResp;

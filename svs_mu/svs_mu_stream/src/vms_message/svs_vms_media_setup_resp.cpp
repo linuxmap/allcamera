@@ -124,6 +124,16 @@ uint8_t* CStreamMediaSetupResp::getDeviceID() const
     return &m_pSetupResp->DeviceID[0];
 }
 
+int32_t CStreamMediaSetupResp::getSessionID() const
+{
+    if (NULL == m_pSetupResp)
+    {
+        return 0;
+    }
+    return m_pSetupResp->SessionID;
+}
+
+
 
 void CStreamMediaSetupResp::dump() const
 {

@@ -45,10 +45,6 @@ public:
     /* 异步回调接口 */
     static void asyncResponse(SVS_ACM::RESPONSE& rResponse, void* pUserData);
 
-    // void handle_asyncResponse(SVS_ACM::RESPONSE& rResponse,CControlMessage* pMessage);
-
-    int32_t getRtspUrl(std::string& strLensID, std::string& strRtspUrl);
-
 private:
     IServerStack(){};
     virtual ~IServerStack(){};

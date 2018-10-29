@@ -71,23 +71,23 @@ public:
     void Port(uint32_t ulPort) { m_ulPort = ulPort;};
     std::string ContentID() {return m_strContentID;};
     void ContentID(const std::string& strContentID) { m_strContentID = strContentID;};
-    uint32_t StreamType(){ return m_ulStreamtype;} ;
-    void StreamType(uint32_t ulStreamType) { m_ulStreamtype = ulStreamType;};
+    DEV_STREAM_TYPE StreamType(){ return m_enStreamtype;} ;
+    void StreamType(DEV_STREAM_TYPE enStreamtype) { m_enStreamtype = enStreamtype;};
     std::string StartTime() { return m_strStartTime;};
     void StartTime(const std::string& strStartTime) { m_strStartTime = strStartTime;};
     std::string EndTime() { return m_strEndTime;};
     void EndTime(const std::string& strEndTime) { m_strEndTime = strEndTime;};
 private:
-    std::string   m_strUrl;
-    PLAY_URL_TYPE m_enType;
-    PLAY_TYPE     m_enPlayType;
-    std::string   m_strServerIP;
-    uint32_t      m_ulPort;
-    std::string   m_strContentID;
-    uint32_t      m_ulStreamtype;
-    std::string   m_strStartTime;
-    std::string   m_strEndTime;
-    SVS_DEV_TYPE  m_enDevType;
+    std::string     m_strUrl;
+    PLAY_URL_TYPE   m_enType;
+    PLAY_TYPE       m_enPlayType;
+    std::string     m_strServerIP;
+    uint32_t        m_ulPort;
+    std::string     m_strContentID;
+    DEV_STREAM_TYPE m_enStreamtype;
+    std::string     m_strStartTime;
+    std::string     m_strEndTime;
+    SVS_DEV_TYPE    m_enDevType;
 };
 
 class CSVSMediaLinkFactory

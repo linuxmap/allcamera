@@ -8,9 +8,18 @@
 #include "svs_acm_request.h"
 #include "svs_access_control.h"
 #include "svs_utility.h"
+#include "svs_ac_common.h"
 
 
 static ACE_OS_Log_Msg_Attributes g_objACELogMsgAttr;
+
+enum enEHOME_LOG_LEVEL
+{
+    EHOME_LOG_LEVEL_CLOSE    = 0,/*0-表示关闭日志 */
+    EHOME_LOG_LEVEL_ERROR    = 1,/*1-表示只输出ERROR错误日志*/
+    EHOME_LOG_LEVEL_ERRDEBUG = 2,/*2-输出ERROR错误信息和DEBUG调试信息*/
+    EHOME_LOG_LEVEL_ALL      = 3,/*3-输出ERROR错误信息、DEBUG调试信息和INFO普通信息等所有信息*/
+};
 
 
 CDeviceStackEhome::CDeviceStackEhome()
@@ -27,11 +36,30 @@ int32_t CDeviceStackEhome::initialize()
 {
     SVS_TRACE();
 
+     ACE_Log_Msg::init_hook(g_objACELogMsgAttr);
+
     if (!NET_ECMS_Init())
     {
         SVS_LOG((SVS_LM_ERROR, "Initialize ehome stack failed."));
         return SVS_ERROR_FAIL;
     }
+    /* set ehome log info */
+    int32_t lLoglevel = SVS_Log_Msg::get_log_priority();
+    DWORD   iehomeLogLevel = EHOME_LOG_LEVEL_CLOSE;
+
+    if((SVS_LM_TRACE == lLoglevel)||(SVS_LM_DEBUG == lLoglevel))
+    {
+        iehomeLogLevel = EHOME_LOG_LEVEL_ALL;
+    }
+    else if((SVS_LM_DEBUG == lLoglevel)||(SVS_LM_INFO == lLoglevel))
+    {
+        iehomeLogLevel = EHOME_LOG_LEVEL_ERRDEBUG;
+    }
+    else if((SVS_LM_ERROR == lLoglevel)||(SVS_LM_WARNING == lLoglevel)||(SVS_LM_CRITICAL == lLoglevel))
+    {
+        iehomeLogLevel = EHOME_LOG_LEVEL_ERROR;
+    }
+    (void)NET_ECMS_SetLogToFile(iehomeLogLevel,(char*)LOG_DIR,TRUE);
     return SVS_ERROR_OK;
 }
 
@@ -133,6 +161,7 @@ void CDeviceStackEhome::handle_ehome_event(LONG lUserID, DWORD dwDataType, void 
            }
            pDev = (EHOME_DEV_INFO *)pbuf;
            pDev->lUserID = lUserID;
+           pDev->bSyncInfo = false;
            memcpy(&pDev->regInfo,pOutBuffer,sizeof(NET_EHOME_DEV_REG_INFO));
 
            m_EhomeDevMap.insert(MAP_EHOME_DEV::value_type(strDevID,pDev));
@@ -142,23 +171,13 @@ void CDeviceStackEhome::handle_ehome_event(LONG lUserID, DWORD dwDataType, void 
            pDev->lUserID = lUserID;
            memcpy(&pDev->regInfo,pOutBuffer,sizeof(NET_EHOME_DEV_REG_INFO));
        }
-
-
        //输入参数
        NET_EHOME_SERVER_INFO *pServerInfo = (NET_EHOME_SERVER_INFO *)pInBuffer;
        pServerInfo->dwTimeOutCount = 6; //心跳超时次数
        pServerInfo->dwKeepAliveSec = CAccessControlSvr::instance().get_device_keep_alive_time_out(); //心跳间隔
 
-       //获取设备通道参数
-       NET_EHOME_CONFIG        config;
-       memset(&config,0,sizeof(NET_EHOME_CONFIG));
-
-       config.pOutBuf = (void*)&pDev->devInfo;
-       config.dwOutSize = sizeof(NET_EHOME_DEVICE_INFO);
-
-       NET_ECMS_GetDevConfig(lUserID,NET_EHOME_GET_DEVICE_INFO,&config,sizeof(NET_EHOME_CONFIG));
-
-       notifyDeviceOnline(pDev);
+       /* notify the device online by the time */
+       //notifyDeviceOnline(pDev);
     }
     else if (ENUM_DEV_OFF == dwDataType)
     {
@@ -202,6 +221,15 @@ void CDeviceStackEhome::notifyDeviceOnline(EHOME_DEV_INFO* pDevInfo)
     SVS_ACM::DEVICE_INFO& stDeviceInfo = stRequest.stDeviceInfo;
     stDeviceInfo.eDeviceType = SVS_DEV_TYPE_EHOME;
     stDeviceInfo.eDeviceStatus = SVS_DEV_STATUS_ONLINE;
+
+    if(!pDevInfo->bSyncInfo)
+    {
+        if(!queryDevInfo(pDevInfo))
+        {
+            return;
+        }
+    }
+
     strncpy(&stDeviceInfo.szDeviceID[0], (char*)&pDevInfo->regInfo.byDeviceID[0], SVS_DEVICEID_LEN);
 
     char szPort[SVS_PORT_LEN + 1] = {0};
@@ -211,7 +239,14 @@ void CDeviceStackEhome::notifyDeviceOnline(EHOME_DEV_INFO* pDevInfo)
     strncpy(stRequest.stDeviceInfo.szHost, pDevInfo->regInfo.struDevAdd.szIP, sizeof(stRequest.stDeviceInfo.szHost) - 1);
     strncpy(stRequest.stDeviceInfo.szPort, szPort, sizeof(stRequest.stDeviceInfo.szPort) - 1);
 
-    for(DWORD i = 0; i < pDevInfo->devInfo.dwChannelAmount;i++)
+    SVS_LOG((SVS_LM_DEBUG, "notifyDeviceOnline, dwChannelNumber: %d, dwChannelAmount:%d, dwStartChannel:%d ,dwDevType: %d.",
+                                     pDevInfo->devInfo.dwChannelNumber, pDevInfo->devInfo.dwChannelAmount,
+                                     pDevInfo->devInfo.dwStartChannel,pDevInfo->devInfo.dwDevType));
+    SVS_LOG((SVS_LM_DEBUG, "notifyDeviceOnline, sServerName: %s, dwChannelNum:%d, dwDevType: %d.",
+                                         pDevInfo->devCfg.sServerName, pDevInfo->devCfg.dwChannelNum,pDevInfo->devCfg.dwServerType));
+
+    //for(DWORD i = 0; i < pDevInfo->devInfo.dwChannelAmount;i++)
+    for(DWORD i = 0; i < pDevInfo->devCfg.dwChannelNum;i++)
     {
         SVS_ACM::LENS_INFO stLensInfo;
         stLensInfo.eLensType = SVS_DEV_TYPE_EHOME;
@@ -254,6 +289,56 @@ void CDeviceStackEhome::notifyDeviceOffline(EHOME_DEV_INFO* pDevInfo)
     return ;
 }
 
+bool CDeviceStackEhome::queryDevInfo(EHOME_DEV_INFO* pDevInfo)
+{
+   //获取设备通道参数
+   NET_EHOME_CONFIG        config;
+   memset(&config,0,sizeof(NET_EHOME_CONFIG));
+
+   config.pOutBuf = (void*)&pDevInfo->devInfo;
+   config.dwOutSize = sizeof(NET_EHOME_DEVICE_INFO);
+
+   BOOL bRet = NET_ECMS_GetDevConfig(pDevInfo->lUserID,NET_EHOME_GET_DEVICE_INFO,&config,sizeof(NET_EHOME_CONFIG));
+   if(bRet)
+   {
+
+       SVS_LOG((SVS_LM_DEBUG, "ehome device Info, dwChannelNumber: %d, dwChannelAmount:%d, dwStartChannel:%d ,dwDevType: %d.",
+                                     pDevInfo->devInfo.dwChannelNumber, pDevInfo->devInfo.dwChannelAmount,
+                                     pDevInfo->devInfo.dwStartChannel,pDevInfo->devInfo.dwDevType));
+   }
+   else
+   {
+       SVS_LOG((SVS_LM_WARNING, "ehome device Info, lUserID: %d, Device ID: %s,get device info fail,last error:[%d].",
+                                     pDevInfo->lUserID, pDevInfo->regInfo.byDeviceID,NET_ECMS_GetLastError()));
+       return false;
+   }
+
+   //获取设备配置参数
+   memset(&config,0,sizeof(NET_EHOME_CONFIG));
+
+   config.pOutBuf = (void*)&pDevInfo->devCfg;
+   config.dwOutSize = sizeof(NET_EHOME_DEVICE_CFG);
+
+   bRet = NET_ECMS_GetDevConfig(pDevInfo->lUserID,NET_EHOME_GET_DEVICE_CFG,&config,sizeof(NET_EHOME_CONFIG));
+   if(bRet)
+   {
+       SVS_LOG((SVS_LM_DEBUG, "ehome device cfg, sServerName: %s, dwChannelNum:%d,"
+                              "dwDevType: %d.",
+                              pDevInfo->devCfg.sServerName, pDevInfo->devCfg.dwChannelNum,
+                              pDevInfo->devCfg.dwServerType));
+
+   }
+   else
+   {
+       SVS_LOG((SVS_LM_WARNING, "ehome device cfg, lUserID: %d, Device ID: %s,get device cfg fail,last error:[%d].",
+                                     pDevInfo->lUserID, pDevInfo->regInfo.byDeviceID,NET_ECMS_GetLastError()));
+       return false;
+   }
+   pDevInfo->bSyncInfo = true;
+   return true;
+}
+
+
 /*********************** ehome ID ********************
 *
 * MASTER ID 20 :18 Byte number + 00 :20181023163800000100
@@ -263,9 +348,9 @@ void CDeviceStackEhome::generateLensIDbycChannel(uint8_t* pszDevID,LONG lChannel
 {
     LONG lChannelIndex = lChannel + 1;
     strncpy((char*)pszLenID, (char*)pszDevID, SVS_DEVICEID_LEN - 2);
-    snprintf((char*)&pszLenID[SVS_DEVICEID_LEN - 2],2,"%02d",lChannelIndex);
+    snprintf((char*)&pszLenID[SVS_DEVICEID_LEN - 2],3,"%02d",lChannelIndex);
 }
-LONG CDeviceStackEhome::getChannelIDbyLensID(uint8_t* pszLenID)
+LONG CDeviceStackEhome::getChannelIDbyLensID(uint8_t* pszDevID,uint8_t* pszLenID)
 {
     uint8_t ChannelIndex[SVS_DEVICEID_LEN] = {0};
     memcpy(ChannelIndex,&pszLenID[SVS_DEVICEID_LEN - 2],2);
@@ -274,6 +359,18 @@ LONG CDeviceStackEhome::getChannelIDbyLensID(uint8_t* pszLenID)
     if(0 < lChannelID) {
         lChannelID--;
     }
+
+    MAP_EHOME_DEV::iterator iter = m_EhomeDevMap.find((char*)pszDevID);
+    EHOME_DEV_INFO         *pDev = NULL;
+    if(iter == m_EhomeDevMap.end())
+    {
+        return lChannelID;
+    }
+    pDev = iter->second;
+
+    lChannelID += pDev->devInfo.dwStartChannel;
+
+
     return lChannelID;
 }
 
@@ -363,20 +460,32 @@ int32_t CDeviceStackEhome::ehomeMediaRequest(SVS_ACM::REQUEST_SEND_INVITE2DEV& r
 
     LONG  lUserID = getUserIDbyDevID((uint8_t*)&rRequest.szDeviceID[0]);
 
-    previewInfo.iChannel = getChannelIDbyLensID((uint8_t*)&rRequest.szLensID[0]);
+    previewInfo.iChannel = getChannelIDbyLensID((uint8_t*)&rRequest.szDeviceID[0],(uint8_t*)&rRequest.szLensID[0]);
     previewInfo.dwStreamType = rRequest.eStreamtype;
     previewInfo.dwLinkMode = rRequest.MediaLinkMode;
     strncpy(&previewInfo.struStreamSever.szIP[0],(char*)&rRequest.szMediaIP[0],SVS_IP_LEN);
     previewInfo.struStreamSever.wPort = rRequest.usMediaPort;
+    previewInfo.byDelayPreview = 0;
 
     BOOL ret = NET_ECMS_StartGetRealStreamV11(lUserID,&previewInfo,&previewOut);
     if(!ret) {
-        SVS_LOG((SVS_LM_ERROR, "ehome Media Request,start get real stream fail,last error:[%d].", NET_ECMS_GetLastError()));
+        SVS_LOG((SVS_LM_ERROR, "ehome Media Request,start get real stream fail,userid:[%d]"
+                               "channel:[%d],streamType:[%d],linkmode:[%d],"
+                               "server:[%s:%d],"
+                               "last error:[%d].",
+                               lUserID,
+                               previewInfo.iChannel,previewInfo.dwStreamType,previewInfo.dwLinkMode,
+                               previewInfo.struStreamSever.szIP,previewInfo.struStreamSever.wPort,
+                               NET_ECMS_GetLastError()));
         return SVS_ERROR_FAIL;
     }
     SVS_LOG((SVS_LM_DEBUG, "ehome Media Request,start get real stream success,SessionID:[%d].", previewOut.lSessionID));
     rResponse.lSessionID = previewOut.lSessionID;
     rResponse.nRequestID = rRequest.nRequestID;
+    memcpy(rResponse.szSdp, rRequest.szSdp, rRequest.SdpLen);
+    rResponse.SdpLen = rRequest.SdpLen;
+    strncpy(rResponse.szLensID, rRequest.szLensID, sizeof(rRequest.szLensID) - 1);
+    SVS_LOG((SVS_LM_DEBUG, "ehome Media Request,start get real stream callback,lenid:[%s],sdp:[%s].", rResponse.szLensID,rResponse.szSdp));
     pCallBack(rResponse, pUserData);
     SVS_LOG((SVS_LM_DEBUG, "ehome Media Request,start get real stream end."));
     return SVS_ERROR_OK;
@@ -401,7 +510,7 @@ int32_t CDeviceStackEhome::ehomeMediaPlayRequest(SVS_ACM::REQUEST_SEND_ACK2DEV& 
 }
 int32_t CDeviceStackEhome::ehomeMediaStopRequest(SVS_ACM::REQUEST_SEND_BYE2DEV& rRequest, SVS_ACM::RESPONSE_CALLBACK pCallBack, void* pUserData)
 {
-    LONG  lUserID = getUserIDbyDevID((uint8_t*)rRequest.szDeviceID[0]);
+    LONG  lUserID = getUserIDbyDevID((uint8_t*)&rRequest.szDeviceID[0]);
 
     BOOL ret = NET_ECMS_StopGetRealStream(lUserID,rRequest.lSessionID);
     if(!ret) {

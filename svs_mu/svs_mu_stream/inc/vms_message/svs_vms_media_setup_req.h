@@ -20,7 +20,7 @@ public:
                 uint32_t unTransNo);
 
     int32_t initMsgBody(uint32_t unLocalIndex,const char* pszDevID,
-                        PLAY_URL_TYPE UrlType,PLAY_TYPE PlayType,
+                        PLAY_URL_TYPE UrlType,PLAY_TYPE PlayType,DEV_STREAM_TYPE eStreamtype,
                         const char* pRtspUrl,const char* pSdpInfo,
                         uint32_t MediaLinkMode,const char* pszMediaIP,uint16_t usMediaPort);
 

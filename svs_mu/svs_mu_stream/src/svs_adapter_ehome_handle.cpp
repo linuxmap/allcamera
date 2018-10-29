@@ -76,6 +76,12 @@ void CEhomeStreamHandle::handle_preview_data(LONG  iPreviewHandle,
 {
     if(NET_EHOME_STREAMDATA != pPreviewCBMsg->byDataType)
     {
+#ifdef __PRINT_MEDIA__
+    char* pData = (char*)pPreviewCBMsg->pRecvdata;
+    SVS_LOG((SVS_LM_ERROR, "CEhomeStreamHandle::handle_preview_data, data type:[%d],len:[%d],data start[0x%02x,0x%02x,0x%02x,0x%02x ].",
+                                         pPreviewCBMsg->byDataType,pPreviewCBMsg->dwDataLen,
+                                         pData[0],pData[1],pData[2],pData[3]));
+#endif
         return;
     }
 

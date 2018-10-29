@@ -63,57 +63,57 @@ public:
 
     virtual ~CStreamSession();
 
-    int32_t init(const char* pszContent,PLAY_TYPE enPlayType);
+    virtual int32_t init(const char* pszContent,PLAY_TYPE enPlayType);
 
-    void close();
+    virtual void close();
 
-    int32_t start(CStreamMediaSetupResp *pResp);
+    virtual int32_t start(CStreamMediaSetupResp *pResp);
 
-    void setStatus(STREAM_SESSION_STATUS enStatus);
+    virtual void setStatus(STREAM_SESSION_STATUS enStatus);
 
-    STREAM_SESSION_STATUS getStatus();
+    virtual STREAM_SESSION_STATUS getStatus();
 
-    void setSessionId(uint64_t ullSessionId);
+    virtual void setSessionId(uint64_t ullSessionId);
 
-    uint64_svs getStreamId() const;
+    virtual uint64_svs getStreamId() const;
 
-    const char* getContentID() const;
+    virtual const char* getContentID() const;
 
-    void setContentID(const char* strContentID) ;
+    virtual void setContentID(const char* strContentID) ;
 
-    uint32_t getVideoCodecType() const;
+    virtual uint32_t getVideoCodecType() const;
 
-    uint32_t getVideoCodeType() const;
+    virtual uint32_t getVideoCodeType() const;
 
-    PLAY_TYPE getPlayType() const;
+    virtual PLAY_TYPE getPlayType() const;
 
-    uint32_t getTransProtocol() const;
+    virtual uint32_t getTransProtocol() const;
 
-    uint32_t getMediaTransType() const;
+    virtual uint32_t getMediaTransType() const;
 
-    uint8_t getVideoPayload()const;
+    virtual uint8_t getVideoPayload()const;
 
-    uint8_t getAudioPayload()const;
+    virtual uint8_t getAudioPayload()const;
 
-    PEER_TYPE getPeerType() const;
+    virtual PEER_TYPE getPeerType() const;
 
-    char getVideoInterleaveNum() const;
+    virtual char getVideoInterleaveNum() const;
 
-    char getAudioInterleaveNum() const;
+    virtual char getAudioInterleaveNum() const;
 
-    ACE_INET_Addr getVideoAddr() const;
+    virtual ACE_INET_Addr getVideoAddr() const;
 
-    ACE_INET_Addr getAudioAddr() const;
+    virtual ACE_INET_Addr getAudioAddr() const;
 
-    uint32_t getSessionType() const;
+    virtual uint32_t getSessionType() const;
 
-    uint32_t getSpecifyIp() const;
+    virtual uint32_t getSpecifyIp() const;
 
-    uint32_t getTransDirection() const;
+    virtual uint32_t getTransDirection() const;
 
-    void getSdpInfo(std::string& SdpInfo) const;
+    virtual void getSdpInfo(std::string& SdpInfo) const;
 
-    void Dump(ACE_HANDLE handle)const;
+    virtual void Dump(ACE_HANDLE handle)const;
 
     virtual int32_t initSesssion(PEER_TYPE unPeerType) = 0;
 

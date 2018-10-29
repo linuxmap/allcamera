@@ -35,7 +35,7 @@ int32_t CStreamMediaSetupReq::create(uint32_t unLength,
 }
 
 int32_t CStreamMediaSetupReq::initMsgBody(uint32_t unLocalIndex,const char* pszDevID,
-                                       PLAY_URL_TYPE UrlType,PLAY_TYPE PlayType,
+                                       PLAY_URL_TYPE UrlType,PLAY_TYPE PlayType,DEV_STREAM_TYPE eStreamtype,
                                        const char* pRtspUrl,const char* pSdpInfo,
                                        uint32_t MediaLinkMode,const char* pszMediaIP,uint16_t usMediaPort)
 {
@@ -51,9 +51,10 @@ int32_t CStreamMediaSetupReq::initMsgBody(uint32_t unLocalIndex,const char* pszD
         return RET_FAIL;
     }
 
-    m_pReq->LocalIndex = unLocalIndex;
-    m_pReq->UrlType    = UrlType;
-    m_pReq->PlayType   = PlayType;
+    m_pReq->LocalIndex  = unLocalIndex;
+    m_pReq->UrlType     = UrlType;
+    m_pReq->PlayType    = PlayType;
+    m_pReq->eStreamtype = eStreamtype;
     memcpy(m_pReq->DeviceID,pszDevID,DEVICE_ID_LEN);
     size_t lens = strlen(pRtspUrl);
     (void)strncpy((char*)&m_pReq->szUrl[0],pRtspUrl,lens);

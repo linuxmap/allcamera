@@ -553,7 +553,7 @@ int32_t CStreamRtmpPushSession::sendMediaSetupReq(CSVSMediaLink* linkInof)
     uint32_t ulTransType = m_pPeerSession->getMediaTransType();
 
     nRet = pReq->initMsgBody(m_unSessionIndex,linkInof->ContentID().c_str(),
-                             linkInof->UrlType(),linkInof->PlayType(),
+                             linkInof->UrlType(),linkInof->PlayType(),linkInof->StreamType(),
                              strUrl.c_str(),strSdpInfo.c_str(),
                              ulTransType,strAddr.c_str(),usPort);
     if (RET_OK != nRet)
@@ -1480,10 +1480,34 @@ int32_t CStreamRtmpPushSession::createDistribute(CSVSMediaLink* linkinfo,std::st
         sdpCreator.setSsrcByGB28181Dev(enPlayType,m_unSessionIndex);
 
     }
+    else if(SVS_DEV_TYPE_EHOME == enDevType) {
+        /* Video */
+        info.ucPayloadType = PT_TYPE_H264;
+        info.usPort        = pPeerSession->getVideoAddr().get_port_number();
+        info.strControl    = "";
+        info.strRtpmap     = "";
+        info.strFmtp       = "";
+        /* H264 ES OVER RTP */
+        info.ucPayloadType = PT_TYPE_H264;
+        sdpCreator.addVideoInfo(info);
+        /* H265 ES OVER RTP */
+        //info.ucPayloadType = PT_TYPE_H265;
+        //sdpCreator.addVideoInfo(info);
+
+        /* Audio */
+        /* PCMU OVER RTP */
+        info.ucPayloadType = PT_TYPE_PCMU;
+        info.usPort        = pPeerSession->getAudioAddr().get_port_number();
+        info.strControl    = "";
+        info.strRtpmap     = "";
+        info.strFmtp       = "";
+        sdpCreator.addAudioInfo(info);
+        /* PCMA OVER RTP */
+        info.ucPayloadType = PT_TYPE_PCMA;
+        sdpCreator.addAudioInfo(info);
+    }
 
     sdpCreator.encodeSdp(strSdpInfo,0,"");
-
-    return RET_OK;
 
     return RET_OK;
 }

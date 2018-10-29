@@ -31,13 +31,18 @@ CStreamEhomeSession::CStreamEhomeSession()
 CStreamEhomeSession::~CStreamEhomeSession()
 {
 }
+int32_t CStreamEhomeSession::start(CStreamMediaSetupResp *pResp)
+{
+    m_lEhomeSessionID = pResp->getSessionID();
+    return CStreamSession::start(pResp);
+}
 
 int32_t CStreamEhomeSession::initSesssion(PEER_TYPE unPeerType)
 {
     m_stSessionInfo.SessionType    = RTP_SESSION;
     m_stSessionInfo.PeerType       = unPeerType;
     m_stSessionInfo.TransDirection = TRANS_DIRECTION_RECVONLY;
-    m_stSessionInfo.MediaTransType = MEDIA_TRANS_TYPE_TCP;
+    m_stSessionInfo.MediaTransType = MEDIA_TRANS_TYPE_UDP;/* ehome only support udp */
     m_stSessionInfo.TransProtocol  = TRANS_PROTOCAL_UDP;
     m_stSessionInfo.SpecifyIp      = CStreamConfig::instance()->getInternalMediaIp();
     return RET_OK;

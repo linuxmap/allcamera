@@ -109,7 +109,7 @@ public:
 public:
     int32_t get_url_req(
                 const string& strParaDevID, PLAY_TYPE enParaPlayType, PLAY_URL_TYPE enPlayUrlType,
-                uint32_t ulParaStreamType, SVS_DEV_TYPE enParaDevType, string& strOutParaUrl);
+                DEV_STREAM_TYPE enParaStreamType, SVS_DEV_TYPE enParaDevType, string& strOutParaUrl);
     int32_t mu_session_setup_req(ACE_Message_Block *mb);
     int32_t mu_session_play_req(ACE_Message_Block *mb);
     int32_t mu_media_keyframe_req(ACE_Message_Block *mb);

@@ -123,7 +123,7 @@ class REQUEST_PLAY_URL_INFO : public REQUEST
 public:
     PLAY_TYPE        ePlayType;
     PLAY_URL_TYPE    ePlayUrlType;
-    uint32_t         ulStreamId;
+    DEV_STREAM_TYPE  enStreamType;
     SVS_DEV_TYPE     eDevType;
     char             szLensID[SVS_DEVICEID_LEN + 1];
 
@@ -133,7 +133,7 @@ public:
         eRequestType = REQ_TYPE_PLAY_URL_REQ;
         ePlayType    = PLAY_TYPE_MAX;
         ePlayUrlType = PLAY_URL_TYPE_MAX;
-        ulStreamId   = 0;
+        enStreamType = DEV_STREAM_TYPE_MAIN;
         eDevType = SVS_DEV_TYPE_MAX;
         memset(szLensID,0,SVS_DEVICEID_LEN + 1);
     }

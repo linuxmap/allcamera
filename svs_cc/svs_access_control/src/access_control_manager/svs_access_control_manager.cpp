@@ -11,22 +11,6 @@
 #include "svs_timer.h"
 #include "svs_device_stack.h"
 
-const char* szDevType[] =
-{
-    "Unkown",
-    "GB28181",
-    "vms",
-    "ehome",
-    "Unkown"
-};
-
-const char* szDevStatus[] =
-{
-    "offline",
-    "online",
-    "Unkown"
-};
-
 
 
 IAccessControlManager::IAccessControlManager()
@@ -222,20 +206,6 @@ int32_t IAccessControlManager::getLensInfo(std::string& strLensID, SVS_ACM::LENS
     return SVS_ERROR_OK;
 }
 
-int32_t IAccessControlManager::getRtspUrl(std::string& strLensID, std::string& strRtspUrl)
-{
-    SVS_TRACE();
-
-    {
-        ACE_GUARD_RETURN(ACE_Recursive_Thread_Mutex, guard, m_mutex, SVS_ERROR_FAIL);
-        if (m_mapLensInfo.end() == m_mapLensInfo.find(strLensID))
-        {
-            return SVS_ERROR_FAIL;
-        }
-    }
-
-    return IServerStack::instance().getRtspUrl(strLensID, strRtspUrl);
-}
 void IAccessControlManager::device_report_timer_callback(void *pArg, int32_t eventId, int32_t timerId, int32_t nDummy)
 {
     IAccessControlManager* pManager = (IAccessControlManager*)pArg;

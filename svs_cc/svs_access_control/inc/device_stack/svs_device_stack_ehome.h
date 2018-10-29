@@ -10,8 +10,10 @@
 struct EHOME_DEV_INFO
 {
     LONG                   lUserID;
+    bool                   bSyncInfo;
     NET_EHOME_DEV_REG_INFO regInfo;
     NET_EHOME_DEVICE_INFO  devInfo;
+    NET_EHOME_DEVICE_CFG   devCfg;
 };
 typedef std::map<std::string, EHOME_DEV_INFO*> MAP_EHOME_DEV;
 
@@ -36,6 +38,7 @@ public:
                             DWORD dwOutLen,void *pInBuffer, DWORD dwInLen);
     void notifyDeviceOnline(EHOME_DEV_INFO* pDevInfo);
     void notifyDeviceOffline(EHOME_DEV_INFO* pDevInfo);
+    bool queryDevInfo(EHOME_DEV_INFO* pDevInfo);
 
 private:
     static BOOL ehomeDeviceEventCallback(LONG lUserID, DWORD dwDataType, void *pOutBuffer, DWORD dwOutLen,
@@ -45,7 +48,7 @@ private:
     int32_t ehomeMediaStopRequest(SVS_ACM::REQUEST_SEND_BYE2DEV& rRequest, SVS_ACM::RESPONSE_CALLBACK pCallBack, void* pUserData);
 private:
     void generateLensIDbycChannel(uint8_t* pszDevID,LONG lChannel,uint8_t* pszLenID);
-    LONG getChannelIDbyLensID(uint8_t* pszLenID);
+    LONG getChannelIDbyLensID(uint8_t* pszDevID,uint8_t* pszLenID);
     std::string getDevIDbyUserID(LONG lUserID);
     LONG getUserIDbyDevID(uint8_t* pszDevID);
 private:

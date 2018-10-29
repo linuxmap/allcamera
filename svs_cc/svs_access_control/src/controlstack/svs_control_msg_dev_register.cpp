@@ -68,7 +68,7 @@ int32_t CControlDevRegMsg::CreateMsgBody(SVS_ACM::REQUEST& rRequest,cJSON* body)
         return SVS_ERROR_FAIL;
     }
     cJSON_AddItemToObject(devInfo,"status",status);
-    cJSON* facName = cJSON_CreateString("GB28181 Dev");
+    cJSON* facName = cJSON_CreateString(szDevType[stDeviceInfo.eDeviceType]);
     if(NULL == facName)
     {
         SVS_LOG((SVS_LM_DEBUG, "CControlDevRegMsg::CreateMsgBody,create facName object fail."));

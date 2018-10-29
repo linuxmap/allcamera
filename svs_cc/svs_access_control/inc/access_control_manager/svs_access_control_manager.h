@@ -32,7 +32,6 @@ public:
     //interface for control stack
     int32_t getDeviceInfo(std::string& strDevID, SVS_ACM::DEVICE_INFO& stDeviceInfo);
     int32_t getLensInfo(std::string& strLensID, SVS_ACM::LENS_INFO& stLensInfo);
-    int32_t getRtspUrl(std::string& strLensID, std::string& strRtspUrl);
 
 public:
     static void device_report_timer_callback(void *pArg, int32_t eventId, int32_t timerId, int32_t nDummy);

@@ -14,6 +14,8 @@
 
 const char* const CONF_FILE = "../conf/svs_access_control.conf";
 const char* const LOG_FILE  = "../log/svs_access_control.log";
+const char* const LOG_DIR   = "../log/";
+
 
 
 const int32_t FRONT_RUN  = 0;
@@ -73,14 +75,22 @@ const int32_t HTTP_MAX_TIME_PER_THREAD      = 10;
 
 
 
-/*
-enum EN_BUSINESS_SESSION_STATUS
+static const char* szDevType[] =
 {
-    EN_BUSINESS_SESSION_STATUS_INIT        = 0,
-    EN_BUSINESS_SESSION_STATUS_WAITTING_NOTIFY_DEV_RESP,
-    EN_BUSINESS_SESSION_STATUS_RUNNING
+    "Unkown",
+    "GB28181",
+    "vms",
+    "ehome",
+    "Unkown"
 };
-*/
+
+static const char* szDevStatus[] =
+{
+    "offline",
+    "online",
+    "Unkown"
+};
+
 
 
 enum EN_DEV_STREAM_STATUS

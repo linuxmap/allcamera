@@ -1631,7 +1631,6 @@ int32_t CStreamRtpSession::startRtspPullSession()
 
     SVS_LOG((SVS_LM_INFO,"rtp session[%Q] send describe message success.", getStreamId()));
 
-    // �ȴ�Ự������Զ�ȡSDP��Ϣ�����ȴ�1s
     ACE_Time_Value timeout = ACE_OS::gettimeofday() + ACE_Time_Value(1);
     if (-1 == m_rtspInitSem.acquire(timeout))
     {

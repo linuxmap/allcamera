@@ -14,6 +14,9 @@
 #define SVS_STREAM_LOG_PATH      "../log/svs_mu_stream.log"
 
 
+#define SVS_STREAM_LOG_DIR       "../log/"
+
+
 #define STREAM_MAX_QUEUE_DELAY       (100 * 1000)
 
 

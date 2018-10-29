@@ -18,7 +18,7 @@ CSVSMediaLink::CSVSMediaLink()
    m_strServerIP  = str_arg_no;
    m_ulPort       = 554;
    m_strContentID = str_arg_no;
-   m_ulStreamtype = 0;
+   m_enStreamtype = DEV_STREAM_TYPE_MAIN;
    m_strStartTime = str_arg_no;
    m_strEndTime   = str_arg_no;
 }
@@ -244,9 +244,9 @@ int32_t CSVSMediaLinkFactory::parseMediaUrl(const std::string& strUrl,CSVSMediaL
     Idx = strTmp.find(str_arg_eq);
     while(std::string::npos != Idx)
     {
+        Idx += 1;
         std::string strarg = strTmp.substr(0, Idx);
         std::string strvalue = "";
-        Idx += 1;
         strTmp = strTmp.substr(Idx);
         Idx = strTmp.find(str_splitchar);
         if(std::string::npos == Idx) {
@@ -260,7 +260,13 @@ int32_t CSVSMediaLinkFactory::parseMediaUrl(const std::string& strUrl,CSVSMediaL
         }
         /* set the args */
         if(str_streamtype == strarg) {
-            linkInfo->StreamType(atoi(strvalue.c_str()));
+            uint32_t ulStreamType = atoi(strvalue.c_str());
+            if(DEV_STREAM_TYPE_MAIN == ulStreamType) {
+                linkInfo->StreamType(DEV_STREAM_TYPE_MAIN);
+            }
+            else if(DEV_STREAM_TYPE_SUB == ulStreamType) {
+                linkInfo->StreamType(DEV_STREAM_TYPE_SUB);
+            }
         }
         else if(str_devtype == strarg) {
             uint32_t ulDevType = atoi(strvalue.c_str());
@@ -269,6 +275,9 @@ int32_t CSVSMediaLinkFactory::parseMediaUrl(const std::string& strUrl,CSVSMediaL
             }
             else if(SVS_DEV_TYPE_GB28181 == ulDevType) {
                 linkInfo->DevType(SVS_DEV_TYPE_GB28181);
+            }
+            else if(SVS_DEV_TYPE_EHOME == ulDevType) {
+                linkInfo->DevType(SVS_DEV_TYPE_EHOME);
             }
         }
         else if(str_starttime == strarg) {
