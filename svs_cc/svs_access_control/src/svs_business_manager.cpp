@@ -276,8 +276,8 @@ int32_t CRealTimeBusiness::mu_session_setup_realtime(ACE_Message_Block *mb, uint
         return SVS_ERROR_CODE_FAIL;
     }
 
-    SVS_MSG_MDU_SESSION_SETUP_REQ* t_pReq
-        = (SVS_MSG_MDU_SESSION_SETUP_REQ*)(void*)GetCommonHdr(mb->rd_ptr());
+    SVS_MSG_STREAM_SESSION_SETUP_REQ* t_pReq
+        = (SVS_MSG_STREAM_SESSION_SETUP_REQ*)(void*)GetCommonHdr(mb->rd_ptr());
     if (NULL == t_pReq)
     {
         SVS_LOG((SVS_LM_ERROR,
@@ -409,8 +409,8 @@ int32_t CRealTimeBusiness::mu_session_play_realtime(ACE_Message_Block *mb)
         return -1;
     }
 
-    SVS_MSG_MDU_SESSION_PLAY_REQ* t_pReq
-        = (SVS_MSG_MDU_SESSION_PLAY_REQ*)(void*)GetCommonHdr(mb->rd_ptr());
+    SVS_MSG_STREAM_SESSION_PLAY_REQ* t_pReq
+        = (SVS_MSG_STREAM_SESSION_PLAY_REQ*)(void*)GetCommonHdr(mb->rd_ptr());
     if (NULL == t_pReq)
     {
         SVS_LOG((SVS_LM_ERROR,
@@ -534,8 +534,8 @@ int32_t CRealTimeBusiness::mu_media_keyframe_req(ACE_Message_Block *mb)
         return -1;
     }
 
-    SVS_MSG_MDU_KEY_FRAME_REQ* t_pReq
-        = (SVS_MSG_MDU_KEY_FRAME_REQ*)(void*)GetCommonHdr(mb->rd_ptr());
+    SVS_MSG_STREAM_KEY_FRAME_REQ* t_pReq
+        = (SVS_MSG_STREAM_KEY_FRAME_REQ*)(void*)GetCommonHdr(mb->rd_ptr());
     if (NULL == t_pReq)
     {
         SVS_LOG((SVS_LM_ERROR,
@@ -776,8 +776,8 @@ int32_t CRealTimeBusiness::mu_session_teardown_req(ACE_Message_Block *mb)
         return -1;
     }
 
-    SVS_MSG_MDU_SESSION_TEARDOWN_REQ* t_pReq
-        = (SVS_MSG_MDU_SESSION_TEARDOWN_REQ*)(void*)GetCommonHdr(mb->rd_ptr());
+    SVS_MSG_STREAM_SESSION_TEARDOWN_REQ* t_pReq
+        = (SVS_MSG_STREAM_SESSION_TEARDOWN_REQ*)(void*)GetCommonHdr(mb->rd_ptr());
     if (NULL == t_pReq)
     {
         SVS_LOG((SVS_LM_ERROR,
@@ -1241,8 +1241,8 @@ int32_t CBusinessManager::mu_session_setup_req(ACE_Message_Block *mb)
         return 0;
     }
 
-    SVS_MSG_MDU_SESSION_SETUP_REQ* t_pReq
-        = (SVS_MSG_MDU_SESSION_SETUP_REQ*)(void*)GetCommonHdr(mb->rd_ptr());
+    SVS_MSG_STREAM_SESSION_SETUP_REQ* t_pReq
+        = (SVS_MSG_STREAM_SESSION_SETUP_REQ*)(void*)GetCommonHdr(mb->rd_ptr());
     if (NULL == t_pReq)
     {
         SVS_LOG((SVS_LM_ERROR,
@@ -1284,8 +1284,8 @@ int32_t CBusinessManager::mu_session_setup_realtime(ACE_Message_Block *mb)
         return -1;
     }
 
-    SVS_MSG_MDU_SESSION_SETUP_REQ* t_pReq
-        = (SVS_MSG_MDU_SESSION_SETUP_REQ*)(void*)GetCommonHdr(mb->rd_ptr());
+    SVS_MSG_STREAM_SESSION_SETUP_REQ* t_pReq
+        = (SVS_MSG_STREAM_SESSION_SETUP_REQ*)(void*)GetCommonHdr(mb->rd_ptr());
     if (NULL == t_pReq)
     {
         SVS_LOG((SVS_LM_ERROR,
@@ -1429,8 +1429,8 @@ int32_t CBusinessManager::mu_session_play_req(ACE_Message_Block *mb)
         return -1;
     }
 
-    SVS_MSG_MDU_SESSION_PLAY_REQ* t_pReq
-        = (SVS_MSG_MDU_SESSION_PLAY_REQ*)(void*)GetCommonHdr(mb->rd_ptr());
+    SVS_MSG_STREAM_SESSION_PLAY_REQ* t_pReq
+        = (SVS_MSG_STREAM_SESSION_PLAY_REQ*)(void*)GetCommonHdr(mb->rd_ptr());
     if (NULL == t_pReq)
     {
         SVS_LOG((SVS_LM_ERROR,
@@ -1515,8 +1515,8 @@ int32_t CBusinessManager::mu_media_keyframe_req(ACE_Message_Block *mb)
         return -1;
     }
 
-    SVS_MSG_MDU_KEY_FRAME_REQ* t_pReq
-        = (SVS_MSG_MDU_KEY_FRAME_REQ*)(void*)GetCommonHdr(mb->rd_ptr());
+    SVS_MSG_STREAM_KEY_FRAME_REQ* t_pReq
+        = (SVS_MSG_STREAM_KEY_FRAME_REQ*)(void*)GetCommonHdr(mb->rd_ptr());
     if (NULL == t_pReq)
     {
         SVS_LOG((SVS_LM_ERROR,
@@ -1616,8 +1616,8 @@ int32_t CBusinessManager::mu_media_keyframe_resp(ACE_Message_Block *mb)
         return -1;
     }
 
-    AC_INTER_MSG_MDU_KEY_FRAME_RESP* t_pReq
-        = (AC_INTER_MSG_MDU_KEY_FRAME_RESP*)(void*)(mb->rd_ptr());
+    AC_INTER_MSG_STREAM_KEY_FRAME_RESP* t_pReq
+        = (AC_INTER_MSG_STREAM_KEY_FRAME_RESP*)(void*)(mb->rd_ptr());
     if (NULL == t_pReq)
     {
         SVS_LOG((SVS_LM_ERROR,
@@ -1707,8 +1707,8 @@ int32_t CBusinessManager::mu_session_teardown_req(ACE_Message_Block *mb)
         return -1;
     }
 
-    SVS_MSG_MDU_SESSION_TEARDOWN_REQ* pReq
-        = (SVS_MSG_MDU_SESSION_TEARDOWN_REQ*)(void*)GetCommonHdr(mb->rd_ptr());
+    SVS_MSG_STREAM_SESSION_TEARDOWN_REQ* pReq
+        = (SVS_MSG_STREAM_SESSION_TEARDOWN_REQ*)(void*)GetCommonHdr(mb->rd_ptr());
     if (NULL == pReq)
     {
         SVS_LOG((SVS_LM_ERROR, "Invalid parameter. pReq is null."));
@@ -1987,23 +1987,23 @@ void CBusinessManager::send_mdu_session_setup_resp(int32_t iRespCode,CBusiness* 
     }
 
     // ready to send response
-    ACE_Message_Block *mbResopnse = allockMessageBlock(sizeof (SVS_MSG_MDU_SESSION_SETUP_RESP));
+    ACE_Message_Block *mbResopnse = allockMessageBlock(sizeof (SVS_MSG_STREAM_SESSION_SETUP_RESP));
     if (NULL == mbResopnse)
     {
         SVS_LOG((SVS_LM_ERROR, "Fail to allocate AceMessageBlock object when send live video share response."));
         return ;
     }
 
-    SVS_MSG_MDU_SESSION_SETUP_RESP* pResp
-        = ((SVS_MSG_MDU_SESSION_SETUP_RESP*)(void*)mbResopnse->rd_ptr());
+    SVS_MSG_STREAM_SESSION_SETUP_RESP* pResp
+        = ((SVS_MSG_STREAM_SESSION_SETUP_RESP*)(void*)mbResopnse->rd_ptr());
 
-    (void)ACE_OS::memset(pResp, 0, sizeof(SVS_MSG_MDU_SESSION_SETUP_RESP) );
+    (void)ACE_OS::memset(pResp, 0, sizeof(SVS_MSG_STREAM_SESSION_SETUP_RESP) );
     uint16_t usTransNum = pBusiness->getReqTranNum();
     FillCommonHeader(
         &pResp->MsgHeader,
-        SVS_MSG_TYPE_MDU_SESSION_SETUP_RESP,
+        SVS_MSG_TYPE_STREAM_SESSION_SETUP_RESP,
         transactionno_respond(usTransNum),
-        sizeof(SVS_MSG_MDU_SESSION_SETUP_RESP));
+        sizeof(SVS_MSG_STREAM_SESSION_SETUP_RESP));
 
     pResp->LocalIndex = pBusiness->getReqLocalIndex();
     pResp->RespCode   = iRespCode;
@@ -2014,7 +2014,7 @@ void CBusinessManager::send_mdu_session_setup_resp(int32_t iRespCode,CBusiness* 
     string t_strDevID = pBusiness->getDevID();
     ACE_OS::strncpy((char*)pResp->DeviceID, t_strDevID.c_str(), DEVICE_ID_LEN);
 
-    mbResopnse->wr_ptr(sizeof(SVS_MSG_MDU_SESSION_SETUP_RESP));
+    mbResopnse->wr_ptr(sizeof(SVS_MSG_STREAM_SESSION_SETUP_RESP));
 
     // putTmpSendMsg(byte2int(mb), mbResopnse);
     CServerManager* pCServerManager = &CServerManager::instance();
@@ -2052,8 +2052,8 @@ void CBusinessManager::send_mdu_session_setup_resp(
         return;
     }
 
-    SVS_MSG_MDU_SESSION_SETUP_REQ* t_pReq
-        = (SVS_MSG_MDU_SESSION_SETUP_REQ*)(void*)GetCommonHdr(mb->rd_ptr());
+    SVS_MSG_STREAM_SESSION_SETUP_REQ* t_pReq
+        = (SVS_MSG_STREAM_SESSION_SETUP_REQ*)(void*)GetCommonHdr(mb->rd_ptr());
     if (NULL == t_pReq)
     {
         SVS_LOG((SVS_LM_ERROR,
@@ -2069,23 +2069,23 @@ void CBusinessManager::send_mdu_session_setup_resp(
                     t_szDevID, iRespCode));
 
     // ready to send response
-    ACE_Message_Block *mbResopnse = allockMessageBlock(sizeof (SVS_MSG_MDU_SESSION_SETUP_RESP));
+    ACE_Message_Block *mbResopnse = allockMessageBlock(sizeof (SVS_MSG_STREAM_SESSION_SETUP_RESP));
     if (NULL == mbResopnse)
     {
         SVS_LOG((SVS_LM_ERROR, "Fail to allocate AceMessageBlock object when send live video share response."));
         return ;
     }
 
-    SVS_MSG_MDU_SESSION_SETUP_RESP* pResp
-        = ((SVS_MSG_MDU_SESSION_SETUP_RESP*)(void*)mbResopnse->rd_ptr());
+    SVS_MSG_STREAM_SESSION_SETUP_RESP* pResp
+        = ((SVS_MSG_STREAM_SESSION_SETUP_RESP*)(void*)mbResopnse->rd_ptr());
 
-    (void)ACE_OS::memset(pResp, 0, sizeof(SVS_MSG_MDU_SESSION_SETUP_RESP) );
+    (void)ACE_OS::memset(pResp, 0, sizeof(SVS_MSG_STREAM_SESSION_SETUP_RESP) );
     uint16_t usTransNum = t_pReq->MsgHeader.TransactionNo;
     FillCommonHeader(
         &pResp->MsgHeader,
-        SVS_MSG_TYPE_MDU_SESSION_SETUP_RESP,
+        SVS_MSG_TYPE_STREAM_SESSION_SETUP_RESP,
         transactionno_respond(usTransNum),
-        sizeof(SVS_MSG_MDU_SESSION_SETUP_RESP));
+        sizeof(SVS_MSG_STREAM_SESSION_SETUP_RESP));
 
     pResp->LocalIndex = t_pReq->LocalIndex;
     pResp->RespCode = iRespCode;
@@ -2109,7 +2109,7 @@ void CBusinessManager::send_mdu_session_setup_resp(
         ACE_OS::memcpy(pResp->szSdp, t_pReq->szSdp, SDP_MSG_LENS);
     }
 
-    mbResopnse->wr_ptr(sizeof(SVS_MSG_MDU_SESSION_SETUP_RESP));
+    mbResopnse->wr_ptr(sizeof(SVS_MSG_STREAM_SESSION_SETUP_RESP));
 
     CServerManager* pCServerManager = &CServerManager::instance();
     // int32_t iRet = 0;
@@ -2144,8 +2144,8 @@ void CBusinessManager::send_mdu_session_play_resp(int32_t iRespCode, ACE_Message
         return;
     }
 
-    SVS_MSG_MDU_SESSION_PLAY_REQ* t_pReq
-        = (SVS_MSG_MDU_SESSION_PLAY_REQ*)(void*)GetCommonHdr(mb->rd_ptr());
+    SVS_MSG_STREAM_SESSION_PLAY_REQ* t_pReq
+        = (SVS_MSG_STREAM_SESSION_PLAY_REQ*)(void*)GetCommonHdr(mb->rd_ptr());
     if (NULL == t_pReq)
     {
         SVS_LOG((SVS_LM_ERROR,
@@ -2158,7 +2158,7 @@ void CBusinessManager::send_mdu_session_play_resp(int32_t iRespCode, ACE_Message
     ACE_OS::memcpy(t_szDevID,  (const char*)t_pReq->DeviceID, DEVICE_ID_LEN);
 
     // ready to send response
-    ACE_Message_Block *mbResopnse = allockMessageBlock(sizeof (SVS_MSG_MDU_SESSION_PLAY_RESP));
+    ACE_Message_Block *mbResopnse = allockMessageBlock(sizeof (SVS_MSG_STREAM_SESSION_PLAY_RESP));
     if (NULL == mbResopnse)
     {
         SVS_LOG((SVS_LM_ERROR, "Fail to allocate AceMessageBlock object when send mu session play response, "
@@ -2167,23 +2167,23 @@ void CBusinessManager::send_mdu_session_play_resp(int32_t iRespCode, ACE_Message
         return ;
     }
 
-    SVS_MSG_MDU_SESSION_PLAY_RESP* pResp
-        = ((SVS_MSG_MDU_SESSION_PLAY_RESP*)(void*)mbResopnse->rd_ptr());
+    SVS_MSG_STREAM_SESSION_PLAY_RESP* pResp
+        = ((SVS_MSG_STREAM_SESSION_PLAY_RESP*)(void*)mbResopnse->rd_ptr());
 
-    (void)ACE_OS::memset(pResp, 0, sizeof(SVS_MSG_MDU_SESSION_PLAY_RESP) );
+    (void)ACE_OS::memset(pResp, 0, sizeof(SVS_MSG_STREAM_SESSION_PLAY_RESP) );
     uint16_t usTransNum = t_pReq->MsgHeader.TransactionNo;
     FillCommonHeader(
         &pResp->MsgHeader,
-        SVS_MSG_TYPE_MDU_SESSION_PLAY_RESP,
+        SVS_MSG_TYPE_STREAM_SESSION_PLAY_RESP,
         transactionno_respond(usTransNum),
-        sizeof(SVS_MSG_MDU_SESSION_PLAY_RESP));
+        sizeof(SVS_MSG_STREAM_SESSION_PLAY_RESP));
 
     pResp->LocalIndex = t_pReq->LocalIndex;
     pResp->UrlType    = t_pReq->UrlType;
     pResp->RespCode = iRespCode;
     ACE_OS::memcpy((char*)pResp->DeviceID,  (const char*)t_pReq->DeviceID, DEVICE_ID_LEN);
 
-    mbResopnse->wr_ptr(sizeof(SVS_MSG_MDU_SESSION_PLAY_RESP));
+    mbResopnse->wr_ptr(sizeof(SVS_MSG_STREAM_SESSION_PLAY_RESP));
 
     CServerManager* pCServerManager = &CServerManager::instance();
     CServer* pCServer = NULL;
@@ -2217,8 +2217,8 @@ void CBusinessManager::send_mu_session_teardown_resp(int32_t iRespCode,ACE_Messa
         return;
     }
 
-    SVS_MSG_MDU_SESSION_TEARDOWN_REQ* t_pReq
-        = (SVS_MSG_MDU_SESSION_TEARDOWN_REQ*)(void*)GetCommonHdr(mb->rd_ptr());
+    SVS_MSG_STREAM_SESSION_TEARDOWN_REQ* t_pReq
+        = (SVS_MSG_STREAM_SESSION_TEARDOWN_REQ*)(void*)GetCommonHdr(mb->rd_ptr());
     if (NULL == t_pReq)
     {
         SVS_LOG((SVS_LM_ERROR,
@@ -2231,7 +2231,7 @@ void CBusinessManager::send_mu_session_teardown_resp(int32_t iRespCode,ACE_Messa
     ACE_OS::memcpy(t_szDevID,  (const char*)t_pReq->DeviceID, DEVICE_ID_LEN);
 
     // ready to send response
-    ACE_Message_Block *mbResopnse = allockMessageBlock(sizeof (SVS_MSG_MDU_SESSION_TEARDOWN_RESP));
+    ACE_Message_Block *mbResopnse = allockMessageBlock(sizeof (SVS_MSG_STREAM_SESSION_TEARDOWN_RESP));
     if (NULL == mbResopnse)
     {
         SVS_LOG((SVS_LM_ERROR, "Fail to allocate AceMessageBlock object when send mu session teardown response."));
@@ -2242,23 +2242,23 @@ void CBusinessManager::send_mu_session_teardown_resp(int32_t iRespCode,ACE_Messa
     // uint16_t usVTDUPort   = 0;
     // uint32_t uiBusinessID = 0;
 
-    SVS_MSG_MDU_SESSION_TEARDOWN_RESP* pResp
-        = ((SVS_MSG_MDU_SESSION_TEARDOWN_RESP*)(void*)mbResopnse->rd_ptr());
+    SVS_MSG_STREAM_SESSION_TEARDOWN_RESP* pResp
+        = ((SVS_MSG_STREAM_SESSION_TEARDOWN_RESP*)(void*)mbResopnse->rd_ptr());
 
-    (void)ACE_OS::memset(pResp, 0, sizeof(SVS_MSG_MDU_SESSION_TEARDOWN_RESP) );
+    (void)ACE_OS::memset(pResp, 0, sizeof(SVS_MSG_STREAM_SESSION_TEARDOWN_RESP) );
     uint16_t usTransNum = t_pReq->MsgHeader.TransactionNo;
 
     FillCommonHeader(
         &pResp->MsgHeader,
-        SVS_MSG_TYPE_MDU_SESSION_TEARDOWN_RESP,
+        SVS_MSG_TYPE_STREAM_SESSION_TEARDOWN_RESP,
         transactionno_respond(usTransNum),
-        sizeof(SVS_MSG_MDU_SESSION_TEARDOWN_RESP));
+        sizeof(SVS_MSG_STREAM_SESSION_TEARDOWN_RESP));
 
     pResp->LocalIndex = t_pReq->LocalIndex;
     pResp->RespCode = iRespCode;
     ACE_OS::memcpy((char*)pResp->DeviceID,  (const char*)t_pReq->DeviceID, DEVICE_ID_LEN);
 
-    mbResopnse->wr_ptr(sizeof(SVS_MSG_MDU_SESSION_TEARDOWN_RESP));
+    mbResopnse->wr_ptr(sizeof(SVS_MSG_STREAM_SESSION_TEARDOWN_RESP));
 
     CServerManager* pCServerManager = &CServerManager::instance();
     // int32_t iRet = 0;

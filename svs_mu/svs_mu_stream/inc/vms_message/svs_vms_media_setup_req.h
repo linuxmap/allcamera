@@ -32,8 +32,8 @@ public:
 
 private:
     SVS_MSG_STREAM_SESSION_SETUP_REQ   *m_pReq;
-    std::string                      m_strRtspUrl;
-    std::string                      m_strSdp;
+    std::string                         m_strRtspUrl;
+    std::string                         m_strSdp;
 };
 
 #endif /* STREAMMEDIASETUPREQ_H_ */

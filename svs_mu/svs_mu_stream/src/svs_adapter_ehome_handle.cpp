@@ -11,6 +11,7 @@
 #include "svs_adapter_media_exchange.h"
 #include "svs_adapter_session_factory.h"
 #include "svs_utility.h"
+#include "svs_adapter_sdp.h"
 
 #define __PRINT_MEDIA__
 
@@ -274,7 +275,6 @@ void CEhomeStreamHandle::send_audio_frame(es_frame_info& FrameInfo,char* pData,u
 {
     ACE_Message_Block *pMsg = NULL;
     size_t rtpHeadPos = sizeof(RTP_FIXED_HEADER);
-    uint32_t ulRtpPlayLoadLen = 0;
     int32_t nRet = RET_OK;
     if(ulLens  > RTP_PLAYLOAD_LEN)
     {
@@ -556,7 +556,7 @@ void CEhomeStreamHandle::ProgramEStramHead(es_frame_info& FrameInfo,char*& pData
     {
 #ifdef __PRINT_MEDIA__
     SVS_LOG((SVS_LM_ERROR, "CStreamPsMediaProcessorSet::ProgramEStramHead, discard pes head len:[%d],packet len:[%d],payload:[%d].",
-                                         ulPesHeadLen,length,FrameInfo.payload));
+                                         ulPesHeadLen,ulLens,FrameInfo.payload));
 #endif
         /* error */
         return;
@@ -586,7 +586,7 @@ void CEhomeStreamHandle::ProgramEStramHead(es_frame_info& FrameInfo,char*& pData
 
     return;
 }
-void CEhomeHandle::getNextRtpSeq(uint16_t& usCurSeq,uint16_t count)
+void CEhomeStreamHandle::getNextRtpSeq(uint16_t& usCurSeq,uint16_t count)
 {
     if((0xFFFF - usCurSeq) < count)
     {

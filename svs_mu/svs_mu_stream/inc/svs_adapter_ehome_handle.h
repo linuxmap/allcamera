@@ -5,6 +5,7 @@
 #include "HCEHomeStream.h"
 #include "HCEHomePublic.h"
 #include <map>
+#include "svs_adapter_mpeg_def.h"
 
 class CEhomeStreamHandle
 {

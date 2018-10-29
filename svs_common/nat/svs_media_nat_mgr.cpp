@@ -1,4 +1,4 @@
-// CMduNatMgr.cpp: implementation of the CMduNatMgr class.
+// CStreamNatMgr.cpp: implementation of the CStreamNatMgr class.
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -10,17 +10,17 @@
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-CMduNatMgr::CMduNatMgr()
+CStreamNatMgr::CStreamNatMgr()
 {
     m_bNatAG = false;
     m_pTimeReactor = NULL;
 }
 
-CMduNatMgr::~CMduNatMgr()
+CStreamNatMgr::~CStreamNatMgr()
 {
 
 }
-int32_t CMduNatMgr::Open(string strConfigfile,ACE_Reactor *pTimeReactor)
+int32_t CStreamNatMgr::Open(string strConfigfile,ACE_Reactor *pTimeReactor)
 {
     if(NULL == pTimeReactor)
     {
@@ -55,7 +55,7 @@ int32_t CMduNatMgr::Open(string strConfigfile,ACE_Reactor *pTimeReactor)
     return 0;
 }
 
-void CMduNatMgr::CheckNatIP(uint32_t ulSrcIP,uint32_t& ulNatIP)
+void CStreamNatMgr::CheckNatIP(uint32_t ulSrcIP,uint32_t& ulNatIP)
 {
     ulNatIP = ulSrcIP;
     if(false == m_bNatAG)
@@ -73,7 +73,7 @@ void CMduNatMgr::CheckNatIP(uint32_t ulSrcIP,uint32_t& ulNatIP)
     SVS_LOG((SVS_LM_DEBUG,"nat the ip:[%u] to :[%u]",ulSrcIP,ulNatIP));
     return;
 }
-int32_t CMduNatMgr::ReadNatConfig()
+int32_t CStreamNatMgr::ReadNatConfig()
 {
     SVS_LOG((SVS_LM_DEBUG,"Read the nat config Start!"));
     char   szReadBuffer[1024] = {0};
@@ -158,7 +158,7 @@ int32_t CMduNatMgr::ReadNatConfig()
     }
     return 0;
 }
-int32_t CMduNatMgr::handle_timeout(const ACE_Time_Value &tv, const void *arg)
+int32_t CStreamNatMgr::handle_timeout(const ACE_Time_Value &tv, const void *arg)
 {
     if(NULL != arg)
     {

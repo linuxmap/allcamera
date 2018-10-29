@@ -179,7 +179,8 @@ typedef enum _enES_TYPE_E
 
 
 #define PS_HEAD_BUF_SIZE_MAX   32
-#pragma pack(1)
+
+#pragma pack(push, 1)
 union littel_endian_size
 {
     unsigned short int  length;

@@ -254,7 +254,7 @@ typedef struct _KEY_FRAME_USER_DATA
     SVS_MSG_HEADER          stRequestHeader;  // 响应中带着
 }KEY_FRAME_USER_DATA;
 
-typedef struct _AC_INTER_MSG_MDU_KEY_FRAME_RESP
+typedef struct _AC_INTER_MSG_STREAM_KEY_FRAME_RESP
 {
     SVS_RECV_MSG_HDR        hdrInner;
     SVS_MSG_HEADER          MsgHeader;
@@ -262,7 +262,7 @@ typedef struct _AC_INTER_MSG_MDU_KEY_FRAME_RESP
     uint8_t                 DeviceID[DEVICE_ID_LEN];
     uint32_t                ServerIndex;
     uint32_t                RespCode;
-}AC_INTER_MSG_MDU_KEY_FRAME_RESP;
+}AC_INTER_MSG_STREAM_KEY_FRAME_RESP;
 
 
 #pragma pack(pop)

@@ -200,7 +200,7 @@ void IServerStack::asyncResponse(SVS_ACM::RESPONSE& rResponse, void* pUserData)
             SVS_ACM::RESPONSE* pKeyFrameResp = (SVS_ACM::RESPONSE*)&rResponse;
 
             // send response to server manager
-            ACE_Message_Block *mbResopnse = allockMessageBlock(sizeof (AC_INTER_MSG_MDU_KEY_FRAME_RESP));
+            ACE_Message_Block *mbResopnse = allockMessageBlock(sizeof (AC_INTER_MSG_STREAM_KEY_FRAME_RESP));
             if (NULL == mbResopnse)
             {
                 SVS_LOG((SVS_LM_ERROR, "Fail to allocate AceMessageBlock object when send keyframe response."));
@@ -216,8 +216,8 @@ void IServerStack::asyncResponse(SVS_ACM::RESPONSE& rResponse, void* pUserData)
 
             const KEY_FRAME_USER_DATA* pKeyFrameUserData = (const KEY_FRAME_USER_DATA*)pUserData;
 
-            AC_INTER_MSG_MDU_KEY_FRAME_RESP* pResp
-                = ((AC_INTER_MSG_MDU_KEY_FRAME_RESP*)(void*)mbResopnse->rd_ptr());
+            AC_INTER_MSG_STREAM_KEY_FRAME_RESP* pResp
+                = ((AC_INTER_MSG_STREAM_KEY_FRAME_RESP*)(void*)mbResopnse->rd_ptr());
 
             char    szDeviceID[SVS_DEVICEID_LEN+1] = {0};
             strncpy(szDeviceID, (const char*)pKeyFrameUserData->DeviceID, SVS_DEVICEID_LEN);
@@ -226,13 +226,13 @@ void IServerStack::asyncResponse(SVS_ACM::RESPONSE& rResponse, void* pUserData)
                              "deal keyframe asyncResponse, DeviceID=%s, RespCode=%d.",
                              szDeviceID, pKeyFrameResp->nResponseCode));
 
-            (void)ACE_OS::memset(pResp, 0, sizeof(AC_INTER_MSG_MDU_KEY_FRAME_RESP) );
+            (void)ACE_OS::memset(pResp, 0, sizeof(AC_INTER_MSG_STREAM_KEY_FRAME_RESP) );
             uint16_t usTransNum = (uint16_t)pKeyFrameResp->nRequestID;
             FillCommonHeader(
                 &pResp->MsgHeader,
                 SVS_MSG_TYPE_AC_INTER_MSG_KEYFRAME_RESP,
                 transactionno_respond(usTransNum),
-                sizeof(AC_INTER_MSG_MDU_KEY_FRAME_RESP));
+                sizeof(AC_INTER_MSG_STREAM_KEY_FRAME_RESP));
             memcpy(pResp->DeviceID, pKeyFrameUserData->DeviceID, SVS_DEVICEID_LEN);
             memcpy(&pResp->ReqMsgHeader, &pKeyFrameUserData->stRequestHeader, SDP_MSG_LENS);
 

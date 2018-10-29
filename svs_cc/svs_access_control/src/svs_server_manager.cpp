@@ -548,7 +548,7 @@ int32_t CStreamServer::handle_load_info_report_req(const char* pszMsg)
 
     SVS_LOG((SVS_LM_INFO, "deal mu load info report request, SvrID=%s.", m_szServerID));
 
-    SVS_MSG_MDU_LOAD_INFO_REQ* t_pReq = (SVS_MSG_MDU_LOAD_INFO_REQ*)(void*)pszMsg;
+    SVS_MSG_STREAM_LOAD_INFO_REQ* t_pReq = (SVS_MSG_STREAM_LOAD_INFO_REQ*)(void*)pszMsg;
     if (NULL == t_pReq)
     {
         SVS_LOG((SVS_LM_ERROR,
@@ -1285,7 +1285,7 @@ int32_t CServerManager::processMsg(ACE_Message_Block *mb)
     case SVS_MSG_TYPE_SERVER_REGIST_REQ:
         handleServerReg(byte2int(mb),GetCommonHdr(mb->rd_ptr()));
         break;
-    case SVS_MSG_TYPE_MDU_SESSION_SETUP_REQ:
+    case SVS_MSG_TYPE_STREAM_SESSION_SETUP_REQ:
         {
             iRet = CBusinessManager::instance().mu_session_setup_req(mb);
         }
@@ -1310,17 +1310,17 @@ int32_t CServerManager::processMsg(ACE_Message_Block *mb)
             handleServerBusinessReport(byte2int(mb),GetCommonHdr(mb->rd_ptr()));
             break;
         }
-    case SVS_MSG_TYPE_MDU_LOAD_INFO_REQ:
+    case SVS_MSG_TYPE_STREAM_LOAD_INFO_REQ:
         {
             handleServerLoadInfoReq(byte2int(mb),GetCommonHdr(mb->rd_ptr()));
             break;
         }
-    case SVS_MSG_TYPE_MDU_SESSION_TEARDOWN_REQ:
+    case SVS_MSG_TYPE_STREAM_SESSION_TEARDOWN_REQ:
         {
             iRet = CBusinessManager::instance().mu_session_teardown_req(mb);
             break;
         }
-    case SVS_MSG_TYPE_MDU_SESSION_PLAY_REQ:
+    case SVS_MSG_TYPE_STREAM_SESSION_PLAY_REQ:
         {
             CBusinessManager::instance().mu_session_play_req(mb);
             break;
@@ -1754,7 +1754,7 @@ void CServerManager::handleServerLoadInfoReq(uint32_t ulHandleIndex,const char* 
 
     int32_t     nRet = 0;
 
-    SVS_MSG_MDU_LOAD_INFO_REQ* pReqMsg = (SVS_MSG_MDU_LOAD_INFO_REQ*)(void*)pszMsg;
+    SVS_MSG_STREAM_LOAD_INFO_REQ* pReqMsg = (SVS_MSG_STREAM_LOAD_INFO_REQ*)(void*)pszMsg;
     CServer* pCServer = NULL;
 
     SVS_LOG((SVS_LM_DEBUG, "handle server load info report message, msgtype[0x%x] transno[0x%x] msglen:[%d].",
@@ -1782,9 +1782,9 @@ void CServerManager::handleServerLoadInfoReq(uint32_t ulHandleIndex,const char* 
     stRespMsg.MsgHeader.ProtocolVersion = pReqMsg->MsgHeader.ProtocolVersion;
     stRespMsg.MsgHeader.TransactionNo   = transactionno_respond(pReqMsg->MsgHeader.TransactionNo);
     stRespMsg.MsgHeader.PacketLength    = sizeof(SVS_MSG_COMMON_RESP);
-    stRespMsg.MsgHeader.MsgType         = SVS_MSG_TYPE_MDU_LOAD_INFO_RESP;
+    stRespMsg.MsgHeader.MsgType         = SVS_MSG_TYPE_STREAM_LOAD_INFO_RESP;
     stRespMsg.RespCode                  = nRet;
-    stRespMsg.RequestType       = SVS_MSG_TYPE_MDU_LOAD_INFO_REQ;
+    stRespMsg.RequestType       = SVS_MSG_TYPE_STREAM_LOAD_INFO_REQ;
 
     nRet = sendMessage(ulHandleIndex,(char*)&stRespMsg,sizeof(SVS_MSG_COMMON_RESP));
     if(0 != nRet)

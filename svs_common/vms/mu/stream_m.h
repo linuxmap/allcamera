@@ -113,7 +113,7 @@ enum SVS_MSG_RETURN_CODE
     SVS_MSG_MU_RESIGER_EXCEED_MAX_CNT_ERR   = 0x2208,
     SVS_MSG_MU_RESIGER_PARA_ERR             = 0x2209,
     SVS_MSG_SERVER_RESIGER_SERVER_NOT_EXIST = 0x220a,
-    SVS_MSG_SERVER_RESIGER_MDU_NO_IP_LIST   = 0x220b,
+    SVS_MSG_SERVER_RESIGER_STREAM_NO_IP_LIST   = 0x220b,
     SVS_MSG_SERVER_RESIGER_AUTH_FAIL        = 0x220c,
 
     SVS_MSG_RECORD_TASK_EXIST_ERR           = 0x2300,
@@ -143,7 +143,7 @@ enum SVS_MSG_RETURN_CODE
     SVS_MSG_STREAM_CREATE_RESOURCE_FAIL      = 0x2404,
     SVS_MSG_STREAM_MEDIA_FILE_ABNORMAL       = 0x2405,
     SVS_MSG_STREAM_INDEX_FILE_ABNORMAL       = 0x2406,
-    SVS_MSG_STREAM_MDU_CONN_ABNORMAL         = 0x2407,
+    SVS_MSG_STREAM_STREAM_CONN_ABNORMAL         = 0x2407,
     SVS_MSG_STREAM_PLAYBACK_PARAM_INVALID    = 0x2408,
 
     SVS_MSG_STREAM_DOWNLOAD_REACH_MAX        = 0x2410,
@@ -151,13 +151,13 @@ enum SVS_MSG_RETURN_CODE
     SVS_MSG_STREAM_STATE_ABNORMAL            = 0x2412,
     SVS_MSG_STREAM_BACKUP_REACH_MAX          = 0x2413,
 
-    SVS_MSG_MDU_STREAMID_NOT_MATCH           = 0x2501,
-    SVS_MSG_MDU_DEVICEID_NOT_MATCH           = 0x2502,
-    SVS_MSG_MDU_SUBSTREAMID_NOT_MATCH        = 0x2503,
-    SVS_MSG_MDU_STREAMID_EXIST               = 0x2504,
-    SVS_MSG_MDU_RECV_STREAMID_ERROR          = 0x2505,
-    SVS_MSG_MDU_RESOURCE_USEDUP              = 0x2506,
-    SVS_MSG_MDU_MAX_COPY_STREAM              = 0x2507,
+    SVS_MSG_STREAM_STREAMID_NOT_MATCH           = 0x2501,
+    SVS_MSG_STREAM_DEVICEID_NOT_MATCH           = 0x2502,
+    SVS_MSG_STREAM_SUBSTREAMID_NOT_MATCH        = 0x2503,
+    SVS_MSG_STREAM_STREAMID_EXIST               = 0x2504,
+    SVS_MSG_STREAM_RECV_STREAMID_ERROR          = 0x2505,
+    SVS_MSG_STREAM_RESOURCE_USEDUP              = 0x2506,
+    SVS_MSG_STREAM_MAX_COPY_STREAM              = 0x2507,
 
     SVS_MSG_RETURN_CODE_MAX
 };
@@ -373,22 +373,22 @@ enum ALARM_CODE
 
     ALARM_RECORD_STREAM_WRITE_ERROR   = 0x00020001,
     ALARM_RECORD_STREAM_RECEIVE_ERROR = 0x00020002,
-    ALARM_RECORD_MDU_NAT_FAIL         = 0x00020003,
+    ALARM_RECORD_STREAM_NAT_FAIL         = 0x00020003,
     ALARM_RECORD_MRU_INSIDE_ERROR     = 0x00020099,
 
     ALARM_PLAYBACK_VIDEO_READ_ERROR   = 0x00030001,
     ALARM_PLAYBACK_VIDEO_SEND_ERROR   = 0x00030002,
-    ALARM_PLAYBACK_MDU_NAT_FAIL       = 0x00030003,
+    ALARM_PLAYBACK_STREAM_NAT_FAIL       = 0x00030003,
     ALARM_PLAYBACK_PAUSE_TIMEOUT      = 0x00030004,
     ALARM_PLAYBACK_MEDIA_HEARTBEAT_TIMEOUT = 0x00030005,
     ALARM_PLAYBACK_MRU_INSIDE_ERROR   = 0x00030099,
 
 
 
-    ALARM_MDU_SESSION_CLOSED          = 0x00040000,
-    ALARM_MDU_SESSION_TIMEOUT         = 0x00040001,
-    ALARM_MDU_STREAM_TIMEOUT          = 0x00040002,
-    ALARM_MDU_SESSION_ABNORMAL        = 0x00040003,
+    ALARM_STREAM_SESSION_CLOSED          = 0x00040000,
+    ALARM_STREAM_SESSION_TIMEOUT         = 0x00040001,
+    ALARM_STREAM_STREAM_TIMEOUT          = 0x00040002,
+    ALARM_STREAM_SESSION_ABNORMAL        = 0x00040003,
     ALARM_MAU_MEDIA_ANALYSE_FAIL      = 0x00060001,
     ALARM_MAU_MEDIA_DECODE_FAIL       = 0x00060002,
     ALARM_MAU_MEDIA_TIMEOUT           = 0x00060003,
@@ -484,22 +484,22 @@ typedef struct _TIME_SPAN
 }TIME_SPAN;
 
 
-enum MDU_IP_TYPE
+enum STREAM_IP_TYPE
 {
-    MDU_IP_TYPE_INTERNAL            = 0,
-    MDU_IP_TYPE_EXTERNAL            = 1,
-    MDU_IP_TYPE_INTERNAL_REPORT     = 2,
-    MDU_IP_TYPE_EXTERNAL_REPORT     = 3,
-    MDU_IP_TYPE_MAX
+    STREAM_IP_TYPE_INTERNAL            = 0,
+    STREAM_IP_TYPE_EXTERNAL            = 1,
+    STREAM_IP_TYPE_INTERNAL_REPORT     = 2,
+    STREAM_IP_TYPE_EXTERNAL_REPORT     = 3,
+    STREAM_IP_TYPE_MAX
 };
 
 
-typedef struct _SVS_MDU_IP
+typedef struct _SVS_STREAM_IP
 {
         uint32_t    uiIpType;
         uint32_t    uiIndex;
         char        szIp[SVS_IP_LEN];
-}SVS_MDU_IP ,*PSVS_MDU_IP;
+}SVS_STREAM_IP ,*PSVS_STREAM_IP;
 
 
 typedef struct _SVS_MSG_COMMON_RESP
@@ -567,7 +567,7 @@ typedef struct _ADDR_INFO
 
 
 
-typedef struct _SVS_MSG_MDU_SESSION_SETUP_REQ
+typedef struct _SVS_MSG_STREAM_SESSION_SETUP_REQ
 {
     SVS_MSG_HEADER  MsgHeader;
     uint32_t        LocalIndex;
@@ -583,10 +583,10 @@ typedef struct _SVS_MSG_MDU_SESSION_SETUP_REQ
     uint32_t        MediaLinkMode;//FOR VMS and EHOME 连接模式：0- TCP方式，1- UDP方式，2- HRUDP方式（可靠传输）
     uint8_t         szMediaIP[SVS_IP_LEN];//FOR VMS and EHOME
     uint16_t        usMediaPort;//FOR VMS and EHOME
-}SVS_MSG_MDU_SESSION_SETUP_REQ;
+}SVS_MSG_STREAM_SESSION_SETUP_REQ;
 
 
-typedef struct _SVS_MSG_MDU_SESSION_SETUP_RESP
+typedef struct _SVS_MSG_STREAM_SESSION_SETUP_RESP
 {
     SVS_MSG_HEADER            MsgHeader;
     uint32_t                  LocalIndex;
@@ -600,49 +600,49 @@ typedef struct _SVS_MSG_MDU_SESSION_SETUP_RESP
     uint32_t                  SdpLen;
     uint8_t                   szSdp[SDP_MSG_LENS];
     int32_t                   SessionID;// for ehome
-}SVS_MSG_MDU_SESSION_SETUP_RESP;
+}SVS_MSG_STREAM_SESSION_SETUP_RESP;
 
-typedef struct _SVS_MSG_MDU_SESSION_PLAY_REQ
+typedef struct _SVS_MSG_STREAM_SESSION_PLAY_REQ
 {
     SVS_MSG_HEADER MsgHeader;
     uint32_t       LocalIndex;
     uint8_t        DeviceID[DEVICE_ID_LEN];
     PLAY_URL_TYPE  UrlType;
     int32_t        SessionID;// for ehome
-}SVS_MSG_MDU_SESSION_PLAY_REQ;
+}SVS_MSG_STREAM_SESSION_PLAY_REQ;
 
 
-typedef struct _SVS_MSG_MDU_SESSION_PLAY_RESP
+typedef struct _SVS_MSG_STREAM_SESSION_PLAY_RESP
 {
     SVS_MSG_HEADER            MsgHeader;
     uint32_t                  LocalIndex;
     uint32_t                  RespCode;
     uint8_t                   DeviceID[DEVICE_ID_LEN];
     PLAY_URL_TYPE             UrlType;
-}SVS_MSG_MDU_SESSION_PLAY_RESP;
+}SVS_MSG_STREAM_SESSION_PLAY_RESP;
 
-typedef struct _SVS_MSG_MDU_KEY_FRAME_REQ
+typedef struct _SVS_MSG_STREAM_KEY_FRAME_REQ
 {
     SVS_MSG_HEADER MsgHeader;
     uint8_t        DeviceID[DEVICE_ID_LEN];
-}SVS_MSG_MDU_KEY_FRAME_REQ;
+}SVS_MSG_STREAM_KEY_FRAME_REQ;
 
-typedef struct _SVS_MSG_MDU_SESSION_TEARDOWN_REQ
+typedef struct _SVS_MSG_STREAM_SESSION_TEARDOWN_REQ
 {
     SVS_MSG_HEADER MsgHeader;
     uint32_t       LocalIndex;
     uint8_t        DeviceID[DEVICE_ID_LEN];
     int32_t        SessionID;// for ehome
-}SVS_MSG_MDU_SESSION_TEARDOWN_REQ;
+}SVS_MSG_STREAM_SESSION_TEARDOWN_REQ;
 
 
-typedef struct _SVS_MSG_MDU_SESSION_TEARDOWN_RESP
+typedef struct _SVS_MSG_STREAM_SESSION_TEARDOWN_RESP
 {
     SVS_MSG_HEADER            MsgHeader;
     uint32_t                  LocalIndex;
     uint8_t                   DeviceID[DEVICE_ID_LEN];
     uint32_t                  RespCode;
-}SVS_MSG_MDU_SESSION_TEARDOWN_RESP;
+}SVS_MSG_STREAM_SESSION_TEARDOWN_RESP;
 
 
 typedef struct _NETWORK_CARD_INFO
@@ -653,7 +653,7 @@ typedef struct _NETWORK_CARD_INFO
     uint32_t EgressUsedBW;
 }NETWORK_CARD_INFO;
 
-typedef struct _SVS_MSG_MDU_LOAD_INFO_REQ
+typedef struct _SVS_MSG_STREAM_LOAD_INFO_REQ
 {
     SVS_MSG_HEADER    MsgHeader;
     uint32_t          TransmitNumber;
@@ -665,7 +665,7 @@ typedef struct _SVS_MSG_MDU_LOAD_INFO_REQ
     uint32_t          CacheUsedNum;
     uint32_t          NetworkCardNum;
     NETWORK_CARD_INFO NetworkCardInfo[1];
-}SVS_MSG_MDU_LOAD_INFO_REQ;
+}SVS_MSG_STREAM_LOAD_INFO_REQ;
 
 
 typedef struct _SVS_MSG_PLAYBACK_CONTROL_REQ

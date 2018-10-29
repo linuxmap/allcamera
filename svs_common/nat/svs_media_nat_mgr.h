@@ -1,4 +1,4 @@
-// CMduNatMgr.h: interface for the CMduNatMgr class.
+// CStreamNatMgr.h: interface for the CStreamNatMgr class.
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -23,21 +23,21 @@ typedef std::map<uint32_t,uint32_t>::iterator MDUNATMAPITER;
 
 #define NATIP_REFRESH_CONFIG_TIME  600
 
-class CMduNatMgr : public ACE_Event_Handler
+class CStreamNatMgr : public ACE_Event_Handler
 {
 public:
-    static CMduNatMgr& GetInstance()
+    static CStreamNatMgr& GetInstance()
     {
-        static CMduNatMgr mduNatMgr;
+        static CStreamNatMgr mduNatMgr;
         return mduNatMgr;
     }
-    virtual ~CMduNatMgr();
+    virtual ~CStreamNatMgr();
 public:
     int32_t Open(string strConfigfile,ACE_Reactor *pTimeReactor);
     void CheckNatIP(uint32_t ulSrcIP,uint32_t& ulNatIP);
     virtual int32_t handle_timeout(const ACE_Time_Value &tv, const void *arg);
 protected:
-    CMduNatMgr();
+    CStreamNatMgr();
 private:
     int32_t ReadNatConfig();
 private:
