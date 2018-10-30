@@ -115,42 +115,41 @@ void CMediaSdp::addVideoInfo(const SDP_MEDIA_INFO &info)
     stVideoInfo.strControl    = info.strControl;
     stVideoInfo.usPort        = info.usPort;
 
-    if ("" != stVideoInfo.strRtpmap)
+    if ("" == stVideoInfo.strRtpmap)
     {
-        return;
-    }
 
-    switch(stVideoInfo.ucPayloadType)
-    {
-        case PT_TYPE_MJPEG:
+        switch(stVideoInfo.ucPayloadType)
         {
-            stVideoInfo.strRtpmap = MJPEG_VIDEO_RTPMAP;
-            break;
-        }
-        case PT_TYPE_PS:
-        {
-            stVideoInfo.strRtpmap = PS_VIDEO_RTPMAP;
-            break;
-        }
-        case PT_TYPE_MPEG4:
-        {
-            stVideoInfo.strRtpmap = MPEG4_VIDEO_RTPMAP;
-            break;
-        }
-        case PT_TYPE_H264:
-        {
-            stVideoInfo.strRtpmap = H264_VIDEO_RTPMAP;
-            break;
-        }
-        case PT_TYPE_H265:
-        {
-            stVideoInfo.strRtpmap = H265_VIDEO_RTPMAP;
-            break;
-        }
-        default:
-        {
-            stVideoInfo.strRtpmap = H264_VIDEO_RTPMAP;
-            break;
+            case PT_TYPE_MJPEG:
+            {
+                stVideoInfo.strRtpmap = MJPEG_VIDEO_RTPMAP;
+                break;
+            }
+            case PT_TYPE_PS:
+            {
+                stVideoInfo.strRtpmap = PS_VIDEO_RTPMAP;
+                break;
+            }
+            case PT_TYPE_MPEG4:
+            {
+                stVideoInfo.strRtpmap = MPEG4_VIDEO_RTPMAP;
+                break;
+            }
+            case PT_TYPE_H264:
+            {
+                stVideoInfo.strRtpmap = H264_VIDEO_RTPMAP;
+                break;
+            }
+            case PT_TYPE_H265:
+            {
+                stVideoInfo.strRtpmap = H265_VIDEO_RTPMAP;
+                break;
+            }
+            default:
+            {
+                stVideoInfo.strRtpmap = H264_VIDEO_RTPMAP;
+                break;
+            }
         }
     }
 

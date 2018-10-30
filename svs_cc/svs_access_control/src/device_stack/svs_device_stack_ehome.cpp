@@ -36,7 +36,7 @@ int32_t CDeviceStackEhome::initialize()
 {
     SVS_TRACE();
 
-     ACE_Log_Msg::init_hook(g_objACELogMsgAttr);
+    ACE_Log_Msg::init_hook(g_objACELogMsgAttr);
 
     if (!NET_ECMS_Init())
     {
@@ -132,6 +132,12 @@ void CDeviceStackEhome::handle_ehome_event(LONG lUserID, DWORD dwDataType, void 
     MAP_EHOME_DEV::iterator iter;
     char* pbuf                   = NULL;
     std::string strDevID;
+
+    if (!ACE_Log_Msg::exists())
+    {
+        ACE_Log_Msg::inherit_hook(NULL, g_objACELogMsgAttr);
+        SVS_LOG((SVS_LM_INFO, "ACE_Log_Msg::inherit_hook in ehome call back."));
+    }
 
 
     ACE_GUARD(ACE_Recursive_Thread_Mutex, guard, m_mutex);
@@ -297,6 +303,7 @@ bool CDeviceStackEhome::queryDevInfo(EHOME_DEV_INFO* pDevInfo)
 
    config.pOutBuf = (void*)&pDevInfo->devInfo;
    config.dwOutSize = sizeof(NET_EHOME_DEVICE_INFO);
+   pDevInfo->devInfo.dwSize = sizeof(NET_EHOME_DEVICE_INFO);
 
    BOOL bRet = NET_ECMS_GetDevConfig(pDevInfo->lUserID,NET_EHOME_GET_DEVICE_INFO,&config,sizeof(NET_EHOME_CONFIG));
    if(bRet)
@@ -318,6 +325,7 @@ bool CDeviceStackEhome::queryDevInfo(EHOME_DEV_INFO* pDevInfo)
 
    config.pOutBuf = (void*)&pDevInfo->devCfg;
    config.dwOutSize = sizeof(NET_EHOME_DEVICE_CFG);
+   pDevInfo->devCfg.dwSize = sizeof(NET_EHOME_DEVICE_CFG);
 
    bRet = NET_ECMS_GetDevConfig(pDevInfo->lUserID,NET_EHOME_GET_DEVICE_CFG,&config,sizeof(NET_EHOME_CONFIG));
    if(bRet)
@@ -500,23 +508,29 @@ int32_t CDeviceStackEhome::ehomeMediaPlayRequest(SVS_ACM::REQUEST_SEND_ACK2DEV& 
     memset(&PushOut,0,sizeof(NET_EHOME_PUSHSTREAM_OUT));
     LONG  lUserID = getUserIDbyDevID((uint8_t*)&rRequest.szDeviceID[0]);
     PushInfo.lSessionID = rRequest.lSessionID;
+    PushInfo.dwSize = sizeof(NET_EHOME_PUSHSTREAM_IN);
+    PushOut.dwSize = sizeof(NET_EHOME_PUSHSTREAM_OUT);
 
     BOOL ret = NET_ECMS_StartPushRealStream(lUserID,&PushInfo,&PushOut);
     if(!ret) {
-        SVS_LOG((SVS_LM_ERROR, "ehome Media push,start push real stream fail,last error:[%d].", NET_ECMS_GetLastError()));
+        SVS_LOG((SVS_LM_ERROR, "ehome Media push,start push real stream fail,userdi:[%d],sessionid:[%d] last error:[%d].", lUserID,PushInfo.lSessionID,NET_ECMS_GetLastError()));
         return SVS_ERROR_FAIL;
     }
+    SVS_LOG((SVS_LM_DEBUG, "ehome Media push,start push real stream success,userdi:[%d],sessionid:[%d] .", lUserID,PushInfo.lSessionID));
     return SVS_ERROR_OK;
 }
 int32_t CDeviceStackEhome::ehomeMediaStopRequest(SVS_ACM::REQUEST_SEND_BYE2DEV& rRequest, SVS_ACM::RESPONSE_CALLBACK pCallBack, void* pUserData)
 {
     LONG  lUserID = getUserIDbyDevID((uint8_t*)&rRequest.szDeviceID[0]);
 
+
+
     BOOL ret = NET_ECMS_StopGetRealStream(lUserID,rRequest.lSessionID);
     if(!ret) {
-        SVS_LOG((SVS_LM_ERROR, "ehome Media push,stop real stream fail,last error:[%d].", NET_ECMS_GetLastError()));
+        SVS_LOG((SVS_LM_ERROR, "ehome Media push,stop real stream fail,userID:[%d] sessionID:[%d],last error:[%d].", lUserID,rRequest.lSessionID,NET_ECMS_GetLastError()));
         return SVS_ERROR_FAIL;
     }
+    SVS_LOG((SVS_LM_DEBUG, "ehome Media push,stop real stream, userID:[%d] sessionID:[%d].", lUserID,rRequest.lSessionID));
     return SVS_ERROR_OK;
 }
 

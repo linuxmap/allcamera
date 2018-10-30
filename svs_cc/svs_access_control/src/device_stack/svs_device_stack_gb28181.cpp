@@ -131,7 +131,7 @@ int32_t CDeviceStackGB28181::initExosip()
 
     eXosip_masquerade_contact(m_pEXosipCtx, pszIP, nPort);
 
-	eXosip_set_user_agent(m_pEXosipCtx, ALLCAM_AGENT_NAME);
+    eXosip_set_user_agent(m_pEXosipCtx, ALLCAM_AGENT_NAME);
     return SVS_ERROR_OK;
 }
 

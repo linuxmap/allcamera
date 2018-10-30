@@ -7,6 +7,8 @@
 #include <map>
 #include "svs_adapter_mpeg_def.h"
 
+#define EHOME_FRAME_MAX_SIZE (1024*1024)
+
 class CEhomeStreamHandle
 {
 public:
@@ -21,17 +23,21 @@ public:
 private:
     static void preview_data_cb(LONG  iPreviewHandle,NET_EHOME_PREVIEW_CB_MSG *pPreviewCBMsg,void *pUserData);
     void    send_ehome_stream(char* pdata,uint32_t ulDataLen);
-    void    send_h264_frame(es_frame_info& FrameInfo,char* pData,uint32_t ulLens);
-    void    send_h265_frame(es_frame_info& FrameInfo,char* pData,uint32_t ulLens);
-    void    send_audio_frame(es_frame_info& FrameInfo,char* pData,uint32_t ulLens);
+    void    send_h264_frame(char* pData,uint32_t ulLens);
+    void    send_h265_frame(char* pData,uint32_t ulLens);
+    void    send_audio_frame(char* pData,uint32_t ulLens);
+    void    send_cache_vidoe_frame();
+    void    send_vidoe_frame(char* pData,uint32_t ulLens);
 private:
-    void ProgramStreamPackHeader(es_frame_info& FrameInfo,char*& pData,uint32_t& ulLens);
-    void ProgramSystemPackHeader(es_frame_info& FrameInfo,char*& pData,uint32_t& ulLens);
-    void ProgramStreamMap(es_frame_info& FrameInfo,char*& pData,uint32_t& ulLens);
-    void ProgramPrivateHeader(es_frame_info& FrameInfo,char*& pData,uint32_t& ulLens);
-    void ProgramEStramHead(es_frame_info& FrameInfo,char*& pData,uint32_t& ulLens);
+    void ProgramStreamPackHeader(char*& pData,uint32_t& ulLens);
+    void ProgramSystemPackHeader(char*& pData,uint32_t& ulLens);
+    void ProgramStreamMap(char*& pData,uint32_t& ulLens);
+    void ProgramPrivateHeader(char*& pData,uint32_t& ulLens);
+    void ProgramEStramHead(char*& pData,uint32_t& ulLens);
 private:
     void getNextRtpSeq(uint16_t& usCurSeq,uint16_t count);
+    uint32_t getNextVideoTimeStamp();
+    uint32_t getNextAudioTimeStamp();
 private:
     uint64_t    m_ullStreamId;
     int32_t     m_lSessionId;
@@ -40,6 +46,14 @@ private:
     uint8_t     m_AudioPayload;
     uint16_t    m_usVideoRtpSeq;
     uint16_t    m_usAudioRtpSeq;
+    uint32_t    m_ulVideoSsrc;
+    uint32_t    m_ulAudioSsrc;
+    uint32_t    m_ulVideoTimeStamp;
+    uint32_t    m_ulAudioTimeStamp;
+    ACE_Time_Value m_ulLastVideoTime;
+    ACE_Time_Value m_ulLastAudioTime;
+    uint8_t     m_szFrameBuf[EHOME_FRAME_MAX_SIZE];
+    uint32_t    m_ulFrameLen;
 };
 
 class CEhomeHandle : public CHandle

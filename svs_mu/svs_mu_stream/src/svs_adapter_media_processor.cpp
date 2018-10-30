@@ -354,9 +354,8 @@ int32_t CStreamMediaProcessorSet::DelMediaProcessor(CStreamMediaProcessor*& pPro
         if (*iter == pProcessor)
         {
             SVS_LOG((SVS_LM_INFO,
-                "CStreamMediaProcessorSet::DelMediaProcessor success, processor [%p] find in es list."
+                "CStreamMediaProcessorSet::DelMediaProcessor success, processor find in es list."
                 " now processor in list num[%d].",
-                pProcessor,
                 m_EsOverRtpProcessList.size()));
             m_EsOverRtpProcessList.erase(iter);
 
