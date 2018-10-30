@@ -68,9 +68,6 @@ class CRealTimeBusiness : public CBusiness
 public:
     CRealTimeBusiness();
     virtual ~CRealTimeBusiness();
-
-    virtual void setDevStatus(uint32_t uiDevStatus);
-    virtual uint32_t getDevStatus();
     virtual bool isTimeOut(time_t tCurrentTime);
     int32_t on_timer(time_t tCurrentTime, int32_t eventId = 0, int32_t timerId = 0);
     int32_t mu_session_setup_realtime(ACE_Message_Block *mb, uint16_t usTransno);
@@ -85,10 +82,6 @@ private:
     uint32_t            m_uiDevStreamStatus;
     ACE_Message_Block*  m_MsgCached;
 };
-
-
-
-
 
 class CBusinessManager
 {

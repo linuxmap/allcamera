@@ -121,17 +121,6 @@ CRealTimeBusiness::~CRealTimeBusiness()
     }
 }
 
-void CRealTimeBusiness::setDevStatus(uint32_t uiDevStatus)
-{
-    m_uiDevStreamStatus = uiDevStatus;
-}
-
-uint32_t CRealTimeBusiness::getDevStatus()
-{
-    return m_uiDevStreamStatus;
-}
-
-
 bool CRealTimeBusiness::isTimeOut(time_t tCurrentTime)
 {
     SVS_TRACE();

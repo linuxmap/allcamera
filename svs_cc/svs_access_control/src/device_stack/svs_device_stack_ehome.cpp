@@ -475,6 +475,9 @@ int32_t CDeviceStackEhome::ehomeMediaRequest(SVS_ACM::REQUEST_SEND_INVITE2DEV& r
     previewInfo.struStreamSever.wPort = rRequest.usMediaPort;
     previewInfo.byDelayPreview = 0;
 
+    rResponse.nRequestID = rRequest.nRequestID;
+    strncpy(rResponse.szLensID, rRequest.szLensID, sizeof(rRequest.szLensID) - 1);
+
     BOOL ret = NET_ECMS_StartGetRealStreamV11(lUserID,&previewInfo,&previewOut);
     if(!ret) {
         SVS_LOG((SVS_LM_ERROR, "ehome Media Request,start get real stream fail,userid:[%d]"
@@ -485,14 +488,17 @@ int32_t CDeviceStackEhome::ehomeMediaRequest(SVS_ACM::REQUEST_SEND_INVITE2DEV& r
                                previewInfo.iChannel,previewInfo.dwStreamType,previewInfo.dwLinkMode,
                                previewInfo.struStreamSever.szIP,previewInfo.struStreamSever.wPort,
                                NET_ECMS_GetLastError()));
-        return SVS_ERROR_FAIL;
+        rResponse.nResponseCode = SVS_ERROR_FAIL;
     }
-    SVS_LOG((SVS_LM_DEBUG, "ehome Media Request,start get real stream success,SessionID:[%d].", previewOut.lSessionID));
-    rResponse.lSessionID = previewOut.lSessionID;
-    rResponse.nRequestID = rRequest.nRequestID;
-    memcpy(rResponse.szSdp, rRequest.szSdp, rRequest.SdpLen);
-    rResponse.SdpLen = rRequest.SdpLen;
-    strncpy(rResponse.szLensID, rRequest.szLensID, sizeof(rRequest.szLensID) - 1);
+    else
+    {
+        rResponse.lSessionID = previewOut.lSessionID;
+        memcpy(rResponse.szSdp, rRequest.szSdp, rRequest.SdpLen);
+        rResponse.SdpLen = rRequest.SdpLen;
+        rResponse.nResponseCode = SVS_ERROR_OK;
+        SVS_LOG((SVS_LM_DEBUG, "ehome Media Request,start get real stream success,SessionID:[%d].", previewOut.lSessionID));
+    }
+
     SVS_LOG((SVS_LM_DEBUG, "ehome Media Request,start get real stream callback,lenid:[%s],sdp:[%s].", rResponse.szLensID,rResponse.szSdp));
     pCallBack(rResponse, pUserData);
     SVS_LOG((SVS_LM_DEBUG, "ehome Media Request,start get real stream end."));
