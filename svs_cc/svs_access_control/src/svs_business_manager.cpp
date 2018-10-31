@@ -102,18 +102,6 @@ CRealTimeBusiness::CRealTimeBusiness()
 CRealTimeBusiness::~CRealTimeBusiness()
 {
     SVS_LOG((SVS_LM_INFO, "~CRealTimeBusiness, %x", this));
-    /*
-    std::map<uint16_t, BusinessSession*>::iterator iter;
-    BusinessSession* pBusinessSession = NULL;
-    for (iter = m_Transno2SessionMap.begin(); iter != m_Transno2SessionMap.end(); iter++)
-    {
-        //
-        pBusinessSession = (BusinessSession*)iter->second;
-        delete pBusinessSession;
-    }
-
-    m_Transno2SessionMap.clear();
-    */
 
     if (NULL != m_MsgCached)
     {
@@ -1357,6 +1345,7 @@ int32_t CBusinessManager::mu_session_setup_realtime(ACE_Message_Block *mb)
             // cann't send the response, the server does not exist.
             delete pCRealTimeBusiness;
             pCRealTimeBusiness  = NULL;
+            m_mapDev2RealtimeBusiness.erase(t_szDevID);
             return -1;
         }
         strMuSvrofReq = pCServer->getServerID();
