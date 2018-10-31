@@ -148,6 +148,7 @@ void CStreamMediaSetupResp::dump() const
     SVS_LOG((SVS_LM_DEBUG,"\tLocalIndex: %u", m_pSetupResp->LocalIndex));
     SVS_LOG((SVS_LM_DEBUG,"\tServiceType: %u", m_pSetupResp->PlayType));
     SVS_LOG((SVS_LM_DEBUG,"\tRespCode: %u", m_pSetupResp->RespCode));
+    SVS_LOG((SVS_LM_DEBUG,"\tSessionID: %u", m_pSetupResp->SessionID));
     SVS_LOG((SVS_LM_DEBUG,"\tUrl: %s", m_pSetupResp->szUrl));
     SVS_LOG((SVS_LM_DEBUG,"SDPInfon:"));
     SVS_LOG((SVS_LM_DEBUG,"\t\t%s", m_pSetupResp->szSdp));

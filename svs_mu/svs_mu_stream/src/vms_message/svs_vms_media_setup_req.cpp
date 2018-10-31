@@ -90,9 +90,22 @@ void CStreamMediaSetupReq::dump() const
 
     CStreamSvsMessage::dump();
 
+    char szDevID[DEVICE_ID_LEN+1] = {0};
+    memcpy(szDevID,m_pReq->DeviceID,DEVICE_ID_LEN);
+
     SVS_LOG((SVS_LM_DEBUG,"MessageBody:"));
     SVS_LOG((SVS_LM_DEBUG,"\tLocalIndex: %u", m_pReq->LocalIndex));
+    SVS_LOG((SVS_LM_DEBUG,"\tDeviceID: %s", szDevID));
+    SVS_LOG((SVS_LM_DEBUG,"\tCallType: %d", m_pReq->CallType));
+    SVS_LOG((SVS_LM_DEBUG,"\tUrlType: %d", m_pReq->UrlType));
+    SVS_LOG((SVS_LM_DEBUG,"\tPlayType: %d", m_pReq->PlayType));
+    SVS_LOG((SVS_LM_DEBUG,"\tStreamtype: %d", m_pReq->eStreamtype));
+    SVS_LOG((SVS_LM_DEBUG,"\tMediaLinkMode: %d", m_pReq->MediaLinkMode));
+    SVS_LOG((SVS_LM_DEBUG,"\tszMediaIP: %s", m_pReq->szMediaIP));
+    SVS_LOG((SVS_LM_DEBUG,"\tusMediaPort: %d", m_pReq->usMediaPort));
     SVS_LOG((SVS_LM_DEBUG,"\tRtspUrl: %s", m_strRtspUrl.c_str()));
+    SVS_LOG((SVS_LM_DEBUG,"\tsdp:\n\t %s", m_strSdp.c_str()));
+    SVS_LOG((SVS_LM_DEBUG,"\tsdp:\n\t %s", m_strSdp.c_str()));
     SVS_LOG((SVS_LM_DEBUG,"\tsdp:\n\t %s", m_strSdp.c_str()));
 
     return;

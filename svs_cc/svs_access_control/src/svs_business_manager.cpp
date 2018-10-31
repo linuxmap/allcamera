@@ -470,7 +470,7 @@ int32_t CRealTimeBusiness::mu_session_play_realtime(ACE_Message_Block *mb)
 
         SVS_ACM::REQUEST_SEND_ACK2DEV oAckRequest;
         oAckRequest.nRequestID = m_usTransno;
-        oAckRequest.lSessionID = t_pReq->SessionID;
+        oAckRequest.lSessionID = getEhomeSessionID();
 
         memcpy(oAckRequest.szLensID, t_szDevID, SVS_DEVICEID_LEN);
 
@@ -684,7 +684,7 @@ int32_t CRealTimeBusiness::notify_dev_start_stream_response(ACE_Message_Block *m
     char  t_szDevID[DEVICE_ID_LEN+1] = {0};
     ACE_OS::memcpy(t_szDevID,  (const char*)t_pResp->DeviceID, DEVICE_ID_LEN);
 
-    m_ulSessionID = t_pResp->SessionID;// for ehome
+    setEhomeSessionID(t_pResp->SessionID);// for ehome
 
     SVS_LOG((SVS_LM_INFO,
                      "deal notify device send stream response message,status=%d, DeviceID=%s, RespCode:%d.",
@@ -824,7 +824,7 @@ int32_t CRealTimeBusiness::mu_session_teardown_req(ACE_Message_Block *mb)
             SVS_ACM::REQUEST_SEND_BYE2DEV oByeRequest;
             oByeRequest.nRequestID = m_usTransno;
 
-            oByeRequest.lSessionID = t_pReq->SessionID;
+            oByeRequest.lSessionID = getEhomeSessionID();
 
             strncpy(oByeRequest.szLensID,m_strDevID.c_str(), SVS_DEVICEID_LEN);
 

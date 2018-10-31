@@ -589,11 +589,11 @@ int32_t CDeviceStackGB28181::handleMessageReq(eXosip_event_t& rEvent)
         nResult = objManscdp.parse(pBody->body);
         if (SVS_ERROR_OK != nResult)
         {
-            SVS_LOG((SVS_LM_ERROR, "Parse %s body failed, content is %s.", rEvent.request->sip_method, pBody->body));
+            SVS_LOG((SVS_LM_ERROR, "Parse %s body failed, content is \n%s.", rEvent.request->sip_method, pBody->body));
             break;
         }
 
-        SVS_LOG((SVS_LM_INFO, "Parse %s body OK, content is %s.", rEvent.request->sip_method, pBody->body));
+        SVS_LOG((SVS_LM_INFO, "Parse %s body OK, content is \n%s.", rEvent.request->sip_method, pBody->body));
     }while(0);
 
 

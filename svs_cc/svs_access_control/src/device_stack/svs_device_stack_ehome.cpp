@@ -520,7 +520,7 @@ int32_t CDeviceStackEhome::ehomeMediaPlayRequest(SVS_ACM::REQUEST_SEND_ACK2DEV& 
     BOOL ret = NET_ECMS_StartPushRealStream(lUserID,&PushInfo,&PushOut);
     if(!ret) {
         SVS_LOG((SVS_LM_ERROR, "ehome Media push,start push real stream fail,userdi:[%d],sessionid:[%d] last error:[%d].", lUserID,PushInfo.lSessionID,NET_ECMS_GetLastError()));
-        return SVS_ERROR_FAIL;
+        return SVS_ERROR_OK;
     }
     SVS_LOG((SVS_LM_DEBUG, "ehome Media push,start push real stream success,userdi:[%d],sessionid:[%d] .", lUserID,PushInfo.lSessionID));
     return SVS_ERROR_OK;

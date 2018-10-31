@@ -24,6 +24,10 @@ private:
     static void preview_data_cb(LONG  iPreviewHandle,NET_EHOME_PREVIEW_CB_MSG *pPreviewCBMsg,void *pUserData);
     void    send_ehome_stream(char* pdata,uint32_t ulDataLen);
     void    send_h264_frame(char* pData,uint32_t ulLens);
+    void    send_h264_key_nalu(char* pData,uint32_t ulLens);
+    void    send_h264_nalu(char* pData,uint32_t ulLens,uint32_t ulTimeStamp);
+    void    send_h264_single_nalu(char* pData,uint32_t ulLens,uint32_t ulTimeStamp);
+    void    send_h264_multi_nalu(char* pData,uint32_t ulLens,uint32_t ulTimeStamp,uint16_t usPacketCount);
     void    send_h265_frame(char* pData,uint32_t ulLens);
     void    send_audio_frame(char* pData,uint32_t ulLens);
     void    send_cache_vidoe_frame();

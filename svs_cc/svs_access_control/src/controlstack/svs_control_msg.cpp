@@ -52,7 +52,7 @@ int32_t CControlMessage::CreateMsg(SVS_ACM::REQUEST& rRequest)
     free(pszMsg);
     cJSON_Delete(root);
     m_enStatus      = CONTROL_MGS_HTTP_STATUS_WAIT_REQ;
-    SVS_LOG((SVS_LM_DEBUG, "CControlMessage::CreateMsg ,msg:[%s].",m_strMsg.c_str()));
+    SVS_LOG((SVS_LM_DEBUG, "CControlMessage::CreateMsg ,msg:\n%s\n.",m_strMsg.c_str()));
     return SVS_ERROR_OK;
 }
 int32_t CControlMessage::CreateMsg(SVS_ACM::RESPONSE& rResponse)
@@ -182,7 +182,7 @@ void CControlMessage::handle_remote_read(struct evhttp_request* remote_rsp)
         return;
     }
     m_strMsg.append(str, 0, len);
-    SVS_LOG((SVS_LM_INFO,"CControlMessage::handle_remote_read,msg:[%s] .",m_strMsg.c_str()));
+    SVS_LOG((SVS_LM_INFO,"CControlMessage::handle_remote_read,msg:\n%s\n .",m_strMsg.c_str()));
     CAccessControlStack::instance().handle_http_reponse(remote_rsp, m_strMsg);
 }
 
@@ -201,7 +201,7 @@ void CControlMessage::handle_readchunk(struct evhttp_request* remote_rsp)
         m_strMsg.append(buf, len);
     }
 
-    SVS_LOG((SVS_LM_INFO,"CControlMessage::handle_readchunk,msg:[%s] .",m_strMsg.c_str()));
+    SVS_LOG((SVS_LM_INFO,"CControlMessage::handle_readchunk,msg:\n%s\n .",m_strMsg.c_str()));
     CAccessControlStack::instance().handle_http_reponse(remote_rsp, m_strMsg);
 }
 
@@ -293,7 +293,7 @@ int32_t CControlMessage::send_http_request(std::string& strUri,std::string& strM
     //evhttp_request_free(m_req);
     //m_req = NULL;
 
-	
+
     evhttp_connection_free(m_pConn);
     m_pConn = NULL;
     SVS_LOG((SVS_LM_WARNING,"CControlMessage::send_http_request break."));
