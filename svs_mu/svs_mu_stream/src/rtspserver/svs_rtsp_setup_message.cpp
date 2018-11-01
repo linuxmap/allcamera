@@ -104,20 +104,17 @@ int32_t CRtspSetupMessage::decodeMessage(CRtspPacket& objRtspPacket)
         return RET_FAIL;
     }
 
-    // ����Transport
 
     string strTransport;
     objRtspPacket.getTransPort(strTransport);
 
-    // �������䷽ʽ
+
     m_unTransType = TRANS_PROTOCAL_UDP;
     string::size_type nStrIndex = strTransport.find(RTSP_TRANSPORT_TCP);
     if (string::npos != nStrIndex)
     {
-        // TCP��ʽ
         m_unTransType = TRANS_PROTOCAL_TCP;
 
-        // ������֯ͨ����
         nStrIndex = strTransport.find(RTSP_TRANSPORT_INTERLEAVED);
         if (string::npos != nStrIndex)
         {

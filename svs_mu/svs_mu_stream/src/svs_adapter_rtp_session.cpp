@@ -1671,7 +1671,6 @@ int32_t CStreamRtpSession::startStdMediaPort()
     int32_t nRet = RET_OK;
     if (TRANS_PROTOCAL_UDP == getTransProtocol())
     {
-        // TCP�Ự��������������
         nRet = startUdpMediaPort();
     }
     else

@@ -22,8 +22,8 @@ CMediaSdp::CMediaSdp()
     m_strUrl        = "";
     m_strConnAddr   = "";
     m_range         = "";
-    m_strSessionName= "Unnamed";
-    m_strConnAddr   = "vds.allcam.com";
+    m_strSessionName= "allcamera media server";
+    m_strConnAddr   = "vds.allcam.com.cn";
     m_enTransDirect = TRANS_DIRECTION_MAX;
     m_strSsrc       = "";
     m_strOwner      = "vds";

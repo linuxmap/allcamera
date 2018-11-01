@@ -498,7 +498,6 @@ void CStreamPsMediaProcessorSet::handleRtpFrame(RTP_FRAME_LIST &rtpFrameList)
             SVS_LOG((SVS_LM_ERROR, "fail to send ps rtp packet, parse rtp packet fail."));
             return;
         }
-        rtpPacket.SetPayloadType(FrameInfo.payload);
         (void)CStreamMediaProcessorSet::Send(pMb);
     }
 
@@ -1227,7 +1226,6 @@ void CStreamPsMediaProcessorSet::sendH264EsSigleNalu(es_frame_info& FrameInfo,RT
         pMb->rd_ptr(ulEsLen);
     }
 
-    FrameInfo.timestamp++;
     return;
 }
 void CStreamPsMediaProcessorSet::sendH264EsFuNale(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
@@ -1357,7 +1355,6 @@ void CStreamPsMediaProcessorSet::sendH264EsFuNale(es_frame_info& FrameInfo,RTP_F
         }
     }while(0 < rtpFrameList.size());
 
-    FrameInfo.timestamp++;
 }
 void CStreamPsMediaProcessorSet::sendH265EsSigleNalu(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
 {
@@ -1437,7 +1434,6 @@ void CStreamPsMediaProcessorSet::sendH265EsSigleNalu(es_frame_info& FrameInfo,RT
         pMb->rd_ptr(ulEsLen);
     }
 
-    FrameInfo.timestamp++;
     return;
 }
 void CStreamPsMediaProcessorSet::sendH265EsFuNale(es_frame_info& FrameInfo,RTP_FRAME_LIST &rtpFrameList)
@@ -1608,7 +1604,6 @@ void CStreamPsMediaProcessorSet::sendH265EsFuNale(es_frame_info& FrameInfo,RTP_F
         }
     }while(0 < rtpFrameList.size());
 
-    FrameInfo.timestamp++;
 }
 
 

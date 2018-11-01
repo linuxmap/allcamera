@@ -15,7 +15,6 @@
 CRtpFrameOrganizer::CRtpFrameOrganizer()
 {
     m_unMaxCacheFrameNum    = 0;
-    m_bParserH264           = false;
     m_pRtpFrameHandler      = NULL;
 
 }
@@ -32,8 +31,7 @@ CRtpFrameOrganizer::~CRtpFrameOrganizer()
 }
 
 int32_t CRtpFrameOrganizer::init(IRtpFrameHandler* pHandler,
-                             uint32_t unMaxFrameCache /*= MAX_RTP_FRAME_CACHE_NUM*/,
-                             bool     bParserH264 /* = false */)
+                             uint32_t unMaxFrameCache /*= MAX_RTP_FRAME_CACHE_NUM*/)
 {
     if ((NULL == pHandler) || (0 == unMaxFrameCache))
     {
@@ -42,7 +40,6 @@ int32_t CRtpFrameOrganizer::init(IRtpFrameHandler* pHandler,
 
     m_pRtpFrameHandler   = pHandler;
     m_unMaxCacheFrameNum = unMaxFrameCache;
-    m_bParserH264        = bParserH264;
 
     RTP_FRAME_INFO_S *pFramInfo = NULL;
 
@@ -77,32 +74,6 @@ int32_t CRtpFrameOrganizer::insertRtpPacket( ACE_Message_Block* pRtpBlock)
         return RET_FAIL;
     }
 
-    if((m_bParserH264)&&(PT_TYPE_H264 == rtpPacket.GetPayloadType()))
-    {
-        RTP_H264_FU_INDICATOR* pFu = (RTP_H264_FU_INDICATOR*)(void*)(pRtpBlock->rd_ptr() + rtpPacket.GetHeadLen());
-        uint8_t ucFuType = pFu->TYPE;
-        if(ucFuType ==RTP_H264_NALU_TYPE_UNDEFINED || ucFuType >= RTP_H264_NALU_TYPE_END)
-        {
-            SVS_LOG((SVS_LM_ERROR, "convert H264 fail, fu type[%d] invalid.", ucFuType));
-            return RET_FAIL;
-        }
-
-        if(ucFuType >0 && ucFuType < RTP_H264_NALU_TYPE_STAP_A)
-        {
-            RTP_FRAME_INFO_S stFrameInfo;
-            stFrameInfo.bMarker = true;
-            stFrameInfo.unTimestamp = rtpPacket.GetTimeStamp();
-            RTP_PACK_INFO_S  rtpInfo;
-            rtpInfo.bMarker = true;
-            rtpInfo.usSeq   = rtpPacket.GetSeqNum();
-            rtpInfo.unTimestamp = rtpPacket.GetTimeStamp();
-            rtpInfo.pRtpMsgBlock = pRtpBlock;
-            stFrameInfo.PacketQueue.push_back(rtpInfo);
-            handleFinishedFrame(&stFrameInfo);
-            stFrameInfo.PacketQueue.clear();
-            return RET_OK;
-        }
-    }
 
     ACE_Message_Block* pRtpMb = pRtpBlock->duplicate();
     if (NULL == pRtpMb)
@@ -112,7 +83,6 @@ int32_t CRtpFrameOrganizer::insertRtpPacket( ACE_Message_Block* pRtpBlock)
     }
 
     RTP_FRAME_INFO_S* pFrameInfo = NULL;
-
 
     RTP_PACK_INFO_S  rtpInfo;
     rtpInfo.bMarker      = rtpPacket.GetMarker();

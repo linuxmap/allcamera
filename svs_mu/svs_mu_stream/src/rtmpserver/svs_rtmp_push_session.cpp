@@ -98,7 +98,7 @@ int32_t CStreamRtmpPushSession::open(uint32_t unIndex, const ACE_INET_Addr &peer
     m_unSessionIndex  = unIndex;
     m_PeerAddr       = peerAddr;
 
-    m_RtpFrameOrganizer.init(this,MAX_RTP_FRAME_CACHE_NUM,true);
+    m_RtpFrameOrganizer.init(this,MAX_RTP_FRAME_CACHE_NUM);
 
     if (ACE_INVALID_HANDLE == m_sockHandle)
     {

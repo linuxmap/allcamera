@@ -82,7 +82,7 @@ public:
     CRtpFrameOrganizer();
     virtual ~CRtpFrameOrganizer();
 
-    int32_t init(IRtpFrameHandler* pHandler, uint32_t unMaxFrameCache = MAX_RTP_FRAME_CACHE_NUM,bool bParserH264 = false);
+    int32_t init(IRtpFrameHandler* pHandler, uint32_t unMaxFrameCache = MAX_RTP_FRAME_CACHE_NUM);
 
     int32_t insertRtpPacket( ACE_Message_Block* pRtpBlock);
 
@@ -102,7 +102,6 @@ private:
 private:
     uint32_t                m_unMaxCacheFrameNum;       // 最大缓冲帧数(按包来计算太不准了)
     IRtpFrameHandler*       m_pRtpFrameHandler;         // RTP帧回调处理接口
-    bool                    m_bParserH264;
 
     RTP_FRAME_MAP_S          m_RtpFrameMap;
     RTP_FRAME_LIST_S         m_RtpFrameFreeList;

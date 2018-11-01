@@ -42,7 +42,7 @@ int32_t CStreamEhomeSession::initSesssion(PEER_TYPE unPeerType)
     m_stSessionInfo.SessionType    = RTP_SESSION;
     m_stSessionInfo.PeerType       = unPeerType;
     m_stSessionInfo.TransDirection = TRANS_DIRECTION_RECVONLY;
-    m_stSessionInfo.MediaTransType = MEDIA_TRANS_TYPE_UDP;/* ehome only support udp */
+    m_stSessionInfo.MediaTransType = CStreamConfig::instance()->getEhomeTransType();/* ehome support udp or tcp */
     m_stSessionInfo.TransProtocol  = TRANS_PROTOCAL_UDP;
     m_stSessionInfo.SpecifyIp      = CStreamConfig::instance()->getInternalMediaIp();
     return RET_OK;

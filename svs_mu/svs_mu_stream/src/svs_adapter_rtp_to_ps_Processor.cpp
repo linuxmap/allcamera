@@ -44,7 +44,7 @@ int32_t CRtp2PsProcessor::Init(uint64_t ullSendSessionID)
         return RET_FAIL;
     }
 
-    if (RET_OK != m_VideoRtpFrameOrganizer.init(this,MAX_RTP_FRAME_CACHE_NUM,true))
+    if (RET_OK != m_VideoRtpFrameOrganizer.init(this,MAX_RTP_FRAME_CACHE_NUM))
     {
         return RET_FAIL;
     }
