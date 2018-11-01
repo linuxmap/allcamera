@@ -801,6 +801,7 @@ int32_t CDeviceStackGB28181::handleMessageAnswered(eXosip_event_t& rEvent)
 
         SVS_ACM::RESPONSE stResponse;
         stResponse.nRequestID = stTransactionInfo.nRequestID;
+        stResponse.nResponseCode = SVS_ERROR_OK;
         stTransactionInfo.pCallBack(stResponse, stTransactionInfo.pUserData);
         SVS_LOG((SVS_LM_INFO, "Response message callback, request id is %d, tid is %d.",
             stTransactionInfo.nRequestID, rEvent.tid));

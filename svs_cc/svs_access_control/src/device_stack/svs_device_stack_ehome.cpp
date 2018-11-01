@@ -441,6 +441,7 @@ int32_t CDeviceStackEhome::asyncRequest(SVS_ACM::REQUEST& rRequest, SVS_ACM::RES
         }
         case SVS_ACM::REQ_TYPE_DEV_CTRL:
         {
+            nResult = ehomeDevCtrlReq((SVS_ACM::REQUEST_DEV_CTRL&)rRequest, pCallBack, pUserData);
             break;
         }
         default:
@@ -539,6 +540,206 @@ int32_t CDeviceStackEhome::ehomeMediaStopRequest(SVS_ACM::REQUEST_SEND_BYE2DEV& 
     SVS_LOG((SVS_LM_DEBUG, "ehome Media push,stop real stream, userID:[%d] sessionID:[%d].", lUserID,rRequest.lSessionID));
     return SVS_ERROR_OK;
 }
+
+int32_t CDeviceStackEhome::ehomeDevCtrlReq(SVS_ACM::REQUEST_DEV_CTRL& rRequest, SVS_ACM::RESPONSE_CALLBACK pCallBack, void* pUserData)
+{
+    LONG  lUserID = getUserIDbyDevID((uint8_t*)&rRequest.szDeviceID[0]);
+    LONG  lChannel = getChannelIDbyLensID((uint8_t*)&rRequest.szDeviceID[0],(uint8_t*)&rRequest.szLensID[0]);
+    BYTE  byPTZCmd = 0;
+    BYTE  bySpeed  = 0;
+    DWORD dwPresetIndex = 0;
+
+    /* PTZ Control */
+    if(SVS_ACM::DEV_CTRL_TYPE_STOP == rRequest.eCtrlType)
+    {
+        //ehomePtzCtrlReq(lUserID,lChannel,byPTZCmd,bySpeed);
+    }
+    else if(SVS_ACM::DEV_CTRL_TYPE_ZOOM_IN == rRequest.eCtrlType)
+    {
+        byPTZCmd = PTZ_ZOOMIN;
+        bySpeed  = (rRequest.nCtrlParam1*EHOME_PTZ_SPEED_MAX)/SVS_PTZ_ZOOM_MAX;
+        ehomePtzCtrlReq(lUserID,lChannel,byPTZCmd,bySpeed);
+    }
+    else if(SVS_ACM::DEV_CTRL_TYPE_ZOOM_OUT == rRequest.eCtrlType)
+    {
+        byPTZCmd = PTZ_ZOOMOUT;
+        bySpeed  = (rRequest.nCtrlParam1*EHOME_PTZ_SPEED_MAX)/SVS_PTZ_ZOOM_MAX;
+        ehomePtzCtrlReq(lUserID,lChannel,byPTZCmd,bySpeed);
+    }
+    else if(SVS_ACM::DEV_CTRL_TYPE_UP == rRequest.eCtrlType)
+    {
+
+        byPTZCmd = PTZ_UP;
+        bySpeed  = (rRequest.nCtrlParam1*EHOME_PTZ_SPEED_MAX)/SVS_PTZ_SPEED_MAX;
+        ehomePtzCtrlReq(lUserID,lChannel,byPTZCmd,bySpeed);
+    }
+    else if(SVS_ACM::DEV_CTRL_TYPE_DOWN == rRequest.eCtrlType)
+    {
+        byPTZCmd = PTZ_DOWN;
+        bySpeed  = (rRequest.nCtrlParam1*EHOME_PTZ_SPEED_MAX)/SVS_PTZ_SPEED_MAX;
+        ehomePtzCtrlReq(lUserID,lChannel,byPTZCmd,bySpeed);
+    }
+    else if(SVS_ACM::DEV_CTRL_TYPE_LEFT == rRequest.eCtrlType)
+    {
+        byPTZCmd = PTZ_LEFT;
+        bySpeed  = (rRequest.nCtrlParam1*EHOME_PTZ_SPEED_MAX)/SVS_PTZ_SPEED_MAX;
+        ehomePtzCtrlReq(lUserID,lChannel,byPTZCmd,bySpeed);
+    }
+    else if(SVS_ACM::DEV_CTRL_TYPE_RIGHT == rRequest.eCtrlType)
+    {
+        byPTZCmd = PTZ_RIGHT;
+        bySpeed  = (rRequest.nCtrlParam1*EHOME_PTZ_SPEED_MAX)/SVS_PTZ_SPEED_MAX;
+        ehomePtzCtrlReq(lUserID,lChannel,byPTZCmd,bySpeed);
+    }
+    else if(SVS_ACM::DEV_CTRL_TYPE_LEFT_UP == rRequest.eCtrlType)
+    {
+        byPTZCmd = PTZ_UPLEFT;
+        bySpeed  = (rRequest.nCtrlParam1*EHOME_PTZ_SPEED_MAX)/SVS_PTZ_SPEED_MAX;
+        ehomePtzCtrlReq(lUserID,lChannel,byPTZCmd,bySpeed);
+    }
+    else if(SVS_ACM::DEV_CTRL_TYPE_LEFT_DOWN == rRequest.eCtrlType)
+    {
+        byPTZCmd = PTZ_DOWNLEFT;
+        bySpeed  = (rRequest.nCtrlParam1*EHOME_PTZ_SPEED_MAX)/SVS_PTZ_SPEED_MAX;
+        ehomePtzCtrlReq(lUserID,lChannel,byPTZCmd,bySpeed);
+    }
+    else if(SVS_ACM::DEV_CTRL_TYPE_RIGHT_UP == rRequest.eCtrlType)
+    {
+        byPTZCmd = PTZ_UPRIGHT;
+        bySpeed  = (rRequest.nCtrlParam1*EHOME_PTZ_SPEED_MAX)/SVS_PTZ_SPEED_MAX;
+        ehomePtzCtrlReq(lUserID,lChannel,byPTZCmd,bySpeed);
+    }
+    else if(SVS_ACM::DEV_CTRL_TYPE_RIGHT_DOWN == rRequest.eCtrlType)
+    {
+        byPTZCmd = PTZ_DOWNRIGHT;
+        bySpeed  = (rRequest.nCtrlParam1*EHOME_PTZ_SPEED_MAX)/SVS_PTZ_SPEED_MAX;
+        ehomePtzCtrlReq(lUserID,lChannel,byPTZCmd,bySpeed);
+    }
+    else if(SVS_ACM::DEV_CTRL_TYPE_APERTURE_OPEN == rRequest.eCtrlType)
+    {
+        byPTZCmd = PTZ_IRISSTARTUP;
+        bySpeed  = (rRequest.nCtrlParam1*EHOME_PTZ_SPEED_MAX)/SVS_PTZ_SPEED_MAX;
+        ehomePtzCtrlReq(lUserID,lChannel,byPTZCmd,bySpeed);
+    }
+    else if(SVS_ACM::DEV_CTRL_TYPE_APERTURE_CLOSE == rRequest.eCtrlType)
+    {
+        byPTZCmd = PTZ_IRISSTOPDOWN;
+        bySpeed  = (rRequest.nCtrlParam1*EHOME_PTZ_SPEED_MAX)/SVS_PTZ_SPEED_MAX;
+        ehomePtzCtrlReq(lUserID,lChannel,byPTZCmd,bySpeed);
+    }
+    else if(SVS_ACM::DEV_CTRL_TYPE_FOCAL_NEAR == rRequest.eCtrlType)
+    {
+        byPTZCmd = PTZ_FOCUSNEAR;
+        bySpeed  = (rRequest.nCtrlParam1*EHOME_PTZ_SPEED_MAX)/SVS_PTZ_SPEED_MAX;
+        ehomePtzCtrlReq(lUserID,lChannel,byPTZCmd,bySpeed);
+    }
+    else if(SVS_ACM::DEV_CTRL_TYPE_FOCAL_FAR == rRequest.eCtrlType)
+    {
+        byPTZCmd = PTZ_FOCUSFAR;
+        bySpeed  = (rRequest.nCtrlParam1*EHOME_PTZ_SPEED_MAX)/SVS_PTZ_SPEED_MAX;
+        ehomePtzCtrlReq(lUserID,lChannel,byPTZCmd,bySpeed);
+    }
+    else if(SVS_ACM::DEV_CTRL_TYPE_STOP_FI == rRequest.eCtrlType)
+    {
+        byPTZCmd = PTZ_FOCUSFAR;
+        bySpeed  = (rRequest.nCtrlParam1*EHOME_PTZ_SPEED_MAX)/SVS_PTZ_SPEED_MAX;
+        ehomePtzCtrlReq(lUserID,lChannel,byPTZCmd,bySpeed);
+    }
+    else if(SVS_ACM::DEV_CTRL_TYPE_PREFAB_BIT_SET == rRequest.eCtrlType)
+    {
+        dwPresetIndex = (DWORD)rRequest.nCtrlParam1;
+        ehomePreSetCtrlReq(lUserID,lChannel,1,dwPresetIndex);
+    }
+    else if(SVS_ACM::DEV_CTRL_TYPE_PREFAB_BIT_DEL == rRequest.eCtrlType)
+    {
+        dwPresetIndex = (DWORD)rRequest.nCtrlParam1;
+        ehomePreSetCtrlReq(lUserID,lChannel,2,dwPresetIndex);
+    }
+    else if(SVS_ACM::DEV_CTRL_TYPE_PREFAB_BIT_RUN == rRequest.eCtrlType)
+    {
+        dwPresetIndex = (DWORD)rRequest.nCtrlParam1;
+        ehomePreSetCtrlReq(lUserID,lChannel,3,dwPresetIndex);
+    }
+    SVS_ACM::RESPONSE stResponse;
+    stResponse.nRequestID = rRequest.nRequestID;
+    stResponse.nResponseCode = SVS_ERROR_OK;
+    if(NULL != pCallBack)
+    {
+        pCallBack(stResponse, pUserData);
+    }
+    return SVS_ERROR_OK;
+}
+void CDeviceStackEhome::ehomePtzCtrlReq(LONG lUserID,LONG lChannel,BYTE byPTZCmd,BYTE bySpeed)
+{
+    NET_EHOME_REMOTE_CTRL_PARAM ctrlParam;
+    memset(&ctrlParam,0,sizeof(NET_EHOME_REMOTE_CTRL_PARAM));
+    NET_EHOME_PTZ_PARAM ptzParam;
+    memset(&ptzParam,0,sizeof(NET_EHOME_PTZ_PARAM));
+
+    ptzParam.dwSize   = sizeof(NET_EHOME_PTZ_PARAM);
+    ptzParam.byPTZCmd = byPTZCmd;
+    ptzParam.byAction = 0;
+    ptzParam.bySpeed  = bySpeed;
+
+    ctrlParam.dwSize = sizeof(NET_EHOME_REMOTE_CTRL_PARAM);
+    ctrlParam.lpCondBuffer = &lChannel;
+    ctrlParam.dwCondBufferSize = sizeof(LONG);
+    ctrlParam.lpInbuffer = &ptzParam;
+    ctrlParam.dwInBufferSize = sizeof(NET_EHOME_PTZ_PARAM);
+    BOOL ret = NET_ECMS_RemoteControl(lUserID,NET_EHOME_PTZ_CTRL,&ctrlParam);
+    if(!ret)
+    {
+        SVS_LOG((SVS_LM_WARNING,"ehome ptz control start fail."
+                                "userid:[%d] channel:[%d] cmd:[%d] speed:[%d].",
+                                lUserID,lChannel,byPTZCmd,bySpeed));
+        return;
+    }
+    SVS_LOG((SVS_LM_DEBUG,"ehome ptz control start success."
+                                "userid:[%d] channel:[%d] cmd:[%d] speed:[%d].",
+                                lUserID,lChannel,byPTZCmd,bySpeed));
+    ptzParam.byAction = 1;
+    ret = NET_ECMS_RemoteControl(lUserID,NET_EHOME_PTZ_CTRL,&ctrlParam);
+    if(!ret)
+    {
+        SVS_LOG((SVS_LM_WARNING,"ehome ptz control stop fail."
+                                "userid:[%d] channel:[%d] cmd:[%d] speed:[%d].",
+                                lUserID,lChannel,byPTZCmd,bySpeed));
+    }
+    SVS_LOG((SVS_LM_DEBUG,"ehome ptz control stop success."
+                                "userid:[%d] channel:[%d] cmd:[%d] speed:[%d].",
+                                lUserID,lChannel,byPTZCmd,bySpeed));
+    return ;
+}
+void CDeviceStackEhome::ehomePreSetCtrlReq(LONG lUserID,LONG lChannel,BYTE byPresetCmd,DWORD  dwPresetIndex)
+{
+    NET_EHOME_REMOTE_CTRL_PARAM ctrlParam;
+    memset(&ctrlParam,0,sizeof(NET_EHOME_REMOTE_CTRL_PARAM));
+    NET_EHOME_PRESET_PARAM preSetParam;
+    memset(&preSetParam,0,sizeof(NET_EHOME_PRESET_PARAM));
+
+    preSetParam.dwSize   = sizeof(NET_EHOME_PRESET_PARAM);
+    preSetParam.byPresetCmd = byPresetCmd;
+    preSetParam.dwPresetIndex = dwPresetIndex;
+
+    ctrlParam.dwSize = sizeof(NET_EHOME_REMOTE_CTRL_PARAM);
+    ctrlParam.lpCondBuffer = &lChannel;
+    ctrlParam.dwCondBufferSize = sizeof(LONG);
+    ctrlParam.lpInbuffer = &preSetParam;
+    ctrlParam.dwInBufferSize = sizeof(NET_EHOME_PRESET_PARAM);
+    BOOL ret = NET_ECMS_RemoteControl(lUserID,NET_EHOME_PRESET_CTRL,&ctrlParam);
+    if(!ret)
+    {
+        SVS_LOG((SVS_LM_WARNING,"ehome preset control fail."
+                                "userid:[%d] channel:[%d] PresetCmd:[%d] PresetIndex:[%d].",
+                                lUserID,lChannel,byPresetCmd,dwPresetIndex));
+        return;
+    }
+    SVS_LOG((SVS_LM_DEBUG,"ehome preset control  success."
+                                "userid:[%d] channel:[%d] PresetCmd:[%d] PresetIndex:[%d].",
+                                lUserID,lChannel,byPresetCmd,dwPresetIndex));
+    return;
+}
+
 
 
 

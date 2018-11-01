@@ -7,6 +7,10 @@
 #include "svs_ace_header.h"
 #include <map>
 
+#define EHOME_PTZ_SPEED_MAX 7
+#define SVS_PTZ_ZOOM_MAX    15
+#define SVS_PTZ_SPEED_MAX   255
+
 struct EHOME_DEV_INFO
 {
     LONG                   lUserID;
@@ -46,6 +50,9 @@ private:
     int32_t ehomeMediaRequest(SVS_ACM::REQUEST_SEND_INVITE2DEV& rRequest, SVS_ACM::RESPONSE_CALLBACK pCallBack, void* pUserData);
     int32_t ehomeMediaPlayRequest(SVS_ACM::REQUEST_SEND_ACK2DEV& rRequest, SVS_ACM::RESPONSE_CALLBACK pCallBack, void* pUserData);
     int32_t ehomeMediaStopRequest(SVS_ACM::REQUEST_SEND_BYE2DEV& rRequest, SVS_ACM::RESPONSE_CALLBACK pCallBack, void* pUserData);
+    int32_t ehomeDevCtrlReq(SVS_ACM::REQUEST_DEV_CTRL& rRequest, SVS_ACM::RESPONSE_CALLBACK pCallBack, void* pUserData);
+    void    ehomePtzCtrlReq(LONG lUserID,LONG lChannel,BYTE byPTZCmd,BYTE bySpeed);
+    void    ehomePreSetCtrlReq(LONG lUserID,LONG lChannel,BYTE byPresetCmd,DWORD  dwPresetIndex);
 private:
     void generateLensIDbycChannel(uint8_t* pszDevID,LONG lChannel,uint8_t* pszLenID);
     LONG getChannelIDbyLensID(uint8_t* pszDevID,uint8_t* pszLenID);
