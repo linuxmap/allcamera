@@ -168,17 +168,12 @@ int32_t CRtp2PsProcessor::checkVideoRtpFrame(RTP_FRAME_LIST &rtpFrameList)
         pRtpBlock = *iter;
         (void)rtpPacket.ParsePacket(pRtpBlock->rd_ptr(), pRtpBlock->length());
 
-        // �Ƴ�RTP��Ϣͷ
         pRtpBlock->rd_ptr(rtpPacket.GetHeadLen());
 
         FU_INDICATOR* pFu = (FU_INDICATOR*)(void*)pRtpBlock->rd_ptr();
-        // ���˵������֡��ֻ֧��FUA�ְ�ʽ
         if (H264_NALU_TYPE_FU_A == pFu->TYPE)
         {
             pRtpBlock->rd_ptr(sizeof(FU_INDICATOR));
-
-            //FU_HEADER *pFuHeader = (FU_HEADER*)(void*)pRtpBlock->rd_ptr();
-
             if (bRemoveHead)
             {
                 H264_NALU_HEADER* pHead = (H264_NALU_HEADER*) (void*) pRtpBlock->rd_ptr();
@@ -233,7 +228,6 @@ int32_t CRtp2PsProcessor::checkAudioRtpFrame(RTP_FRAME_LIST &rtpFrameList)
         pRtpBlock = *iter;
         (void)rtpPacket.ParsePacket(pRtpBlock->rd_ptr(), pRtpBlock->length());
 
-        // �Ƴ�RTP��Ϣͷ
         pRtpBlock->rd_ptr(rtpPacket.GetHeadLen());
 
         if (unCacheSize >= pRtpBlock->length())
@@ -244,20 +238,17 @@ int32_t CRtp2PsProcessor::checkAudioRtpFrame(RTP_FRAME_LIST &rtpFrameList)
         }
         else
         {
-            // ������Ȳ����������������
             m_pWritePos = m_pRtpFrameCache;
             return RET_FAIL;
         }
 
     }
 
-    // ���֡�Ƿ�����
     if (bCheckFrame && (!bFuStart || !bFuStop) )
     {
         SVS_LOG((SVS_LM_WARNING,"rtp2ps processor recved incomplete frame, timestamp[%u].",
                 rtpPacket.GetTimeStamp()));
 
-        // �����������
         m_pWritePos = m_pRtpFrameCache;
         return RET_FAIL;
     }
@@ -265,7 +256,6 @@ int32_t CRtp2PsProcessor::checkAudioRtpFrame(RTP_FRAME_LIST &rtpFrameList)
     return RET_OK;
 }
 
-// ����PS��װ���RTP��ص��ӿ�
 void CRtp2PsProcessor::handleRtpFrame(RTP_FRAME_LIST &rtpFrameList)
 {
     if (rtpFrameList.empty())
@@ -273,7 +263,6 @@ void CRtp2PsProcessor::handleRtpFrame(RTP_FRAME_LIST &rtpFrameList)
         return;
     }
 
-    // �µ�һ֡����
     if (m_pWritePos != m_pRtpFrameCache)
     {
         return;
@@ -288,19 +277,15 @@ void CRtp2PsProcessor::handleRtpFrame(RTP_FRAME_LIST &rtpFrameList)
     uint8_t ucPT = (uint8_t)rtpPacket.GetPayloadType();
 
 
-    // ��ݹ���ɹ�������PS��װ
     if (ucPT == GetRecvVideoPT())
     {
-        // ��Ƶ��
         HandleVideoRtpFrame(rtpFrameList);
     }
     else
     {
-        // ��Ƶ��
         HandleAudioRtpFrame(rtpFrameList);
     }
 
-    // ���û�����дλ��
     m_pWritePos = m_pRtpFrameCache;
     return;
 }
@@ -363,9 +348,7 @@ void CRtp2PsProcessor::HandleAudioRtpFrame(RTP_FRAME_LIST &rtpFrameList)
         return;
     }
 
-    // ��Ƶ��
     (void)m_PsRtpEncap.insertAudioFrame(m_pRtpFrameCache, getWritePos(), ulTimeTick);
-
 
     return;
 }

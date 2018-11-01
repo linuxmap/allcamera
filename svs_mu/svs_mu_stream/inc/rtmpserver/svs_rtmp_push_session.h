@@ -1,9 +1,3 @@
-/*
- * StreamRtspPushSession.h
- *
- *  Created on: 2016-5-16
- *      Author:
- */
 
 #ifndef STREAMRTMPPUSHSESSION_H_
 #define STREAMRTMPPUSHSESSION_H_

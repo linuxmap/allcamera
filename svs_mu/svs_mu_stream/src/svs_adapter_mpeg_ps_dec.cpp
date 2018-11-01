@@ -20,7 +20,6 @@ CMpegPsDec::CMpegPsDec()
 
 CMpegPsDec::~CMpegPsDec()
 {
-    // TODO Auto-generated destructor stub
     m_pEsStreamHandle                = NULL;
     m_pUserData                      = NULL;
     m_pCurMediaData                  = NULL;
